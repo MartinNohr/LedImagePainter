@@ -1,0 +1,587 @@
+#pragma once
+#pragma once
+#include "heltec.h"
+#include <time.h>
+#include "FS.h"
+#include "SD.h"
+#include "SPI.h"
+#include <FastLED.h>
+#include "morefonts.h"
+#include <eeprom.h>
+
+#define OLED Heltec.display
+//#include "SSD1306Wire.h" // legacy include: `#include "SSD1306.h"`
+//#include "OLEDDisplayUi.h"
+
+// bluetooth stuff
+// See the following for generating UUIDs:
+// https://www.uuidgenerator.net/
+#define SERVICE_UUID					    "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define CHARACTERISTIC_UUID_FILEINFO	    "4faf0000-1fb5-459e-8fcc-c5c9c331914b"
+#define CHARACTERISTIC_UUID_WANDSETTINGS	"4faf0100-1fb5-459e-8fcc-c5c9c331914b"
+#define CHARACTERISTIC_UUID_RUN			    "4faf0200-1fb5-459e-8fcc-c5c9c331914b"
+#define CHARACTERISTIC_UUID_FILELIST	    "4faf0300-1fb5-459e-8fcc-c5c9c331914b"
+
+BLECharacteristic* pCharacteristicFileInfo = NULL;
+BLECharacteristic* pCharacteristicWandSettings = NULL;
+BLECharacteristic* pCharacteristicRun = NULL;
+BLECharacteristic* pCharacteristicFileList = NULL;
+std::string sBLECommand = ""; // remote commands come in here
+volatile bool BLEDeviceConnected = false;
+volatile bool oldBLEDeviceConnected = false;
+
+// functions
+void UpdateBLE(bool bProgressOnly);
+void DisplayCurrentFile(bool path = true);
+void DisplayLine(int line, String text, bool bOverRide = false);
+void DisplayMenuLine(int line, int displine, String text);
+void fixRGBwithGamma(byte* rp, byte* gp, byte* bp);
+void WriteMessage(String txt, bool error = false, int wait = 2000);
+void BarberPole();
+void TestBouncingBalls();
+void CheckerBoard();
+void RandomBars();
+void RunningDot();
+void OppositeRunningDots();
+void TestTwinkle();
+void TestMeteor();
+void TestCylon();
+void TestRainbow();
+void TestJuggle();
+void TestSine();
+void TestBpm();
+void TestConfetti();
+void DisplayAllColor();
+bool bPauseDisplay = false; // set this so DisplayLine and Progress won't update display
+int ReadButton(bool wait);
+bool CheckCancel(bool reset = false);
+
+// eeprom values
+char signature[]{ "MLW11" };              // set to make sure saved values are valid, change when savevalues is changed
+bool bAutoLoadSettings = false;           // set to automatically load saved settings from eeprom
+
+// settings
+int displayBrightness = 100;
+bool bSdCardValid = false;              // set to true when card is found
+// wand leds
+#define DATA_PIN1 17
+#define DATA_PIN2 25
+#define NUM_LEDS 144
+// Define the array of leds, up to 288
+CRGB leds[NUM_LEDS * 2];
+bool bSecondStrip = false;                // set true when two strips installed
+#define STRIPLENGTH (NUM_LEDS*(1+(bSecondStrip?1:0)))
+#define LEDIX(ix) (((ix)<NUM_LEDS)?(NUM_LEDS-1-(ix)):(ix))
+int nStripBrightness = 10;                // Variable and default for the Brightness of the strip, 1 to 100%
+int startDelay = 0;                       // Variable for delay between button press and start of light sequence, in seconds
+//bool bRepeatForever = false;                           // Variable to select auto repeat (until select button is pressed again)
+int repeatDelay = 0;                      // Variable for delay between repeats, 0.1 seconds
+int repeatCount = 1;                      // Variable to keep track of number of repeats
+int nRepeatsLeft;                         // countdown while repeating, used for BLE also
+int g = 0;                                // Variable for the Green Value
+int b = 0;                                // Variable for the Blue Value
+int r = 0;                                // Variable for the Red Value
+CRGB whiteBalance = CRGB::White;
+// wand settings
+int charHeight = 19;
+#define NEXT_FOLDER_CHAR '~'
+#define PREVIOUS_FOLDER_CHAR '^'
+String currentFolder = "/";
+int CurrentFileIndex = 0;
+int lastFileIndex = 0;                  // save between switching of internal and SD
+String lastFolder = "/";
+int NumberOfFiles = 0;
+#define MAX_FILES 40
+String FileNames[MAX_FILES];
+bool bSettingsMode = false;             // set true when settings are displayed
+int frameHold = 10;                       // default for the frame delay 
+bool bGammaCorrection = true;             // set to use the gamma table
+bool bShowBuiltInTests = false;           // list the internal file instead of the SD card
+bool bReverseImage = false;               // read the file lines in reverse
+bool bMirrorPlayImage = false;            // play the file twice, 2nd time reversed
+bool bChainFiles = false;                 // set to run all the files from current to the last one in the current folder
+int nChainRepeats = 1;                    // how many times to repeat the chain
+bool bLongPress = false;                  // set when long press
+bool bShowProgress = true;                // show the progress bar
+bool bScaleHeight = false;                // scale the Y values to fit the number of pixels
+bool bCancelRun = false;                  // set to cancel a running job
+volatile int nTimerSeconds;
+// set this to the delay time while we get the next frame, also used for delay timers
+volatile bool bStripWaiting = false;
+esp_timer_handle_t oneshot_LED_timer;
+esp_timer_create_args_t oneshot_LED_timer_args;
+// timer for button
+volatile bool bButtonWait = false;
+esp_timer_handle_t oneshot_BTN_timer;
+esp_timer_create_args_t oneshot_BTN_timer_args;
+
+SDFile dataFile;
+// system state, idle or running
+bool bIsRunning = false;
+// show percentage
+int nProgress = 0;
+
+struct saveValues {
+    void* val;
+    int size;
+};
+const saveValues saveValueList[] = {
+    {&signature, sizeof(signature)},                // this must be first
+    {&bAutoLoadSettings, sizeof(bAutoLoadSettings)},// this must be second
+    {&nStripBrightness, sizeof(nStripBrightness)},
+    {&frameHold, sizeof(frameHold)},
+    {&startDelay, sizeof(startDelay)},
+    //{&bRepeatForever, sizeof(bRepeatForever)},
+    {&repeatCount, sizeof(repeatCount)},
+    {&repeatDelay, sizeof(repeatDelay)},
+    {&bGammaCorrection, sizeof(bGammaCorrection)},
+    {&bSecondStrip, sizeof(bSecondStrip)},
+    //{&nBackLightSeconds, sizeof(nBackLightSeconds)},
+    //{&nMaxBackLight, sizeof(nMaxBackLight)},
+    {&CurrentFileIndex,sizeof(CurrentFileIndex)},
+    {&bShowBuiltInTests,sizeof(bShowBuiltInTests)},
+    {&bScaleHeight,sizeof(bScaleHeight)},
+    {&bChainFiles,sizeof(bChainFiles)},
+    {&bReverseImage,sizeof(bReverseImage)},
+    {&bMirrorPlayImage,sizeof(bMirrorPlayImage)},
+    {&nChainRepeats,sizeof(nChainRepeats)},
+    {&whiteBalance,sizeof(whiteBalance)},
+    {&bShowProgress,sizeof(bShowProgress)},
+};
+
+enum eDisplayOperation {
+    eClear,             // set screen background
+    eText,              // handle text with optional %s value
+    eTextInt,           // handle text with optional %d value
+    eTextCurrentFile,   // adds current basefilename for %s in string
+    eBool,              // handle bool using %s and on/off values
+    eMenu,              // load another menu
+    eExit,              // closes this menu
+    eIfEqual,           // start skipping menu entries if match with data value
+    eElse,              // toggles the skipping
+    eEndif,             // ends an if block
+    eBuiltinOptions,    // use an internal settings menu if available, see the internal name,function list below (BuiltInFiles[])
+    eReboot,            // reboot the system
+    eTerminate,         // must be last in a menu
+};
+
+struct MenuItem {
+    enum eDisplayOperation op;
+    bool valid;     // set to true if displayed for use
+    char* text;
+    void(*function)(MenuItem*);
+    const void* value;
+    long min;       // also used for ifequal
+    long max;       // size to compare for if
+    int decimals;   // 0 for int, 1 for 0.1
+    char* on;       // text for boolean
+    char* off;
+};
+typedef MenuItem MenuItem;
+
+// some menu functions using menus
+void EraseStartFile(MenuItem* menu);
+void SaveStartFile(MenuItem* menu);
+void EraseAssociatedFile(MenuItem* menu);
+void SaveAssociatedFile(MenuItem* menu);
+void LoadAssociatedFile(MenuItem* menu);
+void LoadStartFile(MenuItem* menu);
+bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile);
+void SaveEepromSettings(MenuItem* menu);
+void LoadEepromSettings(MenuItem* menu);
+
+// builtins
+// built-in "files"
+struct BuiltInItem {
+    char* text;
+    void(*function)();
+    MenuItem* menu;
+};
+typedef BuiltInItem BuiltInItem;
+extern BuiltInItem BuiltInFiles[];
+
+// SD details
+#define SDcsPin 5                        // SD card CS pin
+SPIClass spi1;
+
+// adjustment values for builtins
+uint8_t gHue = 0; // rotating "base color" used by many of the patterns
+// bouncing balls
+int nBouncingBallsCount = 4;
+int nBouncingBallsDecay = 1000;
+int nBouncingBallsRuntime = 30; // in seconds
+// cylon eye
+int nCylonEyeSize = 10;
+int nCylonEyeRed = 255;
+int nCylonEyeGreen = 0;
+int nCylonEyeBlue = 0;
+// random bars
+bool bRandomBarsBlacks = true;
+int nRandomBarsRuntime = 20;
+int nRandomBarsHoldframes = 10;
+// meteor
+int nMeteorSize = 10;
+int nMeteorRed = 255;
+int nMeteorGreen = 255;
+int nMeteorBlue = 255;
+// display all color
+int nDisplayAllRed = 255;
+int nDisplayAllGreen = 255;
+int nDisplayAllBlue = 255;
+// rainbow
+int nRainbowRepeats = 4;
+int nRainbowRuntime = 20;
+int nRainbowFadeTime = 10;       // fade in out 0.1 Sec
+bool bRainbowAddGlitter = false;
+bool bRainbowCycleHue = false;
+// twinkle
+int nTwinkleRuntime = 20;
+bool bTwinkleOnlyOne = false;
+// confetti
+int nConfettiRuntime = 20;
+bool bConfettiCycleHue = false;
+// juggle
+int nJuggleRuntime = 20;
+// sine
+int nSineRuntime = 20;
+int nSineStartingHue = 0;
+bool bSineCycleHue = false;
+int nSineSpeed = 13;
+// bpm
+int nBpmRuntime = 20;
+int nBpmBeatsPerMinute = 62;
+bool bBpmCycleHue = false;
+// checkerboard/bars
+int nCheckerBoardRuntime = 20;
+int nCheckerboardHoldframes = 10;
+int nCheckboardBlackWidth = 12;
+int nCheckboardWhiteWidth = 12;
+bool bCheckerBoardAlternate = true;
+int nCheckerboardAddPixels = 0;
+
+// Gramma Correction (Defalt Gamma = 2.8)
+const uint8_t gammaR[] = {
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,
+    1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,
+    2,  2,  2,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  5,
+    5,  5,  5,  5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,
+    9,  9, 10, 10, 10, 11, 11, 11, 12, 12, 12, 13, 13, 14, 14, 14,
+   15, 15, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22,
+   23, 24, 24, 25, 25, 26, 27, 27, 28, 29, 29, 30, 31, 31, 32, 33,
+   33, 34, 35, 36, 36, 37, 38, 39, 40, 40, 41, 42, 43, 44, 45, 46,
+   46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,
+   62, 63, 65, 66, 67, 68, 69, 70, 71, 73, 74, 75, 76, 78, 79, 80,
+   81, 83, 84, 85, 87, 88, 89, 91, 92, 94, 95, 97, 98, 99,101,102,
+  104,105,107,109,110,112,113,115,116,118,120,121,123,125,127,128,
+  130,132,134,135,137,139,141,143,145,146,148,150,152,154,156,158,
+  160,162,164,166,168,170,172,174,177,179,181,183,185,187,190,192,
+  194,196,199,201,203,206,208,210,213,215,218,220,223,225,227,230 };
+
+const uint8_t gammaG[] = {
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
+    1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
+    2,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  5,  5,  5,
+    5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10,
+   10, 10, 11, 11, 11, 12, 12, 13, 13, 13, 14, 14, 15, 15, 16, 16,
+   17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 24, 24, 25,
+   25, 26, 27, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 35, 35, 36,
+   37, 38, 39, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 50,
+   51, 52, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 66, 67, 68,
+   69, 70, 72, 73, 74, 75, 77, 78, 79, 81, 82, 83, 85, 86, 87, 89,
+   90, 92, 93, 95, 96, 98, 99,101,102,104,105,107,109,110,112,114,
+  115,117,119,120,122,124,126,127,129,131,133,135,137,138,140,142,
+  144,146,148,150,152,154,156,158,160,162,164,167,169,171,173,175,
+  177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
+  215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
+
+
+const uint8_t gammaB[] = {
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,
+    1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,
+    2,  2,  2,  2,  2,  2,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,
+    4,  4,  5,  5,  5,  5,  5,  6,  6,  6,  6,  6,  7,  7,  7,  8,
+    8,  8,  8,  9,  9,  9, 10, 10, 10, 10, 11, 11, 12, 12, 12, 13,
+   13, 13, 14, 14, 15, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19, 19,
+   20, 20, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 27, 27, 28, 28,
+   29, 30, 30, 31, 32, 32, 33, 34, 34, 35, 36, 37, 37, 38, 39, 40,
+   40, 41, 42, 43, 44, 44, 45, 46, 47, 48, 49, 50, 51, 51, 52, 53,
+   54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 69, 70,
+   71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 83, 84, 85, 86, 88, 89,
+   90, 92, 93, 94, 96, 97, 98,100,101,103,104,106,107,109,110,112,
+  113,115,116,118,119,121,122,124,126,127,129,131,132,134,136,137,
+  139,141,143,144,146,148,150,152,153,155,157,159,161,163,165,167,
+  169,171,173,175,177,179,181,183,185,187,189,191,193,196,198,200 };
+
+// handle button
+#define btnHandle 26
+// button list
+// names of buttons
+#define btnExecute T8
+#define btnLeft T5
+#define btnRight T2
+#define btnUp T7
+#define btnDown T6
+//#define btnShowFiles T9
+#define btnMenu T4
+#define btnNone (-1)
+int buttons[] = {
+    btnExecute, // this one must be first
+    btnUp,
+    btnDown,
+    btnLeft,
+    btnRight,
+    //btnShowFiles,
+    btnMenu,
+};
+#define NUMBUTTONS (sizeof(buttons) / sizeof(*buttons))
+int baseBtnVal[NUMBUTTONS];
+#define TOUCHED_RATIO (0.7)
+unsigned long btnDownTime;
+unsigned long btnDownStartTime;
+
+void GetIntegerValue(MenuItem*);
+void ToggleBool(MenuItem*);
+void ToggleFilesBuiltin(MenuItem* menu);
+
+MenuItem BouncingBallsMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Ball Count (1-8): %d",GetIntegerValue,&nBouncingBallsCount,1,8},
+    {eTextInt,false,"Decay (500-10000): %d",GetIntegerValue,&nBouncingBallsDecay,500,10000},
+    {eTextInt,false,"Runtime (seconds): %d",GetIntegerValue,&nBouncingBallsRuntime,1,10000},
+    //{eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem CheckerBoardMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nCheckerBoardRuntime,1,10000},
+    {eTextInt,false,"Hold Frames: %d",GetIntegerValue,&nCheckerboardHoldframes,1,100},
+    {eTextInt,false,"Black Width (pixels): %d",GetIntegerValue,&nCheckboardBlackWidth,1,288},
+    {eTextInt,false,"White Width (pixels): %d",GetIntegerValue,&nCheckboardWhiteWidth,1,288},
+    {eTextInt,false,"Add Pixels per Cycle: %d",GetIntegerValue,&nCheckerboardAddPixels,0,144},
+    {eBool,false,"Alternate per Cycle: %s",ToggleBool,&bCheckerBoardAlternate,0,0,0,"Yes","No"},
+    //{eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem RainbowMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Pattern Count: %d",GetIntegerValue,&nRainbowRepeats,1,100},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nRainbowRuntime,1,10000},
+    {eTextInt,false,"Fade Time (S): %d.%d",GetIntegerValue,&nRainbowFadeTime,0,100,1},
+    {eBool,false,"Cycle Hue: %s",ToggleBool,&bRainbowCycleHue,0,0,0,"Yes","No"},
+    {eBool,false,"Add Glitter: %s",ToggleBool,&bRainbowAddGlitter,0,0,0,"Yes","No"},
+    //{eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem ConfettiMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nConfettiRuntime,1,10000},
+    {eBool,false,"Cycle Hue: %s",ToggleBool,&bConfettiCycleHue,0,0,0,"Yes","No"},
+    //{eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem JuggleMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nJuggleRuntime,1,10000},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem TwinkleMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nTwinkleRuntime,1,10000},
+    {eBool,false,"One or Many: %s",ToggleBool,&bTwinkleOnlyOne,0,0,0,"One","Many"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem SineMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nSineRuntime,1,10000},
+    {eTextInt,false,"Starting Hue: %d",GetIntegerValue,&nSineStartingHue,0,255},
+    {eBool,false,"Cycle Hue: %s",ToggleBool,&bSineCycleHue,0,0,0,"Yes","No"},
+    {eTextInt,false,"Speed: %d",GetIntegerValue,&nSineSpeed,1,500},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem BpmMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nBpmRuntime,1,10000},
+    {eTextInt,false,"Beats per minute: %d",GetIntegerValue,&nBpmBeatsPerMinute,1,300},
+    {eBool,false,"Cycle Hue: %s",ToggleBool,&bBpmCycleHue,0,0,0,"Yes","No"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem CylonEyeMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Eye Size:  %d",GetIntegerValue,&nCylonEyeSize,1,100},
+    {eTextInt,false,"Eye Red:   %d",GetIntegerValue,&nCylonEyeRed,0,255},
+    {eTextInt,false,"Eye Green: %d",GetIntegerValue,&nCylonEyeGreen,0,255},
+    {eTextInt,false,"Eye Blue:  %d",GetIntegerValue,&nCylonEyeBlue,0,255},
+    //{eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem MeteorMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Meteor Size:  %d",GetIntegerValue,&nMeteorSize,1,100},
+    {eTextInt,false,"Meteor Red:   %d",GetIntegerValue,&nMeteorRed,0,255},
+    {eTextInt,false,"Meteor Green: %d",GetIntegerValue,&nMeteorGreen,0,255},
+    {eTextInt,false,"Meteor Blue:  %d",GetIntegerValue,&nMeteorBlue,0,255},
+    //{eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem DisplayAllColorMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Red:   %d",GetIntegerValue,&nDisplayAllRed,0,255},
+    {eTextInt,false,"Green: %d",GetIntegerValue,&nDisplayAllGreen,0,255},
+    {eTextInt,false,"Blue:  %d",GetIntegerValue,&nDisplayAllBlue,0,255},
+    //{eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem RandomBarsMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nRandomBarsRuntime,1,10000},
+    {eTextInt,false,"Hold Frames: %d",GetIntegerValue,&nRandomBarsHoldframes,1,100},
+    {eBool,false,"Alternating Blacks: %s",ToggleBool,&bRandomBarsBlacks,0,0,0,"Yes","No"},
+    //{eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem WandMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Frame Hold (mS): %d",GetIntegerValue,&frameHold,0,10000},
+    {eTextInt,false,"Start Delay (S): %d.%d",GetIntegerValue,&startDelay,0,10000,1},
+    {eTextInt,false,"Wand Brightness: %d%%",GetIntegerValue,&nStripBrightness,1,100},
+    {eBool,false,"Two LED strips: %s",ToggleBool,&bSecondStrip,0,0,0,"Yes","No"},
+    {eBool,false,"Scale Height to Fit: %s",ToggleBool,&bScaleHeight,0,0,0,"On","Off"},
+    {eBool,false,"Reverse Image: %s",ToggleBool,&bReverseImage,0,0,0,"Yes","No"},
+    {eBool,false,"Play Mirror Image: %s",ToggleBool,&bMirrorPlayImage,0,0,0,"Yes","No"},
+    //{eMenu,false,"Color Settings",NULL,WandColorMenu},
+    {eBool,false,"Show Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
+    {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100},
+    //{eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem AssociatedFileMenu[] = {
+    {eClear,false},
+    {eTextCurrentFile,false,"Save  %s.LWC",SaveAssociatedFile},
+    {eTextCurrentFile,false,"Load  %s.LWC",LoadAssociatedFile},
+    {eTextCurrentFile,false,"Erase %s.LWC",EraseAssociatedFile},
+    //{eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem StartFileMenu[] = {
+    {eClear,false},
+    {eText,false,"Save  START.LWC",SaveStartFile},
+    {eText,false,"Load  START.LWC",LoadStartFile},
+    {eText,false,"Erase START.LWC",EraseStartFile},
+    {eMenu,false,"Associated Files",NULL,AssociatedFileMenu},
+    //{eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem RepeatMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Repeat Count: %d",GetIntegerValue,&repeatCount,1,1000},
+    {eTextInt,false,"Repeat Delay (S): %d.%d",GetIntegerValue,&repeatDelay,0,100,1},
+    {eIfEqual,false,"",NULL,&bShowBuiltInTests,false},
+        {eBool,false,"Chain Files: %s",ToggleBool,&bChainFiles,0,0,0,"On","Off"},
+        {eIfEqual,false,"",NULL,&bChainFiles,true},
+            {eTextInt,false,"Chain Repeats: %d",GetIntegerValue,&nChainRepeats,1,1000},
+        {eEndif},
+    {eEndif},
+    //{eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem EepromMenu[] = {
+    {eClear,false,},
+    {eBool,false,"Autoload Defaults: %s",ToggleBool,&bAutoLoadSettings,0,0,0,"On","Off"},
+    {eText,false,"Save Default Settings",SaveEepromSettings},
+    {eText,false,"Load Default Settings",LoadEepromSettings},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem MainMenu[] = {
+    {eClear,false},
+    {eIfEqual,false,"",NULL,&bShowBuiltInTests,true},
+        {eBool,false,"Switch to SD Card",ToggleFilesBuiltin,&bShowBuiltInTests,0,0,0,"On","Off"},
+    {eElse},
+        {eBool,false,"Switch to Built-ins",ToggleFilesBuiltin,&bShowBuiltInTests,0,0,0,"On","Off"},
+    {eEndif},
+    {eMenu,false,"Wand Settings",NULL,WandMenu},
+    {eMenu,false,"Repeat Settings",NULL,RepeatMenu},
+    {eIfEqual,false,"",NULL,&bShowBuiltInTests,true},
+        {eBuiltinOptions,false,"%s Options",NULL,BuiltInFiles},
+    {eElse},
+        {eMenu,false,"LWC File Operations",NULL,StartFileMenu},
+    {eEndif},
+    {eMenu,false,"Default Settings",NULL,EepromMenu},
+    {eReboot,false,"Reboot"},
+    //{eMenu,false,"Other Settings",NULL,OtherSettingsMenu},
+    // make sure this one is last
+    {eTerminate}
+};
+
+BuiltInItem BuiltInFiles[] = {
+    {"Barber Pole",BarberPole},
+    {"Beats",TestBpm,BpmMenu},
+    {"Bouncy Balls",TestBouncingBalls,BouncingBallsMenu},
+    {"CheckerBoard",CheckerBoard,CheckerBoardMenu},
+    {"Confetti",TestConfetti,ConfettiMenu},
+    {"Cylon Eye",TestCylon,CylonEyeMenu},
+    {"Juggle",TestJuggle,JuggleMenu},
+    {"Meteor",TestMeteor,MeteorMenu},
+    {"One Dot",RunningDot},
+    {"Rainbow",TestRainbow,RainbowMenu},
+    {"Random Bars",RandomBars,RandomBarsMenu},
+    {"Sine Trails",TestSine,SineMenu},
+    {"Solid Color",DisplayAllColor,DisplayAllColorMenu},
+    {"Twinkle",TestTwinkle,TwinkleMenu},
+    {"Two Dots",OppositeRunningDots},
+};
+
+#define MAX_MENUS 10
+// a stack for menus so we can find our way back
+MenuItem* menustack[MAX_MENUS];
+int menuSavedLevel[MAX_MENUS];      // holds where the menu was last time we were here
+int menuLevel = 0;
+bool bMenuChanged = true;
+int activeMenuLine = 0;
+int activeMenuCount = 0;
+
+// save and load variables from lwc files
+enum SETVARTYPE {
+    vtInt,
+    vtBool,
+    vtRGB,
+};
+struct SETTINGVAR {
+    char* name;
+    void* address;
+    enum SETVARTYPE type;
+    int min, max;
+};
+struct SETTINGVAR SettingsVarList[] = {
+    {"SECOND STRIP",&bSecondStrip,vtBool},
+    {"WAND BRIGHTNESS",&nStripBrightness,vtInt,1,100},
+    {"REPEAT COUNT",&repeatCount,vtInt},
+    {"REPEAT DELAY",&repeatDelay,vtInt},
+    {"FRAME TIME",&frameHold,vtInt},
+    {"START DELAY",&startDelay,vtInt},
+    {"REVERSE IMAGE",&bReverseImage,vtBool},
+    {"MIRROR PLAY IMAGE",&bMirrorPlayImage,vtBool},
+    {"CHAIN FILES",&bChainFiles,vtBool},
+    {"CHAIN REPEATS",&nChainRepeats,vtInt},
+    {"WHITE BALANCE",&whiteBalance,vtRGB},
+    {"DISPLAY BRIGHTNESS",&displayBrightness,vtInt,1,100},
+};
