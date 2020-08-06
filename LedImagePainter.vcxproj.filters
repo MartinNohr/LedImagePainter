@@ -24,5 +24,8 @@
     <ClInclude Include="LedImagePainter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="morefonts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
