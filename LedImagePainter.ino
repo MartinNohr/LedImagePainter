@@ -20,11 +20,10 @@
 #include <ringbufcpp.h>
 #include "LedImagePainter.h"
 
-#define DHTPIN 14
 // rotary switch
 #define BTNPUSH 27
-#define BTNA 33
-#define BTNB 32
+#define BTNA 12
+#define BTNB 14
 
 #define MAX_KEY_BUF 10
 RingBufCPP<int, MAX_KEY_BUF> btnBuf;
@@ -84,7 +83,7 @@ void IRAM_ATTR IntBtnAB()
 	noInterrupts();
 	bool valA = digitalRead(BTNA);
 	bool valB = digitalRead(BTNB);
-	//Serial.println("A:" + String(valA) + " B:" + String(valB));
+	Serial.println("A:" + String(valA) + " B:" + String(valB));
 	//Serial.println("start state: " + String(state));
 	//Serial.println("forward: " + String(forward));
 	if (valA == lastValA && valB == lastValB)
@@ -122,6 +121,7 @@ void IRAM_ATTR IntBtnAB()
 		//Serial.println(String(forward ? "+" : "-"));
 		state = 0;
 		int btn = forward ? BTN_UP : BTN_DOWN;
+		//Serial.println("add: " + String(btn));
 		btnBuf.add(btn);
 	}
 	else if ((tries-- <= 0 && state > 0) || (valA == true && valB == true)) {
@@ -980,15 +980,19 @@ int ReadButton(bool wait)
 	if (!btnBuf.isEmpty()) {
 		int btn;
 		btnBuf.pull(&btn);
+		//Serial.println("button: " + String(btn));
 		switch (btn) {
-		BTN_SELECT:
+		case BTN_SELECT:
 			retValue = btnExecute;
 			break;
-		BTN_UP:
+		case BTN_UP:
 			retValue = btnRight;
 			break;
-		BTN_DOWN:
+		case BTN_DOWN:
 			retValue = btnLeft;
+			break;
+		case BTN_LONG:
+			retValue = btnMenu;
 			break;
 		}
 	}
