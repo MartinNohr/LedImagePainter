@@ -281,6 +281,12 @@ void setup()
 	pinMode(btnHandle, INPUT_PULLUP);
 	pinMode(LED, OUTPUT);
 	digitalWrite(LED, HIGH);
+	pinMode(BTNPUSH, INPUT_PULLUP);
+	pinMode(BTNA, INPUT_PULLUP);
+	pinMode(BTNB, INPUT_PULLUP);
+	attachInterrupt(BTNPUSH, IntBtnCenter, CHANGE);
+	attachInterrupt(BTNA, IntBtnAB, CHANGE);
+	attachInterrupt(BTNB, IntBtnAB, CHANGE);
 	Heltec.begin(true /*DisplayEnable Enable*/, false /*LoRa Enable*/, true /*Serial Enable*/);
 	delay(100);
 	digitalWrite(LED, LOW);
@@ -362,6 +368,11 @@ void setup()
 	delayMicroseconds(50);
 	delay(100);
 	OLED->clear();
+	if (!bSdCardValid) {
+		DisplayCurrentFile();
+		delay(2000);
+		ToggleFilesBuiltin(NULL);
+	}
 	DisplayCurrentFile();
 	oneshot_LED_timer_args = {
 			oneshot_LED_timer_callback,
@@ -379,27 +390,6 @@ void setup()
 			"one-shotBTN"
 	};
 	esp_timer_create(&oneshot_BTN_timer_args, &oneshot_BTN_timer);
-	//touchSetCycles(0x1000, 0x1000);
-	//touch_pad_config(TOUCH_PAD_NUM2, 20);
-	//touch_pad_set_trigger_mode(TOUCH_TRIGGER_BELOW);
-	//touch_pad_intr_enable();
-
-	//touch_pad_init();
-	//// If use interrupt trigger mode, should set touch sensor FSM mode at 'TOUCH_FSM_MODE_TIMER'.
-	//touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER);
-	//// Set reference voltage for charging/discharging
-	//// For most usage scenarios, we recommend using the following combination:
-	//// the high reference valtage will be 2.7V - 1V = 1.7V, The low reference voltage will be 0.5V.
-	//touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_1V);
-	//// Init touch pad IO
-	//tp_example_touch_pad_init();
-	//// Initialize and start a software filter to detect slight change of capacitance.
-	//touch_pad_filter_start(TOUCHPAD_FILTER_TOUCH_PERIOD);
-	//// Set thresh hold
-	//tp_example_set_thresholds();
-	//touch_pad_isr_register(TouchISR, (void*)NULL);
-	ReadButtonBases();
-
 	BLEDevice::init("MN LED Image Painter");
 	BLEServer* pServer = BLEDevice::createServer();
 	pServer->setCallbacks(new MyServerCallbacks());
@@ -966,27 +956,11 @@ bool HandleRunMode()
 	return didsomething;
 }
 
-// read the base values of the touch buttons
-void ReadButtonBases()
-{
-#define BASEREADS 10
-	int btnVal;
-	memset(baseBtnVal, 0, NUMBUTTONS);
-	for (int tries = 0; tries < BASEREADS; ++tries) {
-		for (int i = 0; i < NUMBUTTONS; ++i) {
-			btnVal = touchRead(buttons[i]);
-			baseBtnVal[i] = max(btnVal, baseBtnVal[i]);
-			//Serial.println("base: " + String(baseBtnVal[i]));
-		}
-		//Serial.println("");
-		usleep(100000);
-	}
-}
-
 // check buttons and return if one pressed
 // if wait is set, it will loop until none are pressed and then likely return btnNone
 int ReadButton(bool wait)
 {
+	int retValue = BTN_NONE;
 	// see if we got any BLE commands
 	if (!sBLECommand.empty()) {
 		//Serial.println(sBLECommand.c_str());
@@ -1003,109 +977,29 @@ int ReadButton(bool wait)
 			return btnLeft;
 		}
 	}
-
-#define BTNTIMER 25
-	//static unsigned long lastShowed;
-	int buttonValue, i;
-	int retValue = btnNone;
-	static int lastButton = 0;
-	static unsigned long lastTime;
-	static bool bKeyChange = false;
-	bool bWaitReady = false;
-	//   if (lastShowed < millis() + 1000) {
-	   //	for (i = 0; i < NUMBUTTONS; ++i) {
-	   //		buttonValue = touchRead(buttons[i]);
-	   //		DisplayLine(3, "btn: " + String(i) + "-" + String(buttonValue));
-	   //		Serial.println("btn: " + String(i) + "-" + String(buttonValue));
-	   //		//usleep(500000);
-	   //	}
-	   //	lastShowed = millis();
-	   //}
-	while (wait) {
-		for (i = 0; i < NUMBUTTONS; ++i) {
-			if (i == 0) {
-				if (digitalRead(btnHandle) == false) {
-					buttonValue = btnExecute;
-					break;
-				}
-			}
-			buttonValue = touchRead(buttons[i]);
-			if (buttonValue != 0 && buttonValue < baseBtnVal[i] * TOUCHED_RATIO) {
-				//Serial.println("wait found one: " + String(buttons[i]));
-				break;
-			}
-		}
-		if (i >= NUMBUTTONS) {
-			// guess we didn't find any pressed
-			if (!bWaitReady) {
-				bWaitReady = true;
-				lastTime = millis();
-				continue;
-			}
-			if (millis() > lastTime + BTNTIMER) {
-				lastButton = btnNone;
-				return lastButton;
-			}
-			//Serial.println("button wait done");
-		}
-		delay(BTNTIMER);
-		//usleep(10000);
-		//touch_pad_clear_status();
-		btnDownStartTime = millis();
-		//Serial.println("reset down time from wait");
-	}
-	// set button down time
-	btnDownTime = millis() - btnDownStartTime;
-	if (!bKeyChange && lastButton != 0 && lastTime != 0 && (millis() < lastTime + BTNTIMER)) {
-		//Serial.println("returning last button: " + String(lastButton));
-		//Serial.println("lastdowntime: " + String(btnDownTime));
-		return lastButton;
-	}
-	// see if anybody pressed
-	for (i = 0; i < NUMBUTTONS; ++i) {
-		while ((buttonValue = touchRead(buttons[i])) == 0) {
-			usleep(500);
-		}
-		if (i == 0) {
-			// check the handle
-			if (digitalRead(btnHandle) == 0) {
-				retValue = btnExecute;
-				break;
-			}
-		}
-		//Serial.println("button raw: " + String(buttonValue));
-		if (buttonValue < baseBtnVal[i] * TOUCHED_RATIO) {
-			retValue = buttons[i];
-			//Serial.println("button found: " + String(retValue));
+	if (!btnBuf.isEmpty()) {
+		int btn;
+		btnBuf.pull(&btn);
+		switch (btn) {
+		BTN_SELECT:
+			retValue = btnExecute;
+			break;
+		BTN_UP:
+			retValue = btnRight;
+			break;
+		BTN_DOWN:
+			retValue = btnLeft;
 			break;
 		}
 	}
-	if (i >= NUMBUTTONS) {
-		btnDownTime = 0;
-		btnDownStartTime = millis();
+	// check the handle
+	if (digitalRead(btnHandle) == 0) {
+		retValue = btnExecute;
 	}
-	if (!bKeyChange && lastButton != retValue) {
-		bKeyChange = true;
-		lastTime = millis();
-	}
-	if (bKeyChange && lastButton != retValue && (millis() > lastTime + BTNTIMER)) {
-		if (retValue == btnNone) {
-			//Serial.println("reset down time, btn=" + String(retValue));
-			btnDownTime = 0;
-			btnDownStartTime = millis();
-		}
-		//Serial.println("button change: " + String(retValue) + " i=" + String(i));
-		lastButton = retValue;
-	}
-	if (retValue == btnNone) {
-		btnDownTime = 0;
-		btnDownStartTime = millis();
-	}
-	//if (retValue != btnNone)
-	//    Serial.println("downtime: " + String(btnDownTime));
 	return retValue;
 }
 
+#define BTNTIMER 20
 bool CheckExecuteButton(bool start)
 {
 	static bool tries[4];
@@ -1128,10 +1022,6 @@ bool CheckExecuteButton(bool start)
 		buttonValue = touchRead(btnExecute);
 	}
 	bool retValue = false;
-	if (buttonValue < baseBtnVal[0] * TOUCHED_RATIO) {
-		retValue = true;
-		//Serial.println("button: " + String(retValue));
-	}
 	// now add to array
 	++which;
 	which = which % 4;

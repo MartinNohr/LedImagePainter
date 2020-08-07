@@ -337,8 +337,6 @@ int buttons[] = {
     btnMenu,
 };
 #define NUMBUTTONS (sizeof(buttons) / sizeof(*buttons))
-int baseBtnVal[NUMBUTTONS];
-#define TOUCHED_RATIO (0.7)
 unsigned long btnDownTime;
 unsigned long btnDownStartTime;
 
