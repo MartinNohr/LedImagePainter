@@ -17,7 +17,124 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <BLE2902.h>
+#include <ringbufcpp.h>
 #include "LedImagePainter.h"
+
+#define DHTPIN 14
+// rotary switch
+#define BTNPUSH 27
+#define BTNA 33
+#define BTNB 32
+
+#define MAX_KEY_BUF 10
+RingBufCPP<int, MAX_KEY_BUF> btnBuf;
+enum BUTTONS { BTN_UP, BTN_DOWN, BTN_SELECT, BTN_LONG, BTN_NONE };
+
+// interrupt handlers
+void IRAM_ATTR IntBtnCenter()
+{
+	static unsigned long pressedTime = 0;
+	noInterrupts();
+	bool val = digitalRead(BTNPUSH);
+	unsigned long currentTime = millis();
+	int btn;
+	if (currentTime > pressedTime + 20) {
+		if (val == true) {
+			if (currentTime > pressedTime + 750) {
+				btn = BTN_LONG;
+				btnBuf.add(btn);
+				//Serial.println("long press");
+			}
+			else {
+				btn = BTN_SELECT;
+				btnBuf.add(btn);
+				//Serial.println("press");
+			}
+		}
+		//else {
+		//	Serial.println("press");
+		//}
+		// got one, note time so we can ignore until ready again
+		pressedTime = currentTime;
+	}
+	interrupts();
+}
+
+// state table for the rotary encoder
+#define T true
+#define F false
+#define DIRECTIONS 2
+#define MAXSTATE 4
+#define CONTACTS 2
+bool stateTest[DIRECTIONS][MAXSTATE][CONTACTS] =
+{
+	{{T,F},{F,F},{F,T},{T,T}},
+	{{F,T},{F,F},{T,F},{T,T}}
+};
+#define A 0
+#define B 1
+#define ROTARY_RETRIES 10
+void IRAM_ATTR IntBtnAB()
+{
+	static bool forward;
+	static int state = 0;
+	static int tries;
+	static bool lastValA = true;
+	static bool lastValB = true;
+	noInterrupts();
+	bool valA = digitalRead(BTNA);
+	bool valB = digitalRead(BTNB);
+	//Serial.println("A:" + String(valA) + " B:" + String(valB));
+	//Serial.println("start state: " + String(state));
+	//Serial.println("forward: " + String(forward));
+	if (valA == lastValA && valB == lastValB)
+		return;
+	if (state == 0) {
+		// starting
+		// see if one of the first tests is correct, then go to state 1
+		if (stateTest[0][state][A] == valA && stateTest[0][state][B] == valB) {
+			//Serial.println("down");
+			forward = false;
+			tries = ROTARY_RETRIES;
+			++state;
+		}
+		else if (stateTest[1][state][A] == valA && stateTest[1][state][B] == valB) {
+			//Serial.println("up");
+			forward = true;
+			tries = ROTARY_RETRIES;
+			++state;
+		}
+	}
+	else {
+		// check if we can advance
+		if (stateTest[forward ? 1 : 0][state][A] == valA && stateTest[forward ? 1 : 0][state][B] == valB) {
+			tries = ROTARY_RETRIES;
+			++state;
+		}
+		else {
+			//state = 0;
+		}
+	}
+	//Serial.println("end state: " + String(state));
+	//Serial.println("forward: " + String(forward));
+	if (state == MAXSTATE) {
+		// we're done
+		//Serial.println(String(forward ? "+" : "-"));
+		state = 0;
+		int btn = forward ? BTN_UP : BTN_DOWN;
+		btnBuf.add(btn);
+	}
+	else if ((tries-- <= 0 && state > 0) || (valA == true && valB == true)) {
+		// something failed, start over
+		//Serial.println("failed");
+		//int btn = BTN_NONE;
+		//btnBuf.add(btn);
+		state = 0;
+	}
+	lastValA = valA;
+	lastValB = valB;
+	interrupts();
+}
 
 class MyServerCallbacks : public BLEServerCallbacks {
 	void onConnect(BLEServer* pServer) {
@@ -68,7 +185,7 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
 
 				// Test if parsing succeeds.
 				if (error) {
-					Serial.print(F("deserializeJson() failed: "));
+					Serial.print("deserializeJson() failed: ");
 					Serial.println(error.c_str());
 					return;
 				}
@@ -2592,18 +2709,18 @@ void LoadAssociatedFile(MenuItem* menu)
 	String name = FileNames[CurrentFileIndex];
 	name = MakeLWCFilename(name, true);
 	if (ProcessConfigFile(name)) {
-		WriteMessage(String(F("Processed:\n")) + name);
+		WriteMessage(String("Processed:\n") + name);
 	}
 	else {
-		WriteMessage(String(F("Failed reading:\n")) + name, true);
+		WriteMessage(String("Failed reading:\n") + name, true);
 	}
 }
 
 void LoadStartFile(MenuItem* menu)
 {
-	String name = F("START.LWC");
+	String name = "START.LWC";
 	if (ProcessConfigFile(name)) {
-		WriteMessage(String(F("Processed:\n")) + name);
+		WriteMessage(String("Processed:\n") + name);
 	}
 	else {
 		WriteMessage("Failed reading:\n" + name, true);
