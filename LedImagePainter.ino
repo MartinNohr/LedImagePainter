@@ -27,7 +27,7 @@
 
 #define MAX_KEY_BUF 10
 RingBufCPP<int, MAX_KEY_BUF> btnBuf;
-enum BUTTONS { BTN_UP, BTN_DOWN, BTN_SELECT, BTN_LONG, BTN_NONE };
+enum BUTTONS { BTN_RIGHT, BTN_LEFT, BTN_SELECT, BTN_LONG, BTN_NONE };
 
 // interrupt handlers
 void IRAM_ATTR IntBtnCenter()
@@ -120,7 +120,7 @@ void IRAM_ATTR IntBtnAB()
 		// we're done
 		//Serial.println(String(forward ? "+" : "-"));
 		state = 0;
-		int btn = forward ? BTN_UP : BTN_DOWN;
+		int btn = forward ? BTN_RIGHT : BTN_LEFT;
 		//Serial.println("add: " + String(btn));
 		btnBuf.add(btn);
 	}
@@ -278,7 +278,6 @@ void TouchISR(void* arg)
 
 void setup()
 {
-	pinMode(btnHandle, INPUT_PULLUP);
 	pinMode(LED, OUTPUT);
 	digitalWrite(LED, HIGH);
 	pinMode(BTNPUSH, INPUT_PULLUP);
@@ -302,7 +301,7 @@ void setup()
 	OLED->setFont(ArialMT_Plain_10);
 	charHeight = 13;
 	EEPROM.begin(1024);
-	if (!SaveSettings(false, true) || digitalRead(btnHandle) == LOW) {
+	if (!SaveSettings(false, true) || digitalRead(BTNPUSH) == LOW) {
 		SaveSettings(true, bAutoLoadSettings);
 	}
 	setupSDcard();
@@ -573,7 +572,7 @@ bool RunMenus(int button)
 			continue;
 		}
 		//Serial.println("menu button: " + String(button));
-		if ((button == btnRight || button == btnLeft) && menuix == activeMenuLine) {
+		if (button == BTN_SELECT && menuix == activeMenuLine) {
 			//Serial.println("got match " + String(menuix) + " " + String(activeMenuLine));
 			gotmatch = true;
 			//Serial.println("clicked on menu");
@@ -803,49 +802,31 @@ void ToggleBool(MenuItem* menu)
 // get integer values
 void GetIntegerValue(MenuItem* menu)
 {
+	int stepSize = 1;
 	//Serial.println("int: " + String(menu->text) + String(*(int*)menu->value));
 	char line[50];
-	int button;
+	int button = BTN_NONE;
 	bool done = false;
 	OLED->clear();
 	DisplayLine(1, "Range: " + String(menu->min) + " to " + String(menu->max));
-	//DisplayLine(2, "0 1 2 3 4");
-	//DisplayLine(3, "5 6 7 8 9");
-	//DisplayLine(4, "<-");
-	DisplayLine(2, "LR change by 1");
-	DisplayLine(3, "UD change by 10");
-	DisplayLine(4, "Long press by 10/100");
-	ReadButton(true);
-	while (!done) {
-		button = ReadButton(false);
-		int val = *(int*)menu->value;
-		if (menu->decimals == 0) {
-			sprintf(line, menu->text, val);
-		}
-		else {
-			sprintf(line, menu->text, val / 10, val % 10);
-		}
-		DisplayLine(0, line);
+	DisplayLine(3, "Long Press to Accept");
+	do {
 		//Serial.println("button: " + String(button));
 		switch (button) {
-		case btnLeft:
-			*(int*)menu->value -= btnDownTime > 1000 ? 10 : 1;
+		case BTN_LEFT:
+			*(int*)menu->value -= stepSize;
 			break;
-		case btnDown:
-			*(int*)menu->value -= btnDownTime > 1000 ? 100 : 10;
+		case BTN_RIGHT:
+			*(int*)menu->value += stepSize;
 			break;
-		case btnRight:
-			*(int*)menu->value += btnDownTime > 1000 ? 10 : 1;
+		case BTN_SELECT:
+			stepSize *= 10;
+			if (stepSize > 100)
+				stepSize = 1;
 			break;
-		case btnUp:
-			*(int*)menu->value += btnDownTime > 1000 ? 100 : 10;
-			break;
-		case btnMenu:
+		case BTN_LONG:
 			done = true;
 			break;
-		case btnExecute:
-			done = true;
-			menuLevel = 0;
 		}
 		// make sure not too small
 		if (*(int*)menu->value < menu->min)
@@ -853,8 +834,18 @@ void GetIntegerValue(MenuItem* menu)
 		// make sure not too big
 		if (*(int*)menu->value > menu->max)
 			*(int*)menu->value = menu->max;
-		usleep(250000);
-	}
+		if (menu->decimals == 0) {
+			sprintf(line, menu->text, *(int*)menu->value);
+		}
+		else {
+			sprintf(line, menu->text, *(int*)menu->value / 10, *(int*)menu->value % 10);
+		}
+		DisplayLine(0, line);
+		DisplayLine(4, "step: " + String(stepSize) + " (Click +)");
+		while (!done && (button = ReadButton(false)) == BTN_NONE) {
+			delayMicroseconds(1000);
+		}
+	} while (!done);
 }
 
 // handle the settings menus
@@ -868,42 +859,38 @@ bool HandleMenus()
 	bool didsomething = true;
 	int button = ReadButton(false);
 	switch (button) {
-	case btnRight:
-	case btnLeft:
+	case BTN_SELECT:
 		RunMenus(button);
 		bMenuChanged = true;
 		break;
-	case btnDown:
+	case BTN_RIGHT:
 		++activeMenuLine;
 		if (activeMenuLine >= activeMenuCount)
 			activeMenuLine = 0;
 		bMenuChanged = true;
 		break;
-	case btnUp:
+	case BTN_LEFT:
 		--activeMenuLine;
 		if (activeMenuLine < 0)
 			activeMenuLine = activeMenuCount - 1;
 		bMenuChanged = true;
 		break;
-		//case btnShowFiles:
-		//	break;
-	case btnMenu:
-		if (menuLevel > 0) {
-			--menuLevel;
-			activeMenuLine = menuSavedLevel[menuLevel];
-		}
-		else {
-			OLED->clear();
-			bSettingsMode = false;
-			DisplayCurrentFile();
-		}
-		bMenuChanged = true;
-		break;
-	case btnExecute:
+	//case BTN_HANDLE:
+	case BTN_LONG:
 		OLED->clear();
-		//menuLevel = 0;
 		bSettingsMode = false;
 		DisplayCurrentFile();
+		bMenuChanged = true;
+		break;
+		//if (menuLevel > 0) {
+		//	--menuLevel;
+		//	activeMenuLine = menuSavedLevel[menuLevel];
+		//}
+		//else {
+		//	OLED->clear();
+		//	bSettingsMode = false;
+		//	DisplayCurrentFile();
+		//}
 		bMenuChanged = true;
 		break;
 	default:
@@ -920,18 +907,16 @@ bool HandleRunMode()
 	//DisplayLine(2, "C - select menu/return");
 	//DisplayLine(3, "LRUD - select/change");
 	switch (ReadButton(false)) {
-	case btnExecute:
+	case BTN_SELECT:
 		ProcessFileOrTest();
 		break;
-	case btnDown:
-	case btnRight:
+	case BTN_RIGHT:
 		++CurrentFileIndex;
 		if (CurrentFileIndex >= NumberOfFiles)
 			CurrentFileIndex = 0;
 		DisplayCurrentFile();
 		break;
-	case btnUp:
-	case btnLeft:
+	case BTN_LEFT:
 		if (CurrentFileIndex > 0) {
 			--CurrentFileIndex;
 		}
@@ -945,7 +930,7 @@ bool HandleRunMode()
 		//	GetFileNamesFromSD(currentFolder);
 		//	DisplayCurrentFile();
 		//	break;
-	case btnMenu:
+	case BTN_LONG:
 		OLED->clear();
 		bSettingsMode = true;
 		break;
@@ -968,77 +953,29 @@ int ReadButton(bool wait)
 		stmp.toUpperCase();
 		sBLECommand = "";
 		if (stmp == "RUN") {
-			return btnExecute;
+			return BTN_SELECT;
 		}
 		if (stmp == "RIGHT") {
-			return btnRight;
+			return BTN_RIGHT;
 		}
 		if (stmp == "LEFT") {
-			return btnLeft;
+			return BTN_LEFT;
 		}
 	}
-	if (!btnBuf.isEmpty()) {
-		int btn;
-		btnBuf.pull(&btn);
-		//Serial.println("button: " + String(btn));
-		switch (btn) {
-		case BTN_SELECT:
-			retValue = btnExecute;
-			break;
-		case BTN_UP:
-			retValue = btnRight;
-			break;
-		case BTN_DOWN:
-			retValue = btnLeft;
-			break;
-		case BTN_LONG:
-			retValue = btnMenu;
-			break;
-		}
-	}
-	// check the handle
-	if (digitalRead(btnHandle) == 0) {
-		retValue = btnExecute;
-	}
+	// pull leaves retValue alone if queue is empty
+	btnBuf.pull(&retValue);
 	return retValue;
 }
 
-#define BTNTIMER 20
 bool CheckExecuteButton(bool start)
 {
-	static bool tries[4];
-	static int which = 0;
-	static unsigned lastTime;
-	static bool lastValue;
-	int buttonValue;
-	if (start) {
-		memset(tries, 1, sizeof(tries));
-		return lastValue = true;
+	int btn;
+	if (btnBuf.pull(&btn)) {
+		if (btn == BTN_SELECT) {
+			return true;
+		}
 	}
-	if (lastTime != 0 && millis() < lastTime + BTNTIMER) {
-		return lastValue;
-	}
-	lastTime = millis();
-	if (digitalRead(btnHandle) == 0) {
-		buttonValue = 1;
-	}
-	else {
-		buttonValue = touchRead(btnExecute);
-	}
-	bool retValue = false;
-	// now add to array
-	++which;
-	which = which % 4;
-	tries[which] = retValue;
-	//Serial.println("which: " + String(which));
-	if (tries[0] && tries[1] && tries[2] && tries[3]) {
-		lastValue = true;
-	}
-	else if (!tries[0] && !tries[1] && !tries[2] && !tries[3]) {
-		lastValue = false;
-	}
-	//Serial.println("lastV: " + String(lastValue));
-	return lastValue;
+	return false;
 }
 
 // save or restore the display
