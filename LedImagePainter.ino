@@ -1889,7 +1889,7 @@ void ProcessFileOrTest()
 			if (bChainFiles && !bShowBuiltInTests) {
 				line = "Files Left: " + String(chainCount);
 				if (chainRepeatCount > 0) {
-					line += "Chain Repeats: " + String(chainRepeatCount);
+					line += "Chain Repeats Left: " + String(chainRepeatCount);
 				}
 				DisplayLine(3, line);
 				line = "";
@@ -1900,7 +1900,7 @@ void ProcessFileOrTest()
 				if (!bShowBuiltInTests)
 					ShowProgressBar(0);
 				if (repeatCount > 1) {
-					line = "File Repeats: " + String(nRepeatsLeft - 1);
+					line = "Repeats Left: " + String(nRepeatsLeft - 1);
 				}
 				DisplayLine(2, line);
 				if (bShowBuiltInTests) {
@@ -2267,18 +2267,29 @@ bool IsFolder(int index)
 // show the current file
 void DisplayCurrentFile(bool path)
 {
-	String name = FileNames[CurrentFileIndex];
+	//String name = FileNames[CurrentFileIndex];
 	//String upper = name;
 	//upper.toUpperCase();
  //   if (upper.endsWith(".BMP"))
  //       name = name.substring(0, name.length() - 4);
-	if (bShowBuiltInTests)
-		DisplayLine(0, name);
+	if (bShowBuiltInTests) {
+		DisplayLine(0, FileNames[CurrentFileIndex]);
+	}
 	else {
-		if (bSdCardValid)
-			DisplayLine(0, (path ? currentFolder : "") + name + (bMirrorPlayImage ? "><" : ""));
-		else
+		if (bSdCardValid) {
+			DisplayLine(0, (path ? currentFolder : "") + FileNames[CurrentFileIndex] + (bMirrorPlayImage ? "><" : ""));
+			//if (!bIsRunning) {
+			//	for (int ix = 0; ix < 4; ++ix) {
+			//		if (ix + CurrentFileIndex >= NumberOfFiles - 1) {
+			//			break;
+			//		}
+			//		DisplayLine(ix, FileNames[CurrentFileIndex + ix]);
+			//	}
+			//}
+		}
+		else {
 			DisplayLine(0, "No SD Card or Files");
+		}
 	}
 }
 
