@@ -1934,7 +1934,7 @@ void ProcessFileOrTest()
 						// start timer
 						nTimerSeconds = repeatDelay;
 						while (nTimerSeconds > 0) {
-							line = "Repeat Time Left: " + String(nTimerSeconds / 10) + "." + String(nTimerSeconds % 10);
+							line = "Repeat Delay Left: " + String(nTimerSeconds / 10) + "." + String(nTimerSeconds % 10);
 							DisplayLine(2, line);
 							line = "";
 							if (CheckCancel())
