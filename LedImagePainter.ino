@@ -303,7 +303,7 @@ void setup()
 	OLED->setFont(ArialMT_Plain_24);
 	OLED->drawString(2, 2, "Light Wand");
 	OLED->setFont(ArialMT_Plain_16);
-	OLED->drawString(2, 32, "     Version 1.1");
+	OLED->drawString(2, 32, "     Version 2.0");
 	OLED->display();
 	OLED->setFont(ArialMT_Plain_10);
 	charHeight = 13;
