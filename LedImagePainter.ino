@@ -39,20 +39,23 @@ void IRAM_ATTR IntBtnCenter()
 	int btn;
 	if (currentTime > pressedTime + 20) {
 		if (val == true) {
-			if (currentTime > pressedTime + 750) {
-				btn = BTN_LONG;
-				btnBuf.add(btn);
-				//Serial.println("long press");
+			if (bLongPress) {
+				// the key has already been handled
+				bLongPress = false;
 			}
 			else {
+				// cancel long press timer
+				esp_timer_stop(oneshot_LONGPRESS_timer);
 				btn = BTN_SELECT;
 				btnBuf.add(btn);
-				//Serial.println("press");
 			}
+			//Serial.println("press");
 		}
-		//else {
-		//	Serial.println("press");
-		//}
+		else {
+			//Serial.println("button down");
+			// 1/2 second for long press
+			esp_timer_start_once(oneshot_LONGPRESS_timer, 500 * 1000);
+		}
 		// got one, note time so we can ignore until ready again
 		pressedTime = currentTime;
 	}
@@ -255,7 +258,7 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
 
 //static const char* TAG = "lightwand";
 //esp_timer_cb_t oneshot_timer_callback(void* arg)
-void oneshot_LED_timer_callback(void* arg)
+void IRAM_ATTR oneshot_LED_timer_callback(void* arg)
 {
 	bStripWaiting = false;
 	//int64_t time_since_boot = esp_timer_get_time();
@@ -263,17 +266,21 @@ void oneshot_LED_timer_callback(void* arg)
 	//ESP_LOGI(TAG, "One-shot timer called, time since boot: %lld us", time_since_boot);
 }
 
-void oneshot_BTN_timer_callback(void* arg)
+void IRAM_ATTR oneshot_BTN_timer_callback(void* arg)
 {
 	bButtonWait = false;
-	//int64_t time_since_boot = esp_timer_get_time();
-	//Serial.println("in isr");
-	//ESP_LOGI(TAG, "One-shot timer called, time since boot: %lld us", time_since_boot);
 }
 
-void TouchISR(void* arg)
+void IRAM_ATTR oneshot_LONGPRESS_timer_callback(void* arg)
 {
-	Serial.println("in isr");
+	noInterrupts();
+	// if the button is down, it must be a long press
+	if (!digitalRead(BTNPUSH)) {
+		bLongPress = true;
+		int btn = BTN_LONG;
+		btnBuf.add(btn);
+	}
+	interrupts();
 }
 
 void setup()
@@ -376,7 +383,7 @@ void setup()
 	oneshot_LED_timer_args = {
 			oneshot_LED_timer_callback,
 			/* argument specified here will be passed to timer callback function */
-			NULL,
+			(void*)TID_LED,
 			ESP_TIMER_TASK,
 			"one-shotLED"
 	};
@@ -384,11 +391,21 @@ void setup()
 	oneshot_BTN_timer_args = {
 			oneshot_BTN_timer_callback,
 			/* argument specified here will be passed to timer callback function */
-			NULL,
+			(void*)TID_BTN,
 			ESP_TIMER_TASK,
 			"one-shotBTN"
 	};
 	esp_timer_create(&oneshot_BTN_timer_args, &oneshot_BTN_timer);
+	// the long press timer
+	oneshot_LONGPRESS_timer_args = {
+			oneshot_LONGPRESS_timer_callback,
+			/* argument specified here will be passed to timer callback function */
+			(void*)TID_LONGPRESS,
+			ESP_TIMER_TASK,
+			"one-shotLONGPRESS"
+	};
+	esp_timer_create(&oneshot_LONGPRESS_timer_args, &oneshot_LONGPRESS_timer);
+
 	BLEDevice::init("MN LED Image Painter");
 	BLEServer* pServer = BLEDevice::createServer();
 	pServer->setCallbacks(new MyServerCallbacks());
@@ -613,10 +630,6 @@ bool RunMenus(int button)
 					--menuLevel;
 					activeMenuLine = menuSavedLevel[menuLevel];
 					bMenuChanged = true;
-					if (bLongPress) {
-						bLongPress = false;
-						menuLevel = 0;
-					}
 				}
 				break;
 			case eReboot:
@@ -632,10 +645,6 @@ bool RunMenus(int button)
 		bMenuChanged = true;
 		--menuLevel;
 		activeMenuLine = menuSavedLevel[menuLevel];
-		if (bLongPress) {
-			bLongPress = false;
-			menuLevel = 0;
-		}
 	}
 }
 

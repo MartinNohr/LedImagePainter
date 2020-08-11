@@ -101,10 +101,11 @@ bool bReverseImage = false;               // read the file lines in reverse
 bool bMirrorPlayImage = false;            // play the file twice, 2nd time reversed
 bool bChainFiles = false;                 // set to run all the files from current to the last one in the current folder
 int nChainRepeats = 1;                    // how many times to repeat the chain
-bool bLongPress = false;                  // set when long press
 bool bShowProgress = true;                // show the progress bar
 bool bScaleHeight = false;                // scale the Y values to fit the number of pixels
 bool bCancelRun = false;                  // set to cancel a running job
+// timer argument vale
+enum TIMER_ID { TID_LED, TID_BTN, TID_LONGPRESS };
 volatile int nTimerSeconds;
 // set this to the delay time while we get the next frame, also used for delay timers
 volatile bool bStripWaiting = false;
@@ -114,6 +115,10 @@ esp_timer_create_args_t oneshot_LED_timer_args;
 volatile bool bButtonWait = false;
 esp_timer_handle_t oneshot_BTN_timer;
 esp_timer_create_args_t oneshot_BTN_timer_args;
+// long press time
+volatile bool bLongPress = false;
+esp_timer_handle_t oneshot_LONGPRESS_timer;
+esp_timer_create_args_t oneshot_LONGPRESS_timer_args;
 
 SDFile dataFile;
 // system state, idle or running
