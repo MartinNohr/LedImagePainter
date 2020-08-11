@@ -323,14 +323,14 @@ MenuItem BouncingBallsMenu[] = {
     {eClear,false},
     {eTextInt,false,"Ball Count (1-8): %d",GetIntegerValue,&nBouncingBallsCount,1,8},
     {eTextInt,false,"Decay (500-10000): %d",GetIntegerValue,&nBouncingBallsDecay,500,10000},
-    {eTextInt,false,"Runtime (seconds): %d",GetIntegerValue,&nBouncingBallsRuntime,1,10000},
+    {eTextInt,false,"Runtime (seconds): %d",GetIntegerValue,&nBouncingBallsRuntime,1,120},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
 };
 MenuItem CheckerBoardMenu[] = {
     {eClear,false},
-    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nCheckerBoardRuntime,1,10000},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nCheckerBoardRuntime,1,120},
     {eTextInt,false,"Hold Frames: %d",GetIntegerValue,&nCheckerboardHoldframes,1,100},
     {eTextInt,false,"Black Width (pixels): %d",GetIntegerValue,&nCheckboardBlackWidth,1,288},
     {eTextInt,false,"White Width (pixels): %d",GetIntegerValue,&nCheckboardWhiteWidth,1,288},
@@ -343,7 +343,7 @@ MenuItem CheckerBoardMenu[] = {
 MenuItem RainbowMenu[] = {
     {eClear,false},
     {eTextInt,false,"Pattern Count: %d",GetIntegerValue,&nRainbowRepeats,1,100},
-    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nRainbowRuntime,1,10000},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nRainbowRuntime,1,120},
     {eTextInt,false,"Fade Time (S): %d.%d",GetIntegerValue,&nRainbowFadeTime,0,100,1},
     {eBool,false,"Cycle Hue: %s",ToggleBool,&bRainbowCycleHue,0,0,0,"Yes","No"},
     {eBool,false,"Add Glitter: %s",ToggleBool,&bRainbowAddGlitter,0,0,0,"Yes","No"},
@@ -353,7 +353,7 @@ MenuItem RainbowMenu[] = {
 };
 MenuItem ConfettiMenu[] = {
     {eClear,false},
-    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nConfettiRuntime,1,10000},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nConfettiRuntime,1,120},
     {eBool,false,"Cycle Hue: %s",ToggleBool,&bConfettiCycleHue,0,0,0,"Yes","No"},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
@@ -361,14 +361,14 @@ MenuItem ConfettiMenu[] = {
 };
 MenuItem JuggleMenu[] = {
     {eClear,false},
-    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nJuggleRuntime,1,10000},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nJuggleRuntime,1,120},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
 };
 MenuItem TwinkleMenu[] = {
     {eClear,false},
-    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nTwinkleRuntime,1,10000},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nTwinkleRuntime,1,120},
     {eBool,false,"One or Many: %s",ToggleBool,&bTwinkleOnlyOne,0,0,0,"One","Many"},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
@@ -376,7 +376,7 @@ MenuItem TwinkleMenu[] = {
 };
 MenuItem SineMenu[] = {
     {eClear,false},
-    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nSineRuntime,1,10000},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nSineRuntime,1,120},
     {eTextInt,false,"Starting Hue: %d",GetIntegerValue,&nSineStartingHue,0,255},
     {eBool,false,"Cycle Hue: %s",ToggleBool,&bSineCycleHue,0,0,0,"Yes","No"},
     {eTextInt,false,"Speed: %d",GetIntegerValue,&nSineSpeed,1,500},
@@ -386,7 +386,7 @@ MenuItem SineMenu[] = {
 };
 MenuItem BpmMenu[] = {
     {eClear,false},
-    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nBpmRuntime,1,10000},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nBpmRuntime,1,120},
     {eTextInt,false,"Beats per minute: %d",GetIntegerValue,&nBpmBeatsPerMinute,1,300},
     {eBool,false,"Cycle Hue: %s",ToggleBool,&bBpmCycleHue,0,0,0,"Yes","No"},
     {eExit,false,"Previous Menu"},
@@ -424,7 +424,7 @@ MenuItem DisplayAllColorMenu[] = {
 };
 MenuItem RandomBarsMenu[] = {
     {eClear,false},
-    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nRandomBarsRuntime,1,10000},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nRandomBarsRuntime,1,120},
     {eTextInt,false,"Hold Frames: %d",GetIntegerValue,&nRandomBarsHoldframes,1,100},
     {eBool,false,"Alternating Blacks: %s",ToggleBool,&bRandomBarsBlacks,0,0,0,"Yes","No"},
     {eExit,false,"Previous Menu"},
@@ -433,8 +433,8 @@ MenuItem RandomBarsMenu[] = {
 };
 MenuItem WandMenu[] = {
     {eClear,false},
-    {eTextInt,false,"Frame Hold (mS): %d",GetIntegerValue,&frameHold,0,10000},
-    {eTextInt,false,"Start Delay (S): %d.%d",GetIntegerValue,&startDelay,0,10000,1},
+    {eTextInt,false,"Frame Hold (mS): %d",GetIntegerValue,&frameHold,0,100},
+    {eTextInt,false,"Start Delay (S): %d.%d",GetIntegerValue,&startDelay,0,100,1},
     {eTextInt,false,"Wand Brightness: %d%%",GetIntegerValue,&nStripBrightness,1,100},
     {eBool,false,"Two LED strips: %s",ToggleBool,&bSecondStrip,0,0,0,"Yes","No"},
     {eBool,false,"Scale Height to Fit: %s",ToggleBool,&bScaleHeight,0,0,0,"On","Off"},
@@ -468,12 +468,12 @@ MenuItem StartFileMenu[] = {
 };
 MenuItem RepeatMenu[] = {
     {eClear,false},
-    {eTextInt,false,"Repeat Count: %d",GetIntegerValue,&repeatCount,1,1000},
+    {eTextInt,false,"Repeat Count: %d",GetIntegerValue,&repeatCount,1,100},
     {eTextInt,false,"Repeat Delay (S): %d.%d",GetIntegerValue,&repeatDelay,0,100,1},
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,false},
         {eBool,false,"Chain Files: %s",ToggleBool,&bChainFiles,0,0,0,"On","Off"},
         {eIfEqual,false,"",NULL,&bChainFiles,true},
-            {eTextInt,false,"Chain Repeats: %d",GetIntegerValue,&nChainRepeats,1,1000},
+            {eTextInt,false,"Chain Repeats: %d",GetIntegerValue,&nChainRepeats,1,100},
         {eEndif},
     {eEndif},
     {eExit,false,"Previous Menu"},

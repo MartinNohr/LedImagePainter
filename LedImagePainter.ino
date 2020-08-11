@@ -828,12 +828,14 @@ void GetIntegerValue(MenuItem* menu)
 			done = true;
 			break;
 		}
-		// make sure not too small
-		if (*(int*)menu->value < menu->min)
-			*(int*)menu->value = menu->min;
-		// make sure not too big
-		if (*(int*)menu->value > menu->max)
-			*(int*)menu->value = menu->max;
+		// make sure within limits
+		*(int*)menu->value = constrain(*(int*)menu->value, menu->min, menu->max);
+		// show slider bar
+		OLEDDISPLAY_COLOR oldColor = OLED->getColor();
+		OLED->setColor(OLEDDISPLAY_COLOR::BLACK);
+		OLED->fillRect(0, 30, OLED->width() - 1, 6);
+		OLED->setColor(oldColor);
+		OLED->drawProgressBar(0, 30, OLED->width() - 1, 6, map(*(int*)menu->value, menu->min, menu->max, 0, 100));
 		if (menu->decimals == 0) {
 			sprintf(line, menu->text, *(int*)menu->value);
 		}
