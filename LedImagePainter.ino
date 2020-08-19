@@ -24,6 +24,7 @@
 #define BTNPUSH 27
 #define BTNA 12
 #define BTNB 14
+#define FRAMEBUTTON 26
 
 #define MAX_KEY_BUF 10
 RingBufCPP<int, MAX_KEY_BUF> btnBuf;
@@ -290,6 +291,7 @@ void setup()
 	pinMode(BTNPUSH, INPUT_PULLUP);
 	pinMode(BTNA, INPUT_PULLUP);
 	pinMode(BTNB, INPUT_PULLUP);
+	pinMode(FRAMEBUTTON, INPUT_PULLUP);
 	attachInterrupt(BTNPUSH, IntBtnCenter, CHANGE);
 	attachInterrupt(BTNA, IntBtnAB, CHANGE);
 	attachInterrupt(BTNB, IntBtnAB, CHANGE);
@@ -303,7 +305,7 @@ void setup()
 	OLED->setFont(ArialMT_Plain_24);
 	OLED->drawString(2, 2, "Light Wand");
 	OLED->setFont(ArialMT_Plain_16);
-	OLED->drawString(2, 32, "     Version 2.0");
+	OLED->drawString(2, 32, "     Version 2.01");
 	OLED->display();
 	OLED->setFont(ArialMT_Plain_10);
 	charHeight = 13;
@@ -549,6 +551,7 @@ void UpdateBLE(bool bProgressOnly)
 			wsdoc["secondstrip"] = bSecondStrip;
 			wsdoc["bright"] = nStripBrightness;
 			wsdoc["framehold"] = frameHold;
+			wsdoc["framebutton"] = nFramePulseCount;
 			wsdoc["startdelay"] = startDelay;
 			wsdoc["repeatdelay"] = repeatDelay;
 			wsdoc["repeatcount"] = repeatCount;
@@ -2154,6 +2157,23 @@ void ReadAndDisplayFile(bool doingFirstHalf) {
 		// check keys
 		if (CheckCancel())
 			break;
+		// check if frame advance button requested
+		if (nFramePulseCount) {
+			for (int ix = nFramePulseCount; ix; --ix) {
+				// wait for press
+				while (digitalRead(FRAMEBUTTON)) {
+					if (CheckCancel())
+						break;
+					delay(10);
+				}
+				// wait for release
+				while (!digitalRead(FRAMEBUTTON)) {
+					if (CheckCancel())
+						break;
+					delay(10);
+				}
+			}
+		}
 	}
 	// all done
 	readByte(true);
