@@ -535,7 +535,7 @@ MenuItem MainMenu[] = {
         {eMenu,false,"LWC File Operations",NULL,StartFileMenu},
     {eEndif},
     {eMenu,false,"Default Settings",NULL,EepromMenu},
-    {eBool,false,"BlueTooth Link",ToggleBool,&bEnableBLE,0,0,0,"On","Off"},
+    {eBool,false,"BlueTooth Link: %s",ToggleBool,&bEnableBLE,0,0,0,"On","Off"},
     {eReboot,false,"Reboot"},
     //{eMenu,false,"Other Settings",NULL,OtherSettingsMenu},
     // make sure this one is last
