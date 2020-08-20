@@ -81,7 +81,13 @@ int nRepeatsLeft;                         // countdown while repeating, used for
 int g = 0;                                // Variable for the Green Value
 int b = 0;                                // Variable for the Blue Value
 int r = 0;                                // Variable for the Red Value
-CRGB whiteBalance = CRGB::White;
+//CRGB whiteBalance = CRGB::White;
+// white balance values, really only 8 bits, but menus need ints
+struct {
+    int r;
+    int g;
+    int b;
+} whiteBalance = { 255,255,255 };
 // wand settings
 int charHeight = 19;
 #define NEXT_FOLDER_CHAR '~'
@@ -193,9 +199,14 @@ void EraseAssociatedFile(MenuItem* menu);
 void SaveAssociatedFile(MenuItem* menu);
 void LoadAssociatedFile(MenuItem* menu);
 void LoadStartFile(MenuItem* menu);
-bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile);
 void SaveEepromSettings(MenuItem* menu);
 void LoadEepromSettings(MenuItem* menu);
+void ShowWhiteBalance(MenuItem* menu);
+void GetIntegerValue(MenuItem*);
+void ToggleBool(MenuItem*);
+void ToggleFilesBuiltin(MenuItem* menu);
+
+bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile);
 
 // builtins
 // built-in "files"
@@ -322,10 +333,6 @@ const uint8_t gammaB[] = {
   139,141,143,144,146,148,150,152,153,155,157,159,161,163,165,167,
   169,171,173,175,177,179,181,183,185,187,189,191,193,196,198,200 };
 
-void GetIntegerValue(MenuItem*);
-void ToggleBool(MenuItem*);
-void ToggleFilesBuiltin(MenuItem* menu);
-
 MenuItem BouncingBallsMenu[] = {
     {eClear,false},
     {eTextInt,false,"Ball Count (1-8): %d",GetIntegerValue,&nBouncingBallsCount,1,8},
@@ -438,6 +445,17 @@ MenuItem RandomBarsMenu[] = {
     // make sure this one is last
     {eTerminate}
 };
+MenuItem WandColorMenu[] = {
+    {eClear,false},
+    {eBool,false,"Gamma Correction: %s",ToggleBool,&bGammaCorrection,0,0,0,"On","Off"},
+    {eTextInt,false,"White Balance R: %3d",GetIntegerValue,&whiteBalance.r,0,255},
+    {eTextInt,false,"White Balance G: %3d",GetIntegerValue,&whiteBalance.g,0,255},
+    {eTextInt,false,"White Balance B: %3d",GetIntegerValue,&whiteBalance.b,0,255},
+    {eText,false,"Show White Balance",ShowWhiteBalance},
+    {eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
 MenuItem WandMenu[] = {
     {eClear,false},
     {eTextInt,false,"Frame Hold (mS): %d",GetIntegerValue,&frameHold,0,100},
@@ -448,10 +466,9 @@ MenuItem WandMenu[] = {
     {eBool,false,"Scale Height to Fit: %s",ToggleBool,&bScaleHeight,0,0,0,"On","Off"},
     {eBool,false,"Reverse Image: %s",ToggleBool,&bReverseImage,0,0,0,"Yes","No"},
     {eBool,false,"Play Mirror Image: %s",ToggleBool,&bMirrorPlayImage,0,0,0,"Yes","No"},
-    //{eMenu,false,"Color Settings",NULL,WandColorMenu},
     {eBool,false,"Show Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
     {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100},
-    {eBool,false,"Gamma Correction: %s",ToggleBool,&bGammaCorrection,0,0,0,"On","Off"},
+    {eMenu,false,"Color Settings",NULL,WandColorMenu},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}

@@ -34,11 +34,10 @@ enum BUTTONS { BTN_RIGHT, BTN_LEFT, BTN_SELECT, BTN_LONG, BTN_NONE };
 void IRAM_ATTR IntBtnCenter()
 {
 	static unsigned long pressedTime = 0;
-	noInterrupts();
 	bool val = digitalRead(BTNPUSH);
 	unsigned long currentTime = millis();
 	int btn;
-	if (currentTime > pressedTime + 20) {
+	if (currentTime > pressedTime + 10) {
 		if (val == true) {
 			if (bLongPress) {
 				// the key has already been handled
@@ -60,7 +59,6 @@ void IRAM_ATTR IntBtnCenter()
 		// got one, note time so we can ignore until ready again
 		pressedTime = currentTime;
 	}
-	interrupts();
 }
 
 // state table for the rotary encoder
@@ -84,7 +82,6 @@ void IRAM_ATTR IntBtnAB()
 	static int tries;
 	static bool lastValA = true;
 	static bool lastValB = true;
-	noInterrupts();
 	bool valA = digitalRead(BTNA);
 	bool valB = digitalRead(BTNB);
 	Serial.println("A:" + String(valA) + " B:" + String(valB));
@@ -137,7 +134,6 @@ void IRAM_ATTR IntBtnAB()
 	}
 	lastValA = valA;
 	lastValB = valB;
-	interrupts();
 }
 
 class MyServerCallbacks : public BLEServerCallbacks {
@@ -274,14 +270,12 @@ void IRAM_ATTR oneshot_BTN_timer_callback(void* arg)
 
 void IRAM_ATTR oneshot_LONGPRESS_timer_callback(void* arg)
 {
-	noInterrupts();
 	// if the button is down, it must be a long press
 	if (!digitalRead(BTNPUSH)) {
 		bLongPress = true;
 		int btn = BTN_LONG;
 		btnBuf.add(btn);
 	}
-	interrupts();
 }
 
 void setup()
@@ -328,7 +322,8 @@ void setup()
 	//if (bSecondStrip)
 	// create the second led controller
 	FastLED.addLeds<NEOPIXEL, DATA_PIN2>(leds, NUM_LEDS, NUM_LEDS);
-	FastLED.setTemperature(whiteBalance);
+	//FastLED.setTemperature(whiteBalance);
+	FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, whiteBalance.b));
 	FastLED.setBrightness(map(nStripBrightness, 0, 100, 1, 255));
 	// Turn the LED on, then pause
 	leds[0] = leds[1] = CRGB::Red;
@@ -1579,7 +1574,6 @@ void OppositeRunningDots()
 			delay(frameHold);
 		}
 	}
-	FastLED.clear();
 }
 
 // show all in a color
@@ -1895,6 +1889,7 @@ void ProcessFileOrTest()
 		chainCount = 1;
 		chainRepeatCount = 1;
 	}
+	FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, whiteBalance.b));
 	FastLED.setBrightness(map(nStripBrightness, 0, 100, 1, 255));
 	line = "";
 	while (chainRepeatCount-- > 0) {
@@ -1984,6 +1979,10 @@ void ProcessFileOrTest()
 	DisplayCurrentFile();
 	bIsRunning = false;
 	nProgress = 0;
+	// clear buttons
+	int btn;
+	while (btnBuf.pull(&btn))
+		;
 }
 
 void SendFile(String Filename) {
@@ -2726,4 +2725,19 @@ void SaveEepromSettings(MenuItem* menu)
 void LoadEepromSettings(MenuItem* menu)
 {
 	SaveSettings(false, true);
+}
+
+// show some LED's with and without white balance adjust
+void ShowWhiteBalance(MenuItem* menu)
+{
+	for (int ix = 0; ix < 32; ++ix) {
+		leds[LEDIX(ix)] = CRGB(128, 128, 128);
+	}
+	FastLED.setTemperature(CRGB(128, 128, 128));
+	FastLED.show();
+	delay(2000);
+	FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, whiteBalance.b));
+	FastLED.show();
+	delay(3000);
+	FastLED.clear(true);
 }
