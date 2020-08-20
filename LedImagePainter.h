@@ -29,6 +29,7 @@ BLECharacteristic* pCharacteristicFileList = NULL;
 std::string sBLECommand = ""; // remote commands come in here
 volatile bool BLEDeviceConnected = false;
 volatile bool oldBLEDeviceConnected = false;
+bool bEnableBLE = false;
 
 // functions
 void UpdateBLE(bool bProgressOnly);
@@ -54,7 +55,7 @@ void TestConfetti();
 void DisplayAllColor();
 bool bPauseDisplay = false; // set this so DisplayLine and Progress won't update display
 int ReadButton(bool wait);
-bool CheckCancel(bool reset = false);
+bool CheckCancel();
 
 // eeprom values
 char signature[]{ "MLW11" };              // set to make sure saved values are valid, change when savevalues is changed
@@ -105,6 +106,7 @@ int nFramePulseCount = 0;                 // advance frame when button pressed t
 bool bGammaCorrection = true;             // set to use the gamma table
 bool bShowBuiltInTests = false;           // list the internal file instead of the SD card
 bool bReverseImage = false;               // read the file lines in reverse
+bool bUpsideDown = false;                 // play the image upside down
 bool bMirrorPlayImage = false;            // play the file twice, 2nd time reversed
 bool bChainFiles = false;                 // set to run all the files from current to the last one in the current folder
 int nChainRepeats = 1;                    // how many times to repeat the chain
@@ -157,9 +159,11 @@ const saveValues saveValueList[] = {
     {&bChainFiles,sizeof(bChainFiles)},
     {&bReverseImage,sizeof(bReverseImage)},
     {&bMirrorPlayImage,sizeof(bMirrorPlayImage)},
+    {&bUpsideDown,sizeof(bUpsideDown)},
     {&nChainRepeats,sizeof(nChainRepeats)},
     {&whiteBalance,sizeof(whiteBalance)},
     {&bShowProgress,sizeof(bShowProgress)},
+    {&bEnableBLE,sizeof(bEnableBLE)},
 };
 
 enum eDisplayOperation {
@@ -464,6 +468,7 @@ MenuItem WandMenu[] = {
     {eTextInt,false,"Wand Brightness: %d%%",GetIntegerValue,&nStripBrightness,0,100},
     {eBool,false,"Two LED strips: %s",ToggleBool,&bSecondStrip,0,0,0,"Yes","No"},
     {eBool,false,"Scale Height to Fit: %s",ToggleBool,&bScaleHeight,0,0,0,"On","Off"},
+    {eBool,false,"Upside Down Image: %s",ToggleBool,&bUpsideDown,0,0,0,"Yes","No"},
     {eBool,false,"Reverse Image: %s",ToggleBool,&bReverseImage,0,0,0,"Yes","No"},
     {eBool,false,"Play Mirror Image: %s",ToggleBool,&bMirrorPlayImage,0,0,0,"Yes","No"},
     {eBool,false,"Show Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
@@ -530,6 +535,7 @@ MenuItem MainMenu[] = {
         {eMenu,false,"LWC File Operations",NULL,StartFileMenu},
     {eEndif},
     {eMenu,false,"Default Settings",NULL,EepromMenu},
+    {eBool,false,"BlueTooth Link",ToggleBool,&bEnableBLE,0,0,0,"On","Off"},
     {eReboot,false,"Reboot"},
     //{eMenu,false,"Other Settings",NULL,OtherSettingsMenu},
     // make sure this one is last
@@ -583,6 +589,7 @@ struct SETTINGVAR SettingsVarList[] = {
     {"FRAME TIME",&frameHold,vtInt},
     {"START DELAY",&startDelay,vtInt},
     {"REVERSE IMAGE",&bReverseImage,vtBool},
+    {"UPSIDE DOWN IMAGE",&bUpsideDown,vtBool},
     {"MIRROR PLAY IMAGE",&bMirrorPlayImage,vtBool},
     {"CHAIN FILES",&bChainFiles,vtBool},
     {"CHAIN REPEATS",&nChainRepeats,vtInt},

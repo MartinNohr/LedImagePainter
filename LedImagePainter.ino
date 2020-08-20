@@ -54,6 +54,7 @@ void IRAM_ATTR IntBtnCenter()
 		else {
 			//Serial.println("button down");
 			// 1/2 second for long press
+			esp_timer_stop(oneshot_LONGPRESS_timer);	// just in case
 			esp_timer_start_once(oneshot_LONGPRESS_timer, 500 * 1000);
 			bLongPress = false;
 		}
@@ -279,6 +280,84 @@ void IRAM_ATTR oneshot_LONGPRESS_timer_callback(void* arg)
 	}
 }
 
+void EnableBLE()
+{
+	BLEDevice::init("MN LED Image Painter");
+	BLEServer* pServer = BLEDevice::createServer();
+	pServer->setCallbacks(new MyServerCallbacks());
+
+	BLEService* pServiceDevInfo = pServer->createService(BLEUUID((uint16_t)0x180a));
+	BLECharacteristic* pCharacteristicDevInfo = pServiceDevInfo->createCharacteristic(
+		BLEUUID((uint16_t)0x2a29),
+		BLECharacteristic::PROPERTY_READ
+	);
+	pCharacteristicDevInfo->setValue("NOHR PHOTO");
+
+	pCharacteristicDevInfo = pServiceDevInfo->createCharacteristic(
+		BLEUUID((uint16_t)0x2a24),	// model
+		BLECharacteristic::PROPERTY_READ
+	);
+	pCharacteristicDevInfo->setValue("LED Image Painter Small Display");
+
+	pCharacteristicDevInfo = pServiceDevInfo->createCharacteristic(
+		BLEUUID((uint16_t)0x2a28),	// software version
+		BLECharacteristic::PROPERTY_READ
+	);
+	pCharacteristicDevInfo->setValue("1.1");
+
+	pCharacteristicDevInfo = pServiceDevInfo->createCharacteristic(
+		BLEUUID((uint16_t)0x2a27),	// hardware version
+		BLECharacteristic::PROPERTY_READ
+	);
+	pCharacteristicDevInfo->setValue("1.0");
+
+	BLEService* pService = pServer->createService(SERVICE_UUID);
+	// filepath
+	pCharacteristicFileInfo = pService->createCharacteristic(
+		CHARACTERISTIC_UUID_FILEINFO,
+		BLECharacteristic::PROPERTY_READ |
+		BLECharacteristic::PROPERTY_WRITE
+	);
+	// Create a BLE Descriptor
+	//pCharacteristicFilename->addDescriptor(new BLE2902());
+
+	// Wand settins
+	pCharacteristicWandSettings = pService->createCharacteristic(
+		CHARACTERISTIC_UUID_WANDSETTINGS,
+		BLECharacteristic::PROPERTY_READ |
+		BLECharacteristic::PROPERTY_WRITE
+	);
+
+	// run command
+	pCharacteristicRun = pService->createCharacteristic(
+		CHARACTERISTIC_UUID_RUN,
+		BLECharacteristic::PROPERTY_READ |
+		BLECharacteristic::PROPERTY_WRITE
+	);
+
+	// all the filenames
+	pCharacteristicFileList = pService->createCharacteristic(
+		CHARACTERISTIC_UUID_FILELIST,
+		BLECharacteristic::PROPERTY_READ
+	);
+
+	// add anybody that can be changed or can call us with something to do
+	MyCharacteristicCallbacks* pCallBacks = new MyCharacteristicCallbacks();
+	pCharacteristicRun->setCallbacks(pCallBacks);
+	pCharacteristicWandSettings->setCallbacks(pCallBacks);
+	pCharacteristicFileInfo->setCallbacks(pCallBacks);
+	UpdateBLE(false);
+	pService->start();
+	pServiceDevInfo->start();
+	BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
+	pAdvertising->addServiceUUID(SERVICE_UUID);
+	pAdvertising->addServiceUUID(BLEUUID((uint16_t)0x180a));
+	pAdvertising->setScanResponse(true);
+	pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
+	pAdvertising->setMinPreferred(0x12);
+	BLEDevice::startAdvertising();
+}
+
 void setup()
 {
 	pinMode(LED, OUTPUT);
@@ -404,86 +483,16 @@ void setup()
 	};
 	esp_timer_create(&oneshot_LONGPRESS_timer_args, &oneshot_LONGPRESS_timer);
 
-	BLEDevice::init("MN LED Image Painter");
-	BLEServer* pServer = BLEDevice::createServer();
-	pServer->setCallbacks(new MyServerCallbacks());
-
-	BLEService* pServiceDevInfo = pServer->createService(BLEUUID((uint16_t)0x180a));
-	BLECharacteristic* pCharacteristicDevInfo = pServiceDevInfo->createCharacteristic(
-		BLEUUID((uint16_t)0x2a29),
-		BLECharacteristic::PROPERTY_READ
-	);
-	pCharacteristicDevInfo->setValue("NOHR PHOTO");
-
-	pCharacteristicDevInfo = pServiceDevInfo->createCharacteristic(
-		BLEUUID((uint16_t)0x2a24),	// model
-		BLECharacteristic::PROPERTY_READ
-	);
-	pCharacteristicDevInfo->setValue("LED Image Painter Small Display");
-
-	pCharacteristicDevInfo = pServiceDevInfo->createCharacteristic(
-		BLEUUID((uint16_t)0x2a28),	// software version
-		BLECharacteristic::PROPERTY_READ
-	);
-	pCharacteristicDevInfo->setValue("1.1");
-
-	pCharacteristicDevInfo = pServiceDevInfo->createCharacteristic(
-		BLEUUID((uint16_t)0x2a27),	// hardware version
-		BLECharacteristic::PROPERTY_READ
-	);
-	pCharacteristicDevInfo->setValue("1.0");
-
-	BLEService* pService = pServer->createService(SERVICE_UUID);
-	// filepath
-	pCharacteristicFileInfo = pService->createCharacteristic(
-		CHARACTERISTIC_UUID_FILEINFO,
-		BLECharacteristic::PROPERTY_READ |
-		BLECharacteristic::PROPERTY_WRITE
-	);
-	// Create a BLE Descriptor
-	//pCharacteristicFilename->addDescriptor(new BLE2902());
-
-	// Wand settins
-	pCharacteristicWandSettings = pService->createCharacteristic(
-		CHARACTERISTIC_UUID_WANDSETTINGS,
-		BLECharacteristic::PROPERTY_READ |
-		BLECharacteristic::PROPERTY_WRITE
-	);
-
-	// run command
-	pCharacteristicRun = pService->createCharacteristic(
-		CHARACTERISTIC_UUID_RUN,
-		BLECharacteristic::PROPERTY_READ |
-		BLECharacteristic::PROPERTY_WRITE
-	);
-
-	// all the filenames
-	pCharacteristicFileList = pService->createCharacteristic(
-		CHARACTERISTIC_UUID_FILELIST,
-		BLECharacteristic::PROPERTY_READ
-	);
-
-	// add anybody that can be changed or can call us with something to do
-	MyCharacteristicCallbacks* pCallBacks = new MyCharacteristicCallbacks();
-	pCharacteristicRun->setCallbacks(pCallBacks);
-	pCharacteristicWandSettings->setCallbacks(pCallBacks);
-	pCharacteristicFileInfo->setCallbacks(pCallBacks);
-	UpdateBLE(false);
-	pService->start();
-	pServiceDevInfo->start();
-	BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
-	pAdvertising->addServiceUUID(SERVICE_UUID);
-	pAdvertising->addServiceUUID(BLEUUID((uint16_t)0x180a));
-	pAdvertising->setScanResponse(true);
-	pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
-	pAdvertising->setMinPreferred(0x12);
-	BLEDevice::startAdvertising();
+	if (bEnableBLE) {
+		EnableBLE();
+	}
 }
 
 void loop()
 {
 	static bool didsomething = false;
 	bool lastStrip = bSecondStrip;
+	bool bLastEnableBLE = bEnableBLE;
 	int lastDisplayBrightness = displayBrightness;
 	didsomething = bSettingsMode ? HandleMenus() : HandleRunMode();
 	// special handling for things that might have changed
@@ -503,7 +512,18 @@ void loop()
 		UpdateBLE(false);
 		ReadButton(true);
 		didsomething = false;
-		usleep(10000);
+		// see if BLE enabled
+		if (bEnableBLE != bLastEnableBLE) {
+			if (bEnableBLE) {
+				EnableBLE();
+			}
+			else {
+				// shutdown BLE
+				BLEDeviceConnected = false;
+				// TODO: is there anything else we need to do here?
+			}
+		}
+		delay(1);
 	}
 	// disconnecting
 	if (!BLEDeviceConnected && oldBLEDeviceConnected) {
@@ -553,6 +573,7 @@ void UpdateBLE(bool bProgressOnly)
 			wsdoc["repeatcount"] = repeatCount;
 			wsdoc["gamma"] = bGammaCorrection;
 			wsdoc["reverse"] = bReverseImage;
+			wsdoc["upsidedown"] = bUpsideDown;
 			wsdoc["mirror"] = bMirrorPlayImage;
 			wsdoc["chain"] = bChainFiles;
 			wsdoc["chainrepeats"] = nChainRepeats;
@@ -977,17 +998,6 @@ int ReadButton(bool wait)
 	return retValue;
 }
 
-bool CheckExecuteButton(bool start)
-{
-	int btn;
-	if (btnBuf.pull(&btn)) {
-		if (btn == BTN_SELECT) {
-			return true;
-		}
-	}
-	return false;
-}
-
 // save or restore the display
 void SaveRestoreDisplay(bool save)
 {
@@ -1004,57 +1014,14 @@ void SaveRestoreDisplay(bool save)
 	}
 }
 
-// some fancy logic to handle the cancel button
-bool CheckCancel(bool reset)
+// just check for longpress and cancel if it was there
+bool CheckCancel()
 {
-	static int count;
-	static bool bLastButton;
-	static bool bArmed = false;
-	static bool bSeenNone = false;
-	bool xbtn;
-	if (reset) {
-		bLastButton = bArmed = bSeenNone = false;
-		CheckExecuteButton(true);
-		//Serial.println("CCReset");
-		return false;
-	}
-	xbtn = CheckExecuteButton(false);
-	++count;
-	if (xbtn != bLastButton) {
-		bLastButton = xbtn;
-		//Serial.println("CCbutton: " + String(btn) + "   " + String(count));
-	}
-	if (bArmed && !bButtonWait) {
-		//Serial.println("CCdisarming");
-		SaveRestoreDisplay(false);
-		//		DisplayLine(1, " ");
-		bArmed = false;
-	}
-	if (bArmed && bSeenNone && xbtn) {
-		// really cancel
-		//Serial.println("CCcancel");
-		bArmed = false;
-		bSeenNone = false;
-		// set the global flag to cancel repeats
-		bCancelRun = true;
-		bPauseDisplay = false;
-		return true;
-	}
-	if (!bSeenNone && !xbtn) {
-		//Serial.println("CCsaw none");
-		bSeenNone = true;
-		return false;
-	}
-	if (bSeenNone && xbtn) {
-		SaveRestoreDisplay(true);
-		DisplayLine(1, "Again to cancel", true);
-		//Serial.println("CCarming");
-		bArmed = true;
-		bSeenNone = false;
-		bButtonWait = true;
-		esp_timer_start_once(oneshot_BTN_timer, 2 * 1000 * 1000);
-		ReadButton(true);
-		return false;
+	int button;
+	if (btnBuf.pull(&button)) {
+		if (button == BTN_LONG) {
+			return true;
+		}
 	}
 	return false;
 }
@@ -1844,7 +1811,6 @@ void fadeToBlack(int ledNo, byte fadeValue) {
 void ProcessFileOrTest()
 {
 	String line;
-	CheckCancel(true);
 	// let's see if this is a folder command
 	String tmp = FileNames[CurrentFileIndex];
 	if (tmp[0] == NEXT_FOLDER_CHAR) {
@@ -1878,7 +1844,7 @@ void ProcessFileOrTest()
 			DisplayLine(2, line);
 			if (CheckCancel())
 				break;
-			usleep(100000);
+			delay(100);
 			--nTimerSeconds;
 		}
 		DisplayLine(2, "");
@@ -1938,7 +1904,7 @@ void ProcessFileOrTest()
 							line = "";
 							if (CheckCancel())
 								break;
-							usleep(100000);
+							delay(100);
 							--nTimerSeconds;
 						}
 						DisplayLine(2, "");
@@ -1987,7 +1953,6 @@ void ProcessFileOrTest()
 }
 
 void SendFile(String Filename) {
-	CheckCancel(true);
 	char temp[14];
 	Filename.toCharArray(temp, 14);
 	// see if there is an associated config file
@@ -2136,7 +2101,12 @@ void ReadAndDisplayFile(bool doingFirstHalf) {
 			if (bScaleHeight && (x * displayWidth) % imgWidth) {
 				continue;
 			}
-			leds[LEDIX(x)] = CRGB(r, g, b);
+			if (bUpsideDown) {
+				leds[LEDIX(displayWidth - 1 - x)] = CRGB(r, g, b);
+			}
+			else {
+				leds[LEDIX(x)] = CRGB(r, g, b);
+			}
 		}
 		// see how long it took to get here
 		if (!bLoopTimed) {
@@ -2146,7 +2116,7 @@ void ReadAndDisplayFile(bool doingFirstHalf) {
 		//Serial.println("loop: " + String(minLoopTime));
 		// wait for timer to expire before we show the next frame
 		while (bStripWaiting) {
-			usleep(100);
+			delayMicroseconds(100);
 			// we should maybe check the cancel key here to handle slow frame rates?
 		}
 		// now show the lights
@@ -2349,7 +2319,7 @@ void WriteMessage(String txt, bool error, int wait)
 	if (error)
 		txt = "**" + txt + "**";
 	DisplayLine(0, txt);
-	usleep(wait * 1000);
+	delay(wait);
 }
 
 // create the associated LWC name
