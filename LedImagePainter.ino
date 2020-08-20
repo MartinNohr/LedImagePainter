@@ -329,7 +329,7 @@ void setup()
 	// create the second led controller
 	FastLED.addLeds<NEOPIXEL, DATA_PIN2>(leds, NUM_LEDS, NUM_LEDS);
 	FastLED.setTemperature(whiteBalance);
-	FastLED.setBrightness(map(nStripBrightness, 0, 100, 0, 255));
+	FastLED.setBrightness(map(nStripBrightness, 0, 100, 1, 255));
 	// Turn the LED on, then pause
 	leds[0] = leds[1] = CRGB::Red;
 	leds[4] = leds[5] = CRGB::Green;
@@ -352,7 +352,7 @@ void setup()
 	delayMicroseconds(50);
 	FastLED.clear(true);
 	delayMicroseconds(50);
-	FastLED.setBrightness(map(nStripBrightness, 0, 100, 0, 255));
+	FastLED.setBrightness(map(nStripBrightness, 0, 100, 1, 255));
 	delay(50);
 	// Now turn the LED off
 	FastLED.clear(true);
@@ -1815,7 +1815,7 @@ void TestRainbow()
 // time is in mSec
 void FadeInOut(int time, bool in)
 {
-	int steps = map(nStripBrightness, 0, 100, 0, 255);
+	int steps = map(nStripBrightness, 0, 100, 1, 255);
 	time = time * 100 / 255;
 	if (in) {
 		for (int i = 0; i <= steps; ++i) {
@@ -1895,7 +1895,7 @@ void ProcessFileOrTest()
 		chainCount = 1;
 		chainRepeatCount = 1;
 	}
-	FastLED.setBrightness(map(nStripBrightness, 0, 100, 0, 255));
+	FastLED.setBrightness(map(nStripBrightness, 0, 100, 1, 255));
 	line = "";
 	while (chainRepeatCount-- > 0) {
 		while (chainCount-- > 0) {

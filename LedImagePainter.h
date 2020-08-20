@@ -72,7 +72,7 @@ CRGB leds[NUM_LEDS * 2];
 bool bSecondStrip = false;                // set true when two strips installed
 #define STRIPLENGTH (NUM_LEDS*(1+(bSecondStrip?1:0)))
 #define LEDIX(ix) (((ix)<NUM_LEDS)?(NUM_LEDS-1-(ix)):(ix))
-int nStripBrightness = 10;                // Variable and default for the Brightness of the strip, 1 to 100%
+int nStripBrightness = 10;                // Variable and default for the Brightness of the strip,  to 100%, 0 means the dimmest
 int startDelay = 0;                       // Variable for delay between button press and start of light sequence, in seconds
 //bool bRepeatForever = false;                           // Variable to select auto repeat (until select button is pressed again)
 int repeatDelay = 0;                      // Variable for delay between repeats, 0.1 seconds
@@ -443,7 +443,7 @@ MenuItem WandMenu[] = {
     {eTextInt,false,"Frame Hold (mS): %d",GetIntegerValue,&frameHold,0,100},
     {eTextInt,false,"Frame Pulse Counter: %d",GetIntegerValue,&nFramePulseCount,0,32},
     {eTextInt,false,"Start Delay (S): %d.%d",GetIntegerValue,&startDelay,0,100,1},
-    {eTextInt,false,"Wand Brightness: %d%%",GetIntegerValue,&nStripBrightness,1,100},
+    {eTextInt,false,"Wand Brightness: %d%%",GetIntegerValue,&nStripBrightness,0,100},
     {eBool,false,"Two LED strips: %s",ToggleBool,&bSecondStrip,0,0,0,"Yes","No"},
     {eBool,false,"Scale Height to Fit: %s",ToggleBool,&bScaleHeight,0,0,0,"On","Off"},
     {eBool,false,"Reverse Image: %s",ToggleBool,&bReverseImage,0,0,0,"Yes","No"},
@@ -451,6 +451,7 @@ MenuItem WandMenu[] = {
     //{eMenu,false,"Color Settings",NULL,WandColorMenu},
     {eBool,false,"Show Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
     {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100},
+    {eBool,false,"Gamma Correction: %s",ToggleBool,&bGammaCorrection,0,0,0,"On","Off"},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
@@ -559,7 +560,7 @@ struct SETTINGVAR {
 };
 struct SETTINGVAR SettingsVarList[] = {
     {"SECOND STRIP",&bSecondStrip,vtBool},
-    {"WAND BRIGHTNESS",&nStripBrightness,vtInt,1,100},
+    {"WAND BRIGHTNESS",&nStripBrightness,vtInt,0,100},
     {"REPEAT COUNT",&repeatCount,vtInt},
     {"REPEAT DELAY",&repeatDelay,vtInt},
     {"FRAME TIME",&frameHold,vtInt},
@@ -569,5 +570,6 @@ struct SETTINGVAR SettingsVarList[] = {
     {"CHAIN FILES",&bChainFiles,vtBool},
     {"CHAIN REPEATS",&nChainRepeats,vtInt},
     {"WHITE BALANCE",&whiteBalance,vtRGB},
-    {"DISPLAY BRIGHTNESS",&displayBrightness,vtInt,1,100},
+    {"DISPLAY BRIGHTNESS",&displayBrightness,vtInt,0,100},
+    {"GAMMA CORRECTION",&bGammaCorrection,vtBool},
 };
