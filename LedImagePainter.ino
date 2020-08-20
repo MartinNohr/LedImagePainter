@@ -34,11 +34,10 @@ enum BUTTONS { BTN_RIGHT, BTN_LEFT, BTN_SELECT, BTN_LONG, BTN_NONE };
 void IRAM_ATTR IntBtnCenter()
 {
 	static unsigned long pressedTime = 0;
-	bool val = digitalRead(BTNPUSH);
 	unsigned long currentTime = millis();
 	int btn;
-	if (currentTime > pressedTime + 10) {
-		if (val == true) {
+	if (currentTime > pressedTime + 20) {
+		if (digitalRead(BTNPUSH)) {
 			if (bLongPress) {
 				// the key has already been handled
 				bLongPress = false;
@@ -48,6 +47,7 @@ void IRAM_ATTR IntBtnCenter()
 				esp_timer_stop(oneshot_LONGPRESS_timer);
 				btn = BTN_SELECT;
 				btnBuf.add(btn);
+				bLongPress = false;
 			}
 			//Serial.println("press");
 		}
@@ -55,6 +55,7 @@ void IRAM_ATTR IntBtnCenter()
 			//Serial.println("button down");
 			// 1/2 second for long press
 			esp_timer_start_once(oneshot_LONGPRESS_timer, 500 * 1000);
+			bLongPress = false;
 		}
 		// got one, note time so we can ignore until ready again
 		pressedTime = currentTime;
