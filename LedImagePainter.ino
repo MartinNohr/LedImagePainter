@@ -379,7 +379,7 @@ void setup()
 	OLED->setFont(ArialMT_Plain_24);
 	OLED->drawString(2, 2, "Light Wand");
 	OLED->setFont(ArialMT_Plain_16);
-	OLED->drawString(4, 32, "Version 2.02");
+	OLED->drawString(4, 30, "Version 2.02");
 	OLED->setFont(ArialMT_Plain_10);
 	OLED->drawString(4, 48, __DATE__);
 	OLED->display();
@@ -655,7 +655,7 @@ bool RunMenus(int button)
 				}
 				break;
 			case eReboot:
-				WriteMessage("rebooting in 2 seconds\nhold run for factory reset", false, 2000);
+				WriteMessage("Rebooting in 2 seconds\nhold run for factory reset", false, 2000);
 				ESP.restart();
 				break;
 			}
@@ -852,7 +852,7 @@ void GetIntegerValue(MenuItem* menu)
 			break;
 		case BTN_SELECT:
 			stepSize *= 10;
-			if (stepSize > 100)
+			if (stepSize > 1000)
 				stepSize = 1;
 			break;
 		case BTN_LONG:
@@ -876,7 +876,7 @@ void GetIntegerValue(MenuItem* menu)
 		DisplayLine(0, line);
 		DisplayLine(4, "step: " + String(stepSize) + " (Click +)");
 		while (!done && (button = ReadButton(false)) == BTN_NONE) {
-			delayMicroseconds(1000);
+			delay(1);
 		}
 	} while (!done);
 }
@@ -1258,6 +1258,7 @@ void TestBouncingBalls() {
 }
 
 void BouncingColoredBalls(int balls, CRGB colors[]) {
+	time_t startsec = time(NULL);
 	float Gravity = -9.81;
 	int StartHeight = 1;
 
@@ -1285,6 +1286,7 @@ void BouncingColoredBalls(int balls, CRGB colors[]) {
 	//int lastSeconds = 0;
 	//EventTimers.every(1000L, SecondsTimer);
 	while (millis() < start + ((long)nBouncingBallsRuntime * 1000)) {
+		ShowProgressBar((time(NULL) - startsec) * 100 / nBouncingBallsRuntime);
 		//if (nTimerSeconds != lastSeconds) {
 		//    tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
 		//    tft.setTextSize(2);
@@ -1381,6 +1383,7 @@ CRGB:CRGB red, white, blue;
 // checkerboard
 void CheckerBoard()
 {
+	time_t start = time(NULL);
 	int width = nCheckboardBlackWidth + nCheckboardWhiteWidth;
 	bStripWaiting = true;
 	int times = 0;
@@ -1392,6 +1395,7 @@ void CheckerBoard()
 			leds[LEDIX(y)] = ((y + addPixels) % width) < nCheckboardBlackWidth ? color1 : color2;
 		}
 		FastLED.show();
+		ShowProgressBar((time(NULL) - start) * 100 /nCheckerBoardRuntime);
 		int count = nCheckerboardHoldframes;
 		while (count-- > 0) {
 			delay(frameHold);
@@ -1419,12 +1423,14 @@ void RandomBars()
 // show random bars of lights with optional blacks between
 void ShowRandomBars(bool blacks, int runtime)
 {
+	time_t start = time(NULL);
 	byte r, g, b;
 	srand(millis());
 	char line[40];
 	bStripWaiting = true;
 	esp_timer_start_once(oneshot_LED_timer, runtime * 1000000);
 	for (int pass = 0; bStripWaiting; ++pass) {
+		ShowProgressBar((time(NULL) - start) * 100 / runtime);
 		if (blacks && (pass % 2)) {
 			// odd numbers, clear
 			FastLED.clear(true);
@@ -1561,9 +1567,11 @@ void TestTwinkle() {
 	TwinkleRandom(nTwinkleRuntime, frameHold, bTwinkleOnlyOne);
 }
 void TwinkleRandom(int Runtime, int SpeedDelay, boolean OnlyOne) {
+	time_t start = time(NULL);
 	bStripWaiting = true;
 	esp_timer_start_once(oneshot_LED_timer, Runtime * 1000000);
 	while (bStripWaiting) {
+		ShowProgressBar((time(NULL) - start) * 100 / nTwinkleRuntime);
 		leds[LEDIX(random(STRIPLENGTH))] = CRGB(random(0, 255), random(0, 255), random(0, 255));
 		FastLED.show();
 		delay(SpeedDelay);
@@ -1646,6 +1654,7 @@ void meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTra
 
 void TestConfetti()
 {
+	time_t start = time(NULL);
 	gHue = 0;
 	bStripWaiting = true;
 	esp_timer_start_once(oneshot_LED_timer, nConfettiRuntime * 1000000);
@@ -1655,12 +1664,15 @@ void TestConfetti()
 				++gHue;
 			confetti();
 			FastLED.show();
+			ShowProgressBar((time(NULL) - start) * 100 / nConfettiRuntime);
 		}
 		if (CheckCancel()) {
 			esp_timer_stop(oneshot_LED_timer);
 			bStripWaiting = false;
 		}
 	}
+	// wait for timeout so strip will be blank
+	delay(100);
 }
 
 void confetti()
@@ -1673,12 +1685,14 @@ void confetti()
 
 void TestJuggle()
 {
+	time_t start = time(NULL);
 	bStripWaiting = true;
 	esp_timer_start_once(oneshot_LED_timer, nJuggleRuntime * 1000000);
 	while (bStripWaiting) {
 		EVERY_N_MILLISECONDS(frameHold) {
 			juggle();
 			FastLED.show();
+			ShowProgressBar((time(NULL) - start) * 100 / nJuggleRuntime);
 		}
 		if (CheckCancel()) {
 			esp_timer_stop(oneshot_LED_timer);
@@ -1700,6 +1714,7 @@ void juggle()
 
 void TestSine()
 {
+	time_t start = time(NULL);
 	gHue = nSineStartingHue;
 	bStripWaiting = true;
 	esp_timer_start_once(oneshot_LED_timer, nSineRuntime * 1000000);
@@ -1707,6 +1722,7 @@ void TestSine()
 		EVERY_N_MILLISECONDS(frameHold) {
 			sinelon();
 			FastLED.show();
+			ShowProgressBar((time(NULL) - start) * 100 / nSineRuntime);
 		}
 		if (CheckCancel()) {
 			esp_timer_stop(oneshot_LED_timer);
@@ -1726,6 +1742,7 @@ void sinelon()
 
 void TestBpm()
 {
+	time_t start = time(NULL);
 	gHue = 0;
 	bStripWaiting = true;
 	esp_timer_start_once(oneshot_LED_timer, nBpmRuntime * 1000000);
@@ -1733,6 +1750,7 @@ void TestBpm()
 		EVERY_N_MILLISECONDS(frameHold) {
 			bpm();
 			FastLED.show();
+			ShowProgressBar((time(NULL) - start) * 100 / nBpmRuntime);
 		}
 		if (CheckCancel()) {
 			esp_timer_stop(oneshot_LED_timer);
@@ -1740,6 +1758,7 @@ void TestBpm()
 		}
 	}
 }
+
 void bpm()
 {
 	// colored stripes pulsing at a defined Beats-Per-Minute (BPM)
@@ -1754,6 +1773,7 @@ void bpm()
 
 void TestRainbow()
 {
+	time_t start = time(NULL);
 	gHue = 0;
 	bStripWaiting = true;
 	esp_timer_start_once(oneshot_LED_timer, nRainbowRuntime * 1000000);
@@ -1767,6 +1787,7 @@ void TestRainbow()
 			if (bRainbowAddGlitter)
 				addGlitter(80);
 			FastLED.show();
+			ShowProgressBar((time(NULL) - start) * 100 / nRainbowRuntime);
 		}
 		if (CheckCancel()) {
 			esp_timer_stop(oneshot_LED_timer);
