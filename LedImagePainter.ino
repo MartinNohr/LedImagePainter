@@ -29,6 +29,9 @@
 #define MAX_KEY_BUF 10
 RingBufCPP<int, MAX_KEY_BUF> btnBuf;
 enum BUTTONS { BTN_RIGHT, BTN_LEFT, BTN_SELECT, BTN_LONG, BTN_NONE };
+// for debugging missed buttons
+volatile int nButtonDowns;
+volatile int nButtonUps;
 
 // interrupt handlers
 void IRAM_ATTR IntBtnCenter()
@@ -49,9 +52,11 @@ void IRAM_ATTR IntBtnCenter()
 				btnBuf.add(btn);
 				bLongPress = false;
 			}
-			//Serial.println("press");
+			//Serial.println("button up");
+			++nButtonUps;
 		}
 		else {
+			++nButtonDowns;
 			//Serial.println("button down");
 			// 1/2 second for long press
 			esp_timer_stop(oneshot_LONGPRESS_timer);	// just in case
@@ -1017,9 +1022,10 @@ void SaveRestoreDisplay(bool save)
 // just check for longpress and cancel if it was there
 bool CheckCancel()
 {
-	int button;
-	if (btnBuf.pull(&button)) {
+	int button = ReadButton();
+	if (button) {
 		if (button == BTN_LONG) {
+			bCancelRun = true;
 			return true;
 		}
 	}
@@ -1877,6 +1883,7 @@ void ProcessFileOrTest()
 		chainCount = 1;
 		chainRepeatCount = 1;
 	}
+	// set the basic LED info
 	FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, whiteBalance.b));
 	FastLED.setBrightness(map(nStripBrightness, 0, 100, 1, 255));
 	line = "";
@@ -1884,9 +1891,9 @@ void ProcessFileOrTest()
 		while (chainCount-- > 0) {
 			DisplayCurrentFile();
 			if (bChainFiles && !bShowBuiltInTests) {
-				line = "Files Left: " + String(chainCount);
+				line = "Files Left: " + String(chainCount + 1);
 				if (chainRepeatCount > 0) {
-					line += "Chain Repeats Left: " + String(chainRepeatCount);
+					line += "Chain Repeats Left: " + String(chainRepeatCount + 1);
 				}
 				DisplayLine(3, line);
 				line = "";
@@ -1897,7 +1904,7 @@ void ProcessFileOrTest()
 				if (!bShowBuiltInTests)
 					ShowProgressBar(0);
 				if (repeatCount > 1) {
-					line = "Repeats Left: " + String(nRepeatsLeft - 1);
+					line = "Repeats Left: " + String(nRepeatsLeft);
 				}
 				DisplayLine(2, line);
 				if (bShowBuiltInTests) {
@@ -2313,6 +2320,8 @@ void DisplayCurrentFile(bool path)
 			DisplayLine(0, "No SD Card or Files");
 		}
 	}
+	// for debugging keypresses
+	DisplayLine(3, String(nButtonDowns) + " " + nButtonUps);
 }
 
 void ShowProgressBar(int percent)
