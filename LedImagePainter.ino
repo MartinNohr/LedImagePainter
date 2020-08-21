@@ -766,7 +766,7 @@ void ShowMenu(struct MenuItem* menu)
 		case eExit:
 		case eReboot:
 			menu->valid = true;
-			strcpy(line, menu->text);
+			strcpy(line, (String((menu->op == eReboot) ? "" : "+") + menu->text).c_str());
 			++y;
 			//Serial.println("menu text4: " + String(line));
 			break;
@@ -1903,7 +1903,7 @@ void ProcessFileOrTest()
 				}
 				DisplayLine(2, line);
 				if (bShowBuiltInTests) {
-					DisplayLine(3, "Running");
+					DisplayLine(3, "Running (long cancel)");
 					// run the test
 					(*BuiltInFiles[CurrentFileIndex].function)();
 				}
@@ -2725,11 +2725,13 @@ void LoadEepromSettings(MenuItem* menu)
 void ShowWhiteBalance(MenuItem* menu)
 {
 	for (int ix = 0; ix < 32; ++ix) {
-		leds[LEDIX(ix)] = CRGB(128, 128, 128);
+		leds[LEDIX(ix)] = CRGB(255, 255, 255);
 	}
-	FastLED.setTemperature(CRGB(128, 128, 128));
+	FastLED.setTemperature(CRGB(255, 255, 255));
 	FastLED.show();
 	delay(2000);
+	FastLED.clear(true);
+	delay(50);
 	FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, whiteBalance.b));
 	FastLED.show();
 	delay(3000);
