@@ -1896,10 +1896,7 @@ void ProcessFileOrTest()
 		while (chainCount-- > 0) {
 			DisplayCurrentFile();
 			if (bChainFiles && !bShowBuiltInTests) {
-				line = "Files Left: " + String(chainCount + 1);
-				if (chainRepeatCount > 0) {
-					line += "Chain Repeats Left: " + String(chainRepeatCount + 1);
-				}
+				line = "Files: " + String(chainCount + 1);
 				DisplayLine(3, line);
 				line = "";
 			}
@@ -1909,7 +1906,10 @@ void ProcessFileOrTest()
 				if (!bShowBuiltInTests)
 					ShowProgressBar(0);
 				if (repeatCount > 1) {
-					line = "Repeats Left: " + String(nRepeatsLeft);
+					line = "Repeats: " + String(nRepeatsLeft);
+				}
+				if (chainRepeatCount > 0) {
+					line += " Chains: " + String(chainRepeatCount + 1);
 				}
 				DisplayLine(2, line);
 				if (bShowBuiltInTests) {
@@ -2109,7 +2109,7 @@ void ReadAndDisplayFile(bool doingFirstHalf) {
 		}
 		if (secondsLeft != lastSeconds) {
 			lastSeconds = secondsLeft;
-			sprintf(num, "%d seconds left", secondsLeft);
+			sprintf(num, "Seconds: %d", secondsLeft);
 			DisplayLine(1, num);
 		}
 		percent = map(bReverseImage ? y : imgHeight - y, 0, imgHeight, 0, 100);
