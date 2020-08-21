@@ -36,22 +36,24 @@ volatile int nButtonUps;
 // interrupt handlers
 void IRAM_ATTR IntBtnCenter()
 {
+	//int32_t bits = gpio_input_get();
+	static bool lastState = true;
+	bool state = digitalRead(BTNPUSH);
+	if (lastState == state)
+		state = !state;
+	lastState = state;
 	static unsigned long pressedTime = 0;
 	unsigned long currentTime = millis();
 	int btn;
-	if (currentTime > pressedTime + 20) {
-		if (digitalRead(BTNPUSH)) {
-			if (bLongPress) {
-				// the key has already been handled
-				bLongPress = false;
-			}
-			else {
+	if (currentTime > pressedTime + 30) {
+		if (state) {
+			if (!bLongPress) {
 				// cancel long press timer
 				esp_timer_stop(oneshot_LONGPRESS_timer);
 				btn = BTN_SELECT;
 				btnBuf.add(btn);
-				bLongPress = false;
 			}
+			bLongPress = false;
 			//Serial.println("button up");
 			++nButtonUps;
 		}
@@ -63,9 +65,9 @@ void IRAM_ATTR IntBtnCenter()
 			esp_timer_start_once(oneshot_LONGPRESS_timer, 500 * 1000);
 			bLongPress = false;
 		}
-		// got one, note time so we can ignore until ready again
-		pressedTime = currentTime;
 	}
+	// got one, note time so we can ignore until ready again
+	pressedTime = currentTime;
 }
 
 // state table for the rotary encoder
@@ -371,6 +373,32 @@ void setup()
 	pinMode(BTNA, INPUT_PULLUP);
 	pinMode(BTNB, INPUT_PULLUP);
 	pinMode(FRAMEBUTTON, INPUT_PULLUP);
+	oneshot_LED_timer_args = {
+				oneshot_LED_timer_callback,
+				/* argument specified here will be passed to timer callback function */
+				(void*)TID_LED,
+				ESP_TIMER_TASK,
+				"one-shotLED"
+	};
+	esp_timer_create(&oneshot_LED_timer_args, &oneshot_LED_timer);
+	oneshot_BTN_timer_args = {
+			oneshot_BTN_timer_callback,
+			/* argument specified here will be passed to timer callback function */
+			(void*)TID_BTN,
+			ESP_TIMER_TASK,
+			"one-shotBTN"
+	};
+	esp_timer_create(&oneshot_BTN_timer_args, &oneshot_BTN_timer);
+	// the long press timer
+	oneshot_LONGPRESS_timer_args = {
+			oneshot_LONGPRESS_timer_callback,
+			/* argument specified here will be passed to timer callback function */
+			(void*)TID_LONGPRESS,
+			ESP_TIMER_TASK,
+			"one-shotLONGPRESS"
+	};
+	esp_timer_create(&oneshot_LONGPRESS_timer_args, &oneshot_LONGPRESS_timer);
+
 	attachInterrupt(BTNPUSH, IntBtnCenter, CHANGE);
 	attachInterrupt(BTNA, IntBtnAB, CHANGE);
 	attachInterrupt(BTNB, IntBtnAB, CHANGE);
@@ -464,32 +492,7 @@ void setup()
 		ToggleFilesBuiltin(NULL);
 	}
 	DisplayCurrentFile();
-	oneshot_LED_timer_args = {
-			oneshot_LED_timer_callback,
-			/* argument specified here will be passed to timer callback function */
-			(void*)TID_LED,
-			ESP_TIMER_TASK,
-			"one-shotLED"
-	};
-	esp_timer_create(&oneshot_LED_timer_args, &oneshot_LED_timer);
-	oneshot_BTN_timer_args = {
-			oneshot_BTN_timer_callback,
-			/* argument specified here will be passed to timer callback function */
-			(void*)TID_BTN,
-			ESP_TIMER_TASK,
-			"one-shotBTN"
-	};
-	esp_timer_create(&oneshot_BTN_timer_args, &oneshot_BTN_timer);
-	// the long press timer
-	oneshot_LONGPRESS_timer_args = {
-			oneshot_LONGPRESS_timer_callback,
-			/* argument specified here will be passed to timer callback function */
-			(void*)TID_LONGPRESS,
-			ESP_TIMER_TASK,
-			"one-shotLONGPRESS"
-	};
-	esp_timer_create(&oneshot_LONGPRESS_timer_args, &oneshot_LONGPRESS_timer);
-
+	
 	if (bEnableBLE) {
 		EnableBLE();
 	}
@@ -680,7 +683,8 @@ bool RunMenus(int button)
 void ShowMenu(struct MenuItem* menu)
 {
 	activeMenuCount = 0;
-	int offsetLines = max(0, activeMenuLine - 4);
+	static int offsetLines;
+	offsetLines = max(0, activeMenuLine - 4);
 	//Serial.println("offset: " + String(offsetLines));
 	int y = 0;
 	int x = 0;
@@ -2321,7 +2325,7 @@ void DisplayCurrentFile(bool path)
 		}
 	}
 	// for debugging keypresses
-	DisplayLine(3, String(nButtonDowns) + " " + nButtonUps);
+	//DisplayLine(3, String(nButtonDowns) + " " + nButtonUps);
 }
 
 void ShowProgressBar(int percent)
