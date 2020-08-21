@@ -852,7 +852,7 @@ void GetIntegerValue(MenuItem* menu)
 			break;
 		case BTN_SELECT:
 			stepSize *= 10;
-			if (stepSize > 1000)
+			if (stepSize > (menu->max / 10))
 				stepSize = 1;
 			break;
 		case BTN_LONG:
