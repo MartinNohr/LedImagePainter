@@ -2109,7 +2109,7 @@ void ReadAndDisplayFile(bool doingFirstHalf) {
 		}
 		if (secondsLeft != lastSeconds) {
 			lastSeconds = secondsLeft;
-			sprintf(num, "Seconds: %d", secondsLeft);
+			sprintf(num, "File Seconds: %d", secondsLeft);
 			DisplayLine(1, num);
 		}
 		percent = map(bReverseImage ? y : imgHeight - y, 0, imgHeight, 0, 100);
