@@ -32,20 +32,20 @@ enum BUTTONS { BTN_RIGHT, BTN_LEFT, BTN_SELECT, BTN_LONG, BTN_NONE };
 // for debugging missed buttons
 volatile int nButtonDowns;
 volatile int nButtonUps;
+volatile bool btnLastState = true;
 
 // interrupt handlers
 void IRAM_ATTR IntBtnCenter()
 {
-	//int32_t bits = gpio_input_get();
-	static bool lastState = true;
 	bool state = digitalRead(BTNPUSH);
-	if (lastState == state)
-		state = !state;
-	lastState = state;
-	static unsigned long pressedTime = 0;
+	//int32_t bits = gpio_input_get();
+	static unsigned long changedTime = 0;
 	unsigned long currentTime = millis();
 	int btn;
-	if (currentTime > pressedTime + 30) {
+	if (currentTime > changedTime + 30) {
+		if (btnLastState == state)
+			state = !state;
+		btnLastState = state;
 		if (state) {
 			if (!bLongPress) {
 				// cancel long press timer
@@ -65,9 +65,9 @@ void IRAM_ATTR IntBtnCenter()
 			esp_timer_start_once(oneshot_LONGPRESS_timer, 500 * 1000);
 			bLongPress = false;
 		}
+		// got one, note time so we can ignore until ready again
+		changedTime = currentTime;
 	}
-	// got one, note time so we can ignore until ready again
-	pressedTime = currentTime;
 }
 
 // state table for the rotary encoder
@@ -284,6 +284,7 @@ void IRAM_ATTR oneshot_LONGPRESS_timer_callback(void* arg)
 		bLongPress = true;
 		int btn = BTN_LONG;
 		btnBuf.add(btn);
+		btnLastState = false;
 	}
 }
 
