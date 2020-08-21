@@ -512,7 +512,6 @@ void loop()
 	if (didsomething) {
 		//Serial.println("calling wait for none");
 		UpdateBLE(false);
-		ReadButton(true);
 		didsomething = false;
 		// see if BLE enabled
 		if (bEnableBLE != bLastEnableBLE) {
@@ -875,7 +874,7 @@ void GetIntegerValue(MenuItem* menu)
 		}
 		DisplayLine(0, line);
 		DisplayLine(4, "step: " + String(stepSize) + " (Click +)");
-		while (!done && (button = ReadButton(false)) == BTN_NONE) {
+		while (!done && (button = ReadButton()) == BTN_NONE) {
 			delay(1);
 		}
 	} while (!done);
@@ -890,7 +889,7 @@ bool HandleMenus()
 		bMenuChanged = false;
 	}
 	bool didsomething = true;
-	int button = ReadButton(false);
+	int button = ReadButton();
 	switch (button) {
 	case BTN_SELECT:
 		RunMenus(button);
@@ -939,7 +938,7 @@ bool HandleRunMode()
 	bool didsomething = true;
 	//DisplayLine(2, "C - select menu/return");
 	//DisplayLine(3, "LRUD - select/change");
-	switch (ReadButton(false)) {
+	switch (ReadButton()) {
 	case BTN_SELECT:
 		ProcessFileOrTest();
 		break;
@@ -975,8 +974,7 @@ bool HandleRunMode()
 }
 
 // check buttons and return if one pressed
-// if wait is set, it will loop until none are pressed and then likely return btnNone
-int ReadButton(bool wait)
+int ReadButton()
 {
 	int retValue = BTN_NONE;
 	// see if we got any BLE commands

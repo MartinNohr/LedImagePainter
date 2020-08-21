@@ -54,7 +54,7 @@ void TestBpm();
 void TestConfetti();
 void DisplayAllColor();
 bool bPauseDisplay = false; // set this so DisplayLine and Progress won't update display
-int ReadButton(bool wait);
+int ReadButton();
 bool CheckCancel();
 
 // eeprom values
