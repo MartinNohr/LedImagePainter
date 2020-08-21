@@ -1872,8 +1872,8 @@ void ProcessFileOrTest()
 		nTimerSeconds = startDelay;
 		while (nTimerSeconds) {
 			//Serial.println("timer " + String(nTimerSeconds));
-			line = "Seconds before start: " + String(nTimerSeconds / 10) + "." + String(nTimerSeconds % 10);
-			DisplayLine(2, line);
+			line = "Start Delay: " + String(nTimerSeconds / 10) + "." + String(nTimerSeconds % 10);
+			DisplayLine(1, line);
 			if (CheckCancel())
 				break;
 			delay(100);
@@ -1932,15 +1932,15 @@ void ProcessFileOrTest()
 						// start timer
 						nTimerSeconds = repeatDelay;
 						while (nTimerSeconds > 0) {
-							line = "Repeat Delay Left: " + String(nTimerSeconds / 10) + "." + String(nTimerSeconds % 10);
-							DisplayLine(2, line);
+							line = "Repeat Delay: " + String(nTimerSeconds / 10) + "." + String(nTimerSeconds % 10);
+							DisplayLine(1, line);
 							line = "";
 							if (CheckCancel())
 								break;
 							delay(100);
 							--nTimerSeconds;
 						}
-						DisplayLine(2, "");
+						//DisplayLine(2, "");
 					}
 				}
 			}
