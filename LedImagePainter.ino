@@ -621,6 +621,7 @@ bool RunMenus(int button)
 				menustack[menuLevel] = (MenuItem*)(menustack[menuLevel - 1][ix].value);
 				bMenuChanged = true;
 				activeMenuLine = 0;
+				offsetMenuLines = 0;
 				//Serial.println("change menu");
 				break;
 			case eBuiltinOptions: // find it in builtins
@@ -629,6 +630,7 @@ bool RunMenus(int button)
 					++menuLevel;
 					menustack[menuLevel] = (MenuItem*)(BuiltInFiles[CurrentFileIndex].menu);
 					activeMenuLine = 0;
+					offsetMenuLines = 0;
 				}
 				else {
 					WriteMessage("No settings available for:\n" + String(BuiltInFiles[CurrentFileIndex].text));
@@ -640,6 +642,7 @@ bool RunMenus(int button)
 					--menuLevel;
 					activeMenuLine = menuSavedLevel[menuLevel];
 					bMenuChanged = true;
+					offsetMenuLines = 0;
 				}
 				break;
 			case eReboot:
