@@ -2727,7 +2727,7 @@ void SaveEepromSettings(MenuItem* menu)
 // load eeprom settings
 void LoadEepromSettings(MenuItem* menu)
 {
-	SaveSettings(false, true);
+	SaveSettings(false, false);
 }
 
 // show some LED's with and without white balance adjust
