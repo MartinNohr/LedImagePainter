@@ -404,7 +404,7 @@ void setup()
 		SaveSettings(true, bAutoLoadSettings);
 	}
 	setupSDcard();
-	menustack[0] = MainMenu;
+	menuSavedInfo[0].menu = MainMenu;
 	menuSavedInfo[0].index = 0;
 	menuSavedInfo[0].offset = 0;
 	//const int ledPin = 16;  // 16 corresponds to GPIO16
@@ -594,9 +594,9 @@ bool RunMenus(int button)
 	// see if we got a menu match
 	bool gotmatch = false;
 	int menuix = 0;
-	for (int ix = 0; !gotmatch && menustack[menuLevel][ix].op != eTerminate; ++ix) {
+	for (int ix = 0; !gotmatch && menuSavedInfo[menuLevel].menu[ix].op != eTerminate; ++ix) {
 		// see if this is one is valid
-		if (!menustack[menuLevel][ix].valid) {
+		if (!menuSavedInfo[menuLevel].menu[ix].valid) {
 			continue;
 		}
 		//Serial.println("menu button: " + String(button));
@@ -605,14 +605,14 @@ bool RunMenus(int button)
 			gotmatch = true;
 			//Serial.println("clicked on menu");
 			// got one, service it
-			switch (menustack[menuLevel][ix].op) {
+			switch (menuSavedInfo[menuLevel].menu[ix].op) {
 			case eText:
 			case eTextInt:
 			case eTextCurrentFile:
 			case eBool:
-				if (menustack[menuLevel][ix].function) {
+				if (menuSavedInfo[menuLevel].menu[ix].function) {
 					//Serial.println(ix);
-					(*menustack[menuLevel][ix].function)(&menustack[menuLevel][ix]);
+					(*menuSavedInfo[menuLevel].menu[ix].function)(&menuSavedInfo[menuLevel].menu[ix]);
 					bMenuChanged = true;
 				}
 				break;
@@ -620,7 +620,7 @@ bool RunMenus(int button)
 				menuSavedInfo[menuLevel].index = activeMenuLine;
 				menuSavedInfo[menuLevel].offset = offsetMenuLines;
 				++menuLevel;
-				menustack[menuLevel] = (MenuItem*)(menustack[menuLevel - 1][ix].value);
+				menuSavedInfo[menuLevel].menu = (MenuItem*)(menuSavedInfo[menuLevel - 1].menu[ix].value);
 				bMenuChanged = true;
 				activeMenuLine = 0;
 				offsetMenuLines = 0;
@@ -631,7 +631,7 @@ bool RunMenus(int button)
 					menuSavedInfo[menuLevel].index = activeMenuLine;
 					menuSavedInfo[menuLevel].offset = offsetMenuLines;
 					++menuLevel;
-					menustack[menuLevel] = (MenuItem*)(BuiltInFiles[CurrentFileIndex].menu);
+					menuSavedInfo[menuLevel].menu = (MenuItem*)(BuiltInFiles[CurrentFileIndex].menu);
 					activeMenuLine = 0;
 					offsetMenuLines = 0;
 				}
@@ -880,7 +880,7 @@ void GetIntegerValue(MenuItem* menu)
 bool HandleMenus()
 {
 	if (bMenuChanged) {
-		ShowMenu(menustack[menuLevel]);
+		ShowMenu(menuSavedInfo[menuLevel].menu);
 		//ShowGo();
 		bMenuChanged = false;
 	}

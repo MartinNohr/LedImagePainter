@@ -573,12 +573,11 @@ BuiltInItem BuiltInFiles[] = {
 
 #define MAX_MENUS 10
 // a stack for menus so we can find our way back
-MenuItem* menustack[MAX_MENUS];
 struct MENUINFO {
     int index;
     int offset;
+    MenuItem* menu;
 } menuSavedInfo[MAX_MENUS];
-//int menuSavedLevel[MAX_MENUS];      // holds where the menu index and offset last time we were here
 int menuLevel = 0;
 bool bMenuChanged = true;
 int activeMenuLine = 0;
