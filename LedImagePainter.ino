@@ -1905,7 +1905,7 @@ void ProcessFileOrTest()
 				if (repeatCount > 1) {
 					line = "Repeats: " + String(nRepeatsLeft)+" ";
 				}
-				if (bChainFiles) {
+				if (nChainRepeats > 1) {
 					line += "Chains: " + String(chainRepeatCount + 1);
 				}
 				DisplayLine(2, line);
