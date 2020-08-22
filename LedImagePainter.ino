@@ -2197,6 +2197,24 @@ void ReadAndDisplayFile(bool doingFirstHalf) {
 				}
 			}
 		}
+		if (bManualFrameAdvance) {
+			int btn;
+			bool done = false;
+			while (!done) {
+				btn = ReadButton();
+				if (btn == BTN_NONE)
+					continue;
+				else if (btn == BTN_LONG)
+					btnBuf.add(btn);
+				else
+					break;
+				if (CheckCancel())
+					break;
+				delay(10);
+			}
+		}
+		if (bCancelRun)
+			break;
 	}
 	// all done
 	readByte(true);

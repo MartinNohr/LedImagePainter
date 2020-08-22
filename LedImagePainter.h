@@ -103,6 +103,7 @@ String FileNames[MAX_FILES];
 bool bSettingsMode = false;               // set true when settings are displayed
 int frameHold = 10;                       // default for the frame delay
 int nFramePulseCount = 0;                 // advance frame when button pressed this many times, 0 means ignore
+bool bManualFrameAdvance = false;         // advance frame by clicking or rotating button
 bool bGammaCorrection = true;             // set to use the gamma table
 bool bShowBuiltInTests = false;           // list the internal file instead of the SD card
 bool bReverseImage = false;               // read the file lines in reverse
@@ -146,6 +147,7 @@ const saveValues saveValueList[] = {
     {&nStripBrightness, sizeof(nStripBrightness)},
     {&frameHold, sizeof(frameHold)},
     {&nFramePulseCount, sizeof(nFramePulseCount)},
+    {&bManualFrameAdvance, sizeof(bManualFrameAdvance)},
     {&startDelay, sizeof(startDelay)},
     //{&bRepeatForever, sizeof(bRepeatForever)},
     {&repeatCount, sizeof(repeatCount)},
@@ -474,7 +476,8 @@ MenuItem DisplayMenu[] = {
 };
 MenuItem ImageMenu[] = {
     {eClear,false},
-    {eTextInt,false,"Frame Hold (mS): %d",GetIntegerValue,&frameHold,0,100},
+    {eTextInt,false,"Frame Hold (mS): %d",GetIntegerValue,&frameHold,0,1000},
+    {eBool,false,"Frame Advance: %s",ToggleBool,&bManualFrameAdvance,0,0,0,"Click","Auto"},
     {eTextInt,false,"Frame Pulse Counter: %d",GetIntegerValue,&nFramePulseCount,0,32},
     {eTextInt,false,"Start Delay (S): %d.%d",GetIntegerValue,&startDelay,0,100,1},
     {eTextInt,false,"Strip Brightness: %d%%",GetIntegerValue,&nStripBrightness,0,100},
