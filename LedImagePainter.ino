@@ -32,42 +32,33 @@ enum BUTTONS { BTN_RIGHT, BTN_LEFT, BTN_SELECT, BTN_LONG, BTN_NONE };
 // for debugging missed buttons
 volatile int nButtonDowns;
 volatile int nButtonUps;
-volatile bool btnLastState = true;
+volatile bool bButtonTimerRunning;
+volatile bool bButtonArmed = true;	// must be reset after reading a long press, it stops the noise on button release
 
 // interrupt handlers
 void IRAM_ATTR IntBtnCenter()
 {
-	bool state = digitalRead(BTNPUSH);
-	//int32_t bits = gpio_input_get();
-	static unsigned long changedTime = 0;
-	unsigned long currentTime = millis();
-	int btn;
-	if (currentTime > changedTime + 30) {
-		if (btnLastState == state)
-			state = !state;
-		btnLastState = state;
-		if (state) {
-			if (!bLongPress) {
-				// cancel long press timer
-				esp_timer_stop(oneshot_LONGPRESS_timer);
-				btn = BTN_SELECT;
-				btnBuf.add(btn);
-			}
-			bLongPress = false;
-			//Serial.println("button up");
-			++nButtonUps;
-		}
-		else {
-			++nButtonDowns;
-			//Serial.println("button down");
-			// 1/2 second for long press
-			esp_timer_stop(oneshot_LONGPRESS_timer);	// just in case
-			esp_timer_start_once(oneshot_LONGPRESS_timer, 500 * 1000);
-			bLongPress = false;
-		}
-		// got one, note time so we can ignore until ready again
-		changedTime = currentTime;
+	// went low, if timer not started, start it
+	if (!bButtonTimerRunning && bButtonArmed) {
+		//esp_timer_stop(oneshot_LONGPRESS_timer);	// just in case
+		esp_timer_start_once(oneshot_LONGPRESS_timer, 400 * 1000);
+		bButtonTimerRunning = true;
 	}
+}
+
+void IRAM_ATTR oneshot_LONGPRESS_timer_callback(void* arg)
+{
+	int btn;
+	// if the button is down, it must be a long press
+	btn = digitalRead(BTNPUSH) ? BTN_SELECT : BTN_LONG;
+	if (bButtonArmed) {
+		btnBuf.add(btn);
+		//Serial.println("btn: " + String(btn));
+		if (btn == BTN_LONG) {
+			bButtonArmed = false;
+		}
+	}
+	bButtonTimerRunning = false;
 }
 
 // state table for the rotary encoder
@@ -93,7 +84,7 @@ void IRAM_ATTR IntBtnAB()
 	static bool lastValB = true;
 	bool valA = digitalRead(BTNA);
 	bool valB = digitalRead(BTNB);
-	Serial.println("A:" + String(valA) + " B:" + String(valB));
+	//Serial.println("A:" + String(valA) + " B:" + String(valB));
 	//Serial.println("start state: " + String(state));
 	//Serial.println("forward: " + String(forward));
 	if (valA == lastValA && valB == lastValB)
@@ -145,6 +136,21 @@ void IRAM_ATTR IntBtnAB()
 	lastValB = valB;
 }
 
+//static const char* TAG = "lightwand";
+//esp_timer_cb_t oneshot_timer_callback(void* arg)
+void IRAM_ATTR oneshot_LED_timer_callback(void* arg)
+{
+	bStripWaiting = false;
+	//int64_t time_since_boot = esp_timer_get_time();
+	//Serial.println("in isr");
+	//ESP_LOGI(TAG, "One-shot timer called, time since boot: %lld us", time_since_boot);
+}
+
+void IRAM_ATTR oneshot_BTN_timer_callback(void* arg)
+{
+	bButtonWait = false;
+}
+
 class MyServerCallbacks : public BLEServerCallbacks {
 	void onConnect(BLEServer* pServer) {
 		BLEDeviceConnected = true;
@@ -152,7 +158,7 @@ class MyServerCallbacks : public BLEServerCallbacks {
 		//WriteMessage("BLE connected");
 		//OLED->clear();
 		//DisplayCurrentFile();
-		Serial.println("BLE connected");
+		//Serial.println("BLE connected");
 	};
 
 	void onDisconnect(BLEServer* pServer) {
@@ -161,7 +167,7 @@ class MyServerCallbacks : public BLEServerCallbacks {
 		//WriteMessage("BLE disconnected");
 		//OLED->clear();
 		//DisplayCurrentFile();
-		Serial.println("BLE disconnected");
+		//Serial.println("BLE disconnected");
 	}
 };
 
@@ -185,7 +191,7 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
 				sBLECommand = value;
 			}
 			else if (uuid.equals(BLEUUID(CHARACTERISTIC_UUID_WANDSETTINGS))) {
-				Serial.println(value.c_str());
+				//Serial.println(value.c_str());
 				StaticJsonDocument<200> doc;
 				const char* json = value.c_str();
 
@@ -194,8 +200,8 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
 
 				// Test if parsing succeeds.
 				if (error) {
-					Serial.print("deserializeJson() failed: ");
-					Serial.println(error.c_str());
+					//Serial.print("deserializeJson() failed: ");
+					//Serial.println(error.c_str());
 					return;
 				}
 				JsonObject object = doc.as<JsonObject>();
@@ -261,32 +267,6 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
 		}
 	}
 };
-
-//static const char* TAG = "lightwand";
-//esp_timer_cb_t oneshot_timer_callback(void* arg)
-void IRAM_ATTR oneshot_LED_timer_callback(void* arg)
-{
-	bStripWaiting = false;
-	//int64_t time_since_boot = esp_timer_get_time();
-	//Serial.println("in isr");
-	//ESP_LOGI(TAG, "One-shot timer called, time since boot: %lld us", time_since_boot);
-}
-
-void IRAM_ATTR oneshot_BTN_timer_callback(void* arg)
-{
-	bButtonWait = false;
-}
-
-void IRAM_ATTR oneshot_LONGPRESS_timer_callback(void* arg)
-{
-	// if the button is down, it must be a long press
-	if (!digitalRead(BTNPUSH)) {
-		bLongPress = true;
-		int btn = BTN_LONG;
-		btnBuf.add(btn);
-		btnLastState = false;
-	}
-}
 
 void EnableBLE()
 {
@@ -400,7 +380,7 @@ void setup()
 	};
 	esp_timer_create(&oneshot_LONGPRESS_timer_args, &oneshot_LONGPRESS_timer);
 
-	attachInterrupt(BTNPUSH, IntBtnCenter, CHANGE);
+	attachInterrupt(BTNPUSH, IntBtnCenter, FALLING);
 	attachInterrupt(BTNA, IntBtnAB, CHANGE);
 	attachInterrupt(BTNB, IntBtnAB, CHANGE);
 	Heltec.begin(true /*DisplayEnable Enable*/, false /*LoRa Enable*/, true /*Serial Enable*/);
@@ -539,7 +519,7 @@ void loop()
 	if (!BLEDeviceConnected && oldBLEDeviceConnected) {
 		delay(500); // give the bluetooth stack the chance to get things ready
 		BLEDevice::startAdvertising();
-		Serial.println("start advertising");
+		//Serial.println("start advertising");
 		oldBLEDeviceConnected = BLEDeviceConnected;
 	}
 	// connecting
@@ -986,6 +966,7 @@ bool HandleRunMode()
 // check buttons and return if one pressed
 int ReadButton()
 {
+	static int nSawLongPress = 0;
 	int retValue = BTN_NONE;
 	// see if we got any BLE commands
 	if (!sBLECommand.empty()) {
@@ -1005,6 +986,22 @@ int ReadButton()
 	}
 	// pull leaves retValue alone if queue is empty
 	btnBuf.pull(&retValue);
+	static unsigned long sawTime;
+	if (nSawLongPress == 0 && retValue == BTN_LONG) {
+		nSawLongPress = 1;
+		//Serial.println("saw long press");
+	}
+	if (nSawLongPress == 1 && digitalRead(BTNPUSH)) {
+		sawTime = millis();
+		//Serial.println("start long timer");
+		nSawLongPress = 2;
+	}
+	// rearm if button high again and timer over
+	if (nSawLongPress == 2 && (millis() > sawTime + 100) && digitalRead(BTNPUSH)) {
+		//Serial.println("rearm");
+		bButtonArmed = true;
+		nSawLongPress = 0;
+	}
 	return retValue;
 }
 
@@ -1173,13 +1170,13 @@ void setupSDcard()
 	spi1.begin(18, 19, 23, SDcsPin);	// SCK,MISO,MOSI,CS
 
 	if (!SD.begin(SDcsPin, spi1)) {
-		Serial.println("Card Mount Failed");
+		//Serial.println("Card Mount Failed");
 		return;
 	}
 	uint8_t cardType = SD.cardType();
 
 	if (cardType == CARD_NONE) {
-		Serial.println("No SD card attached");
+		//Serial.println("No SD card attached");
 		return;
 	}
 
@@ -2453,11 +2450,11 @@ bool GetFileNamesFromSD(String dir) {
 		File root = SD.open(dir);
 		String CurrentFilename = "";
 		if (!root) {
-			Serial.println("Failed to open directory: " + dir);
+			//Serial.println("Failed to open directory: " + dir);
 			return false;
 		}
 		if (!root.isDirectory()) {
-			Serial.println("Not a directoryf: " + dir);
+			//Serial.println("Not a directoryf: " + dir);
 			return false;
 		}
 

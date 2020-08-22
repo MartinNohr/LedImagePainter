@@ -125,7 +125,6 @@ volatile bool bButtonWait = false;
 esp_timer_handle_t oneshot_BTN_timer;
 esp_timer_create_args_t oneshot_BTN_timer_args;
 // long press time
-volatile bool bLongPress = false;
 esp_timer_handle_t oneshot_LONGPRESS_timer;
 esp_timer_create_args_t oneshot_LONGPRESS_timer_args;
 
