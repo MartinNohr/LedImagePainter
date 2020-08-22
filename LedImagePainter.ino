@@ -391,7 +391,7 @@ void setup()
 	OLED->clear();
 	OLED->drawRect(0, 0, width - 1, height - 1);
 	OLED->setFont(ArialMT_Plain_24);
-	OLED->drawString(2, 2, "LED Painter");
+	OLED->drawString(2, 2, "MN Painter");
 	OLED->setFont(ArialMT_Plain_16);
 	OLED->drawString(4, 30, "Version 2.03");
 	OLED->setFont(ArialMT_Plain_10);
@@ -659,13 +659,12 @@ bool RunMenus(int button)
 }
 
 // display the menu
-// if activeLine is > 5, then shift the lines up by enough to display them
+// if activeMenuLine is > 5, then shift the lines up by enough to display them
 // remember that we only have room for 5 lines
 void ShowMenu(struct MenuItem* menu)
 {
 	activeMenuCount = 0;
-	static int offsetLines;
-	offsetLines = max(0, activeMenuLine - 4);
+	//offsetLines = max(0, activeMenuLine - 4);
 	//Serial.println("offset: " + String(offsetLines));
 	int y = 0;
 	int x = 0;
@@ -760,17 +759,17 @@ void ShowMenu(struct MenuItem* menu)
 			//Serial.println("menu text4: " + String(line));
 			break;
 		}
-		if (strlen(line) && y >= offsetLines) {
-			DisplayMenuLine(y - 1, y - 1 - offsetLines, line);
+		if (strlen(line) && y >= offsetMenuLines) {
+			DisplayMenuLine(y - 1, y - 1 - offsetMenuLines, line);
 		}
 	}
 	//Serial.println("menu: " + String(offsetLines) + ":" + String(y) + " active: " + String(activeMenuLine));
 	activeMenuCount = y;
 	// show line if menu has been scrolled
-	if (offsetLines > 0)
+	if (offsetMenuLines > 0)
 		OLED->drawLine(0, 0, 5, 0);
-	// show bottom line if menu greater than 5 and not on last one
-	if (activeMenuCount > 5 && activeMenuLine < activeMenuCount - 1)
+	// show bottom line if last line is showing
+	if (offsetMenuLines + 4 < activeMenuCount - 1)
 		OLED->drawLine(0, OLED->getHeight() - 1, 5, OLED->getHeight() - 1);
 	OLED->display();
 }
@@ -870,7 +869,7 @@ void GetIntegerValue(MenuItem* menu)
 	} while (!done);
 }
 
-// handle the settings menus
+// handle the menus
 bool HandleMenus()
 {
 	if (bMenuChanged) {
@@ -880,24 +879,38 @@ bool HandleMenus()
 	}
 	bool didsomething = true;
 	int button = ReadButton();
+	int lastOffset = offsetMenuLines;
+	int lastMenu = activeMenuLine;
 	switch (button) {
 	case BTN_SELECT:
 		RunMenus(button);
 		bMenuChanged = true;
 		break;
 	case BTN_RIGHT:
-		if (bAllowMenuWrap || activeMenuLine < activeMenuCount - 1)
+		if (bAllowMenuWrap || activeMenuLine < activeMenuCount - 1) {
 			++activeMenuLine;
-		if (activeMenuLine >= activeMenuCount)
+		}
+		if (activeMenuLine >= activeMenuCount) {
 			activeMenuLine = 0;
-		bMenuChanged = true;
+		}
+		// see if we need to scroll the menu
+		if (activeMenuLine > 4) {
+			if (offsetMenuLines < activeMenuCount - 5) {
+				++offsetMenuLines;
+			}
+		}
 		break;
 	case BTN_LEFT:
-		if (bAllowMenuWrap || activeMenuLine > 0)
+		if (bAllowMenuWrap || activeMenuLine > 0) {
 			--activeMenuLine;
-		if (activeMenuLine < 0)
+		}
+		if (activeMenuLine < 0) {
 			activeMenuLine = activeMenuCount - 1;
-		bMenuChanged = true;
+		}
+		// see if we need to adjust the offset
+		if (offsetMenuLines && activeMenuLine < offsetMenuLines) {
+			--offsetMenuLines;
+		}
 		break;
 	//case BTN_HANDLE:
 	case BTN_LONG:
@@ -921,6 +934,9 @@ bool HandleMenus()
 		didsomething = false;
 		break;
 	}
+	if (lastMenu != activeMenuLine || lastOffset != offsetMenuLines) {
+		bMenuChanged = true;
+	}
 	return didsomething;
 }
 
@@ -928,8 +944,6 @@ bool HandleMenus()
 bool HandleRunMode()
 {
 	bool didsomething = true;
-	//DisplayLine(2, "C - select menu/return");
-	//DisplayLine(3, "LRUD - select/change");
 	switch (ReadButton()) {
 	case BTN_SELECT:
 		ProcessFileOrTest();
@@ -1974,8 +1988,8 @@ void ProcessFileOrTest()
 		CurrentFileIndex = lastFileIndex;
 	FastLED.clear(true);
 	OLED->clear();
-	DisplayCurrentFile();
 	bIsRunning = false;
+	DisplayCurrentFile();
 	nProgress = 0;
 	// clear buttons
 	int btn;

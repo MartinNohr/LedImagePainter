@@ -572,6 +572,7 @@ int menuSavedLevel[MAX_MENUS];      // holds where the menu was last time we wer
 int menuLevel = 0;
 bool bMenuChanged = true;
 int activeMenuLine = 0;
+int offsetMenuLines = 0;
 int activeMenuCount = 0;
 
 // save and load variables from lwc files
