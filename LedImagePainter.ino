@@ -1903,10 +1903,10 @@ void ProcessFileOrTest()
 				if (!bShowBuiltInTests)
 					ShowProgressBar(0);
 				if (repeatCount > 1) {
-					line = "Repeats: " + String(nRepeatsLeft);
+					line = "Repeats: " + String(nRepeatsLeft)+" ";
 				}
-				if (chainRepeatCount > 0) {
-					line += " Chains: " + String(chainRepeatCount + 1);
+				if (bChainFiles) {
+					line += "Chains: " + String(chainRepeatCount + 1);
 				}
 				DisplayLine(2, line);
 				if (bShowBuiltInTests) {
