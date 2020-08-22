@@ -901,7 +901,7 @@ bool HandleMenus()
 			activeMenuLine = 0;
 		}
 		// see if we need to scroll the menu
-		if (activeMenuLine > 4) {
+		if (activeMenuLine - offsetMenuLines > 4) {
 			if (offsetMenuLines < activeMenuCount - 5) {
 				++offsetMenuLines;
 			}
