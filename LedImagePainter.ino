@@ -2310,14 +2310,16 @@ void DisplayCurrentFile(bool path)
 	else {
 		if (bSdCardValid) {
 			DisplayLine(0, (path ? currentFolder : "") + FileNames[CurrentFileIndex] + (bMirrorPlayImage ? "><" : ""));
-			//if (!bIsRunning) {
-			//	for (int ix = 0; ix < 4; ++ix) {
-			//		if (ix + CurrentFileIndex >= NumberOfFiles - 1) {
-			//			break;
-			//		}
-			//		DisplayLine(ix, FileNames[CurrentFileIndex + ix]);
-			//	}
-			//}
+			if (!bIsRunning && bShowNextFiles) {
+				for (int ix = 1; ix < 4; ++ix) {
+					if (ix + CurrentFileIndex >= NumberOfFiles) {
+						DisplayLine(ix, "");
+					}
+					else {
+						DisplayLine(ix, "   " + FileNames[CurrentFileIndex + ix]);
+					}
+				}
+			}
 		}
 		else {
 			DisplayLine(0, "No SD Card or Files");
