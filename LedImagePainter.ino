@@ -4,7 +4,7 @@
  Author:	Martin
 */
 /*
- Martin Nohr ESP32 light wand
+ Martin Nohr ESP32 LED Image Painter
 */
 /*
 	BLE code based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleServer.cpp
@@ -391,9 +391,9 @@ void setup()
 	OLED->clear();
 	OLED->drawRect(0, 0, width - 1, height - 1);
 	OLED->setFont(ArialMT_Plain_24);
-	OLED->drawString(2, 2, "Light Wand");
+	OLED->drawString(2, 2, "LED Painter");
 	OLED->setFont(ArialMT_Plain_16);
-	OLED->drawString(4, 30, "Version 2.02");
+	OLED->drawString(4, 30, "Version 2.03");
 	OLED->setFont(ArialMT_Plain_10);
 	OLED->drawString(4, 48, __DATE__);
 	OLED->display();
@@ -886,15 +886,13 @@ bool HandleMenus()
 		bMenuChanged = true;
 		break;
 	case BTN_RIGHT:
-		++activeMenuLine;
-		if (activeMenuLine >= activeMenuCount)
-			activeMenuLine = 0;
+		if (activeMenuLine < activeMenuCount - 1)
+			++activeMenuLine;
 		bMenuChanged = true;
 		break;
 	case BTN_LEFT:
-		--activeMenuLine;
-		if (activeMenuLine < 0)
-			activeMenuLine = activeMenuCount - 1;
+		if (activeMenuLine > 0)
+			--activeMenuLine;
 		bMenuChanged = true;
 		break;
 	//case BTN_HANDLE:
@@ -933,18 +931,13 @@ bool HandleRunMode()
 		ProcessFileOrTest();
 		break;
 	case BTN_RIGHT:
-		++CurrentFileIndex;
-		if (CurrentFileIndex >= NumberOfFiles)
-			CurrentFileIndex = 0;
+		if (CurrentFileIndex < NumberOfFiles - 1)
+			++CurrentFileIndex;
 		DisplayCurrentFile();
 		break;
 	case BTN_LEFT:
-		if (CurrentFileIndex > 0) {
+		if (CurrentFileIndex > 0)
 			--CurrentFileIndex;
-		}
-		else {
-			CurrentFileIndex = NumberOfFiles - 1;
-		}
 		DisplayCurrentFile();
 		break;
 		//case btnShowFiles:
