@@ -405,7 +405,8 @@ void setup()
 	}
 	setupSDcard();
 	menustack[0] = MainMenu;
-	menuSavedLevel[0] = 0;
+	menuSavedInfo[0].index = 0;
+	menuSavedInfo[0].offset = 0;
 	//const int ledPin = 16;  // 16 corresponds to GPIO16
 
 	//// configure LED PWM functionalitites
@@ -616,7 +617,8 @@ bool RunMenus(int button)
 				}
 				break;
 			case eMenu:
-				menuSavedLevel[menuLevel] = activeMenuLine;
+				menuSavedInfo[menuLevel].index = activeMenuLine;
+				menuSavedInfo[menuLevel].offset = offsetMenuLines;
 				++menuLevel;
 				menustack[menuLevel] = (MenuItem*)(menustack[menuLevel - 1][ix].value);
 				bMenuChanged = true;
@@ -626,7 +628,8 @@ bool RunMenus(int button)
 				break;
 			case eBuiltinOptions: // find it in builtins
 				if (BuiltInFiles[CurrentFileIndex].menu != NULL) {
-					menuSavedLevel[menuLevel] = activeMenuLine;
+					menuSavedInfo[menuLevel].index = activeMenuLine;
+					menuSavedInfo[menuLevel].offset = offsetMenuLines;
 					++menuLevel;
 					menustack[menuLevel] = (MenuItem*)(BuiltInFiles[CurrentFileIndex].menu);
 					activeMenuLine = 0;
@@ -640,9 +643,9 @@ bool RunMenus(int button)
 			case eExit: // go back a level
 				if (menuLevel) {
 					--menuLevel;
-					activeMenuLine = menuSavedLevel[menuLevel];
+					activeMenuLine = menuSavedInfo[menuLevel].index;
+					offsetMenuLines = menuSavedInfo[menuLevel].offset;
 					bMenuChanged = true;
-					offsetMenuLines = 0;
 				}
 				break;
 			case eReboot:
@@ -657,7 +660,8 @@ bool RunMenus(int button)
 	if (!bMenuChanged && menuLevel) {
 		bMenuChanged = true;
 		--menuLevel;
-		activeMenuLine = menuSavedLevel[menuLevel];
+		activeMenuLine = menuSavedInfo[menuLevel].index;
+		offsetMenuLines = menuSavedInfo[menuLevel].offset;
 	}
 }
 

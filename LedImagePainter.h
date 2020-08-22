@@ -64,7 +64,7 @@ bool bAutoLoadSettings = false;           // set to automatically load saved set
 // settings
 int displayBrightness = 100;
 bool bSdCardValid = false;              // set to true when card is found
-// wand leds
+// strip leds
 #define DATA_PIN1 17
 #define DATA_PIN2 25
 #define NUM_LEDS 144
@@ -89,7 +89,7 @@ struct {
     int g;
     int b;
 } whiteBalance = { 255,255,255 };
-// wand settings
+// strip settings
 int charHeight = 19;
 #define NEXT_FOLDER_CHAR '~'
 #define PREVIOUS_FOLDER_CHAR '^'
@@ -452,7 +452,7 @@ MenuItem RandomBarsMenu[] = {
     // make sure this one is last
     {eTerminate}
 };
-MenuItem WandColorMenu[] = {
+MenuItem StripColorMenu[] = {
     {eClear,false},
     {eBool,false,"Gamma Correction: %s",ToggleBool,&bGammaCorrection,0,0,0,"On","Off"},
     {eTextInt,false,"White Balance R: %3d",GetIntegerValue,&whiteBalance.r,0,255},
@@ -463,22 +463,28 @@ MenuItem WandColorMenu[] = {
     // make sure this one is last
     {eTerminate}
 };
-MenuItem WandMenu[] = {
+MenuItem DisplayMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100},
+    {eBool,false,"Allow Menu Wrap: %s",ToggleBool,&bAllowMenuWrap,0,0,0,"Yes","No"},
+    {eBool,false,"Show Next Files: %s",ToggleBool,&bShowNextFiles,0,0,0,"Yes","No"},
+    {eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem ImageMenu[] = {
     {eClear,false},
     {eTextInt,false,"Frame Hold (mS): %d",GetIntegerValue,&frameHold,0,100},
     {eTextInt,false,"Frame Pulse Counter: %d",GetIntegerValue,&nFramePulseCount,0,32},
     {eTextInt,false,"Start Delay (S): %d.%d",GetIntegerValue,&startDelay,0,100,1},
-    {eTextInt,false,"Wand Brightness: %d%%",GetIntegerValue,&nStripBrightness,0,100},
-    {eBool,false,"Two LED strips: %s",ToggleBool,&bSecondStrip,0,0,0,"Yes","No"},
+    {eTextInt,false,"Strip Brightness: %d%%",GetIntegerValue,&nStripBrightness,0,100},
     {eBool,false,"Scale Height to Fit: %s",ToggleBool,&bScaleHeight,0,0,0,"On","Off"},
     {eBool,false,"Upside Down Image: %s",ToggleBool,&bUpsideDown,0,0,0,"Yes","No"},
     {eBool,false,"Reverse Image: %s",ToggleBool,&bReverseImage,0,0,0,"Yes","No"},
     {eBool,false,"Play Mirror Image: %s",ToggleBool,&bMirrorPlayImage,0,0,0,"Yes","No"},
     {eBool,false,"Show Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
-    {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100},
-    {eBool,false,"Allow Menu Wrap: %s",ToggleBool,&bAllowMenuWrap,0,0,0,"Yes","No"},
-    {eBool,false,"Show Next Files: %s",ToggleBool,&bShowNextFiles,0,0,0,"Yes","No"},
-    {eMenu,false,"Color Settings",NULL,WandColorMenu},
+    {eMenu,false,"Color Settings",NULL,StripColorMenu},
+    {eBool,false,"Two LED strips: %s",ToggleBool,&bSecondStrip,0,0,0,"Yes","No"},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
@@ -532,7 +538,7 @@ MenuItem MainMenu[] = {
     {eElse},
         {eBool,false,"Switch to Built-ins",ToggleFilesBuiltin,&bShowBuiltInTests,0,0,0,"On","Off"},
     {eEndif},
-    {eMenu,false,"Wand Settings",NULL,WandMenu},
+    {eMenu,false,"Image Settings",NULL,ImageMenu},
     {eMenu,false,"Repeat Settings",NULL,RepeatMenu},
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,true},
         {eBuiltinOptions,false,"%s Options",NULL,BuiltInFiles},
@@ -540,9 +546,9 @@ MenuItem MainMenu[] = {
         {eMenu,false,"LWC File Operations",NULL,StartFileMenu},
     {eEndif},
     {eMenu,false,"Default Settings",NULL,EepromMenu},
+    {eMenu,false,"Display Settings",NULL,DisplayMenu},
     {eBool,false,"BlueTooth Link: %s",ToggleBool,&bEnableBLE,0,0,0,"On","Off"},
     {eReboot,false,"Reboot"},
-    //{eMenu,false,"Other Settings",NULL,OtherSettingsMenu},
     // make sure this one is last
     {eTerminate}
 };
@@ -568,7 +574,11 @@ BuiltInItem BuiltInFiles[] = {
 #define MAX_MENUS 10
 // a stack for menus so we can find our way back
 MenuItem* menustack[MAX_MENUS];
-int menuSavedLevel[MAX_MENUS];      // holds where the menu was last time we were here
+struct MENUINFO {
+    int index;
+    int offset;
+} menuSavedInfo[MAX_MENUS];
+//int menuSavedLevel[MAX_MENUS];      // holds where the menu index and offset last time we were here
 int menuLevel = 0;
 bool bMenuChanged = true;
 int activeMenuLine = 0;
@@ -589,7 +599,7 @@ struct SETTINGVAR {
 };
 struct SETTINGVAR SettingsVarList[] = {
     {"SECOND STRIP",&bSecondStrip,vtBool},
-    {"WAND BRIGHTNESS",&nStripBrightness,vtInt,0,100},
+    {"STRIP BRIGHTNESS",&nStripBrightness,vtInt,0,100},
     {"REPEAT COUNT",&repeatCount,vtInt},
     {"REPEAT DELAY",&repeatDelay,vtInt},
     {"FRAME TIME",&frameHold,vtInt},
