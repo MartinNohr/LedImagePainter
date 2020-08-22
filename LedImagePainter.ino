@@ -1885,6 +1885,7 @@ void ProcessFileOrTest()
 	}
 	bIsRunning = true;
 	nProgress = 0;
+	DisplayLine(3, "");
 	//DisplayCurrentFile();
 	if (startDelay) {
 		// set a timer
