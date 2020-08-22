@@ -113,6 +113,7 @@ int nChainRepeats = 1;                    // how many times to repeat the chain
 bool bShowProgress = true;                // show the progress bar
 bool bScaleHeight = false;                // scale the Y values to fit the number of pixels
 bool bCancelRun = false;                  // set to cancel a running job
+bool bAllowMenuWrap = false;              // allows menus to wrap around from end and start instead of pinning
 // timer argument vale
 enum TIMER_ID { TID_LED, TID_BTN, TID_LONGPRESS };
 volatile int nTimerSeconds;
@@ -472,6 +473,7 @@ MenuItem WandMenu[] = {
     {eBool,false,"Play Mirror Image: %s",ToggleBool,&bMirrorPlayImage,0,0,0,"Yes","No"},
     {eBool,false,"Show Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
     {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100},
+    {eBool,false,"Allow Menu Wrap: %s",ToggleBool,&bAllowMenuWrap,0,0,0,"Yes","No"},
     {eMenu,false,"Color Settings",NULL,WandColorMenu},
     {eExit,false,"Previous Menu"},
     // make sure this one is last

@@ -886,13 +886,17 @@ bool HandleMenus()
 		bMenuChanged = true;
 		break;
 	case BTN_RIGHT:
-		if (activeMenuLine < activeMenuCount - 1)
+		if (bAllowMenuWrap || activeMenuLine < activeMenuCount - 1)
 			++activeMenuLine;
+		if (activeMenuLine >= activeMenuCount)
+			activeMenuLine = 0;
 		bMenuChanged = true;
 		break;
 	case BTN_LEFT:
-		if (activeMenuLine > 0)
+		if (bAllowMenuWrap || activeMenuLine > 0)
 			--activeMenuLine;
+		if (activeMenuLine < 0)
+			activeMenuLine = activeMenuCount - 1;
 		bMenuChanged = true;
 		break;
 	//case BTN_HANDLE:
@@ -931,13 +935,17 @@ bool HandleRunMode()
 		ProcessFileOrTest();
 		break;
 	case BTN_RIGHT:
-		if (CurrentFileIndex < NumberOfFiles - 1)
+		if (bAllowMenuWrap || (CurrentFileIndex < NumberOfFiles - 1))
 			++CurrentFileIndex;
+		if (CurrentFileIndex >= NumberOfFiles)
+			CurrentFileIndex = 0;
 		DisplayCurrentFile();
 		break;
 	case BTN_LEFT:
-		if (CurrentFileIndex > 0)
+		if (bAllowMenuWrap || (CurrentFileIndex > 0))
 			--CurrentFileIndex;
+		if (CurrentFileIndex < 0)
+			CurrentFileIndex = NumberOfFiles - 1;
 		DisplayCurrentFile();
 		break;
 		//case btnShowFiles:
