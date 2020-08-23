@@ -454,22 +454,12 @@ MenuItem RandomBarsMenu[] = {
     // make sure this one is last
     {eTerminate}
 };
-MenuItem StripColorMenu[] = {
-    {eClear,false},
-    {eBool,false,"Gamma Correction: %s",ToggleBool,&bGammaCorrection,0,0,0,"On","Off"},
-    {eTextInt,false,"White Balance R: %3d",GetIntegerValue,&whiteBalance.r,0,255},
-    {eTextInt,false,"White Balance G: %3d",GetIntegerValue,&whiteBalance.g,0,255},
-    {eTextInt,false,"White Balance B: %3d",GetIntegerValue,&whiteBalance.b,0,255},
-    {eText,false,"Show White Balance",ShowWhiteBalance},
-    {eExit,false,"Previous Menu"},
-    // make sure this one is last
-    {eTerminate}
-};
 MenuItem DisplayMenu[] = {
     {eClear,false},
     {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100},
     {eBool,false,"Allow Menu Wrap: %s",ToggleBool,&bAllowMenuWrap,0,0,0,"Yes","No"},
     {eBool,false,"Show Next Files: %s",ToggleBool,&bShowNextFiles,0,0,0,"Yes","No"},
+    {eBool,false,"Show Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
@@ -480,14 +470,23 @@ MenuItem ImageMenu[] = {
     {eBool,false,"Frame Advance: %s",ToggleBool,&bManualFrameAdvance,0,0,0,"Click","Auto"},
     {eTextInt,false,"Frame Pulse Counter: %d",GetIntegerValue,&nFramePulseCount,0,32},
     {eTextInt,false,"Start Delay (S): %d.%d",GetIntegerValue,&startDelay,0,100,1},
-    {eTextInt,false,"Strip Brightness: %d%%",GetIntegerValue,&nStripBrightness,0,100},
-    {eBool,false,"Scale Height to Fit: %s",ToggleBool,&bScaleHeight,0,0,0,"On","Off"},
     {eBool,false,"Upside Down Image: %s",ToggleBool,&bUpsideDown,0,0,0,"Yes","No"},
     {eBool,false,"Reverse Image: %s",ToggleBool,&bReverseImage,0,0,0,"Yes","No"},
     {eBool,false,"Play Mirror Image: %s",ToggleBool,&bMirrorPlayImage,0,0,0,"Yes","No"},
-    {eBool,false,"Show Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
-    {eMenu,false,"Color Settings",NULL,StripColorMenu},
+    {eBool,false,"Scale Height to Fit: %s",ToggleBool,&bScaleHeight,0,0,0,"On","Off"},
+    {eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem StripMenu[] = {
+    {eClear,false},
+    {eTextInt,false,"Strip Brightness: %d%%",GetIntegerValue,&nStripBrightness,0,100},
     {eBool,false,"Two LED strips: %s",ToggleBool,&bSecondStrip,0,0,0,"Yes","No"},
+    {eBool,false,"Gamma Correction: %s",ToggleBool,&bGammaCorrection,0,0,0,"On","Off"},
+    {eTextInt,false,"White Balance R: %3d",GetIntegerValue,&whiteBalance.r,0,255},
+    {eTextInt,false,"White Balance G: %3d",GetIntegerValue,&whiteBalance.g,0,255},
+    {eTextInt,false,"White Balance B: %3d",GetIntegerValue,&whiteBalance.b,0,255},
+    {eText,false,"Show White Balance",ShowWhiteBalance},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
@@ -541,8 +540,9 @@ MenuItem MainMenu[] = {
     {eElse},
         {eBool,false,"Switch to Built-ins",ToggleFilesBuiltin,&bShowBuiltInTests,0,0,0,"On","Off"},
     {eEndif},
-    {eMenu,false,"Image Settings",NULL,ImageMenu},
+    {eMenu,false,"File Image Settings",NULL,ImageMenu},
     {eMenu,false,"Repeat Settings",NULL,RepeatMenu},
+    {eMenu,false,"LED Strip Settings",NULL,StripMenu},
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,true},
         {eBuiltinOptions,false,"%s Options",NULL,BuiltInFiles},
     {eElse},
