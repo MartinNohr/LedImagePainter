@@ -828,7 +828,9 @@ void ToggleBool(MenuItem* menu)
 // get integer values
 void GetIntegerValue(MenuItem* menu)
 {
+	// -1 means to reset to original
 	int stepSize = 1;
+	int originalValue = *(int*)menu->value;
 	//Serial.println("int: " + String(menu->text) + String(*(int*)menu->value));
 	char line[50];
 	int button = BTN_NONE;
@@ -844,18 +846,32 @@ void GetIntegerValue(MenuItem* menu)
 		//Serial.println("button: " + String(button));
 		switch (button) {
 		case BTN_LEFT:
-			*(int*)menu->value -= stepSize;
+			if (stepSize != -1)
+				*(int*)menu->value -= stepSize;
 			break;
 		case BTN_RIGHT:
-			*(int*)menu->value += stepSize;
+			if (stepSize != -1)
+				*(int*)menu->value += stepSize;
 			break;
 		case BTN_SELECT:
-			stepSize *= 10;
-			if (stepSize > (menu->max / 10))
+			if (stepSize == -1) {
 				stepSize = 1;
+			}
+			else {
+				stepSize *= 10;
+			}
+			if (stepSize > (menu->max / 10)) {
+				stepSize = -1;
+			}
 			break;
 		case BTN_LONG:
-			done = true;
+			if (stepSize == -1) {
+				*(int*)menu->value = originalValue;
+				stepSize = 1;
+			}
+			else {
+				done = true;
+			}
 			break;
 		}
 		// make sure within limits
@@ -873,7 +889,7 @@ void GetIntegerValue(MenuItem* menu)
 			sprintf(line, menu->text, *(int*)menu->value / 10, *(int*)menu->value % 10);
 		}
 		DisplayLine(0, line);
-		DisplayLine(4, "step: " + String(stepSize) + " (Click +)");
+		DisplayLine(4, stepSize == -1 ? "Reset: long press (Click +)" : "step: " + String(stepSize) + " (Click +)");
 		if (menu->change != NULL && oldVal != *(int*)menu->value) {
 			(*menu->change)(menu, 0);
 			oldVal = *(int*)menu->value;
