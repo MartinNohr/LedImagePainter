@@ -893,11 +893,68 @@ void UpdateStripBrightness(MenuItem* menu, int flag)
 	case 1:		// first time
 		for (int ix = 0; ix < 64; ++ix) {
 			leds[LEDIX(ix)] = CRGB::White;
-			FastLED.show();
 		}
+		FastLED.show();
 		break;
 	case 0:		// every change
 		FastLED.setBrightness(*(int*)menu->value);
+		FastLED.show();
+		break;
+	case -1:	// last time
+		FastLED.clear(true);
+		break;
+	}
+}
+
+void UpdateStripWhiteBalanceR(MenuItem* menu, int flag)
+{
+	switch (flag) {
+	case 1:		// first time
+		for (int ix = 0; ix < 64; ++ix) {
+			leds[LEDIX(ix)] = CRGB::White;
+		}
+		FastLED.show();
+		break;
+	case 0:		// every change
+		FastLED.setTemperature(CRGB(*(int*)menu->value, whiteBalance.g, whiteBalance.b));
+		FastLED.show();
+		break;
+	case -1:	// last time
+		FastLED.clear(true);
+		break;
+	}
+}
+
+void UpdateStripWhiteBalanceG(MenuItem* menu, int flag)
+{
+	switch (flag) {
+	case 1:		// first time
+		for (int ix = 0; ix < 64; ++ix) {
+			leds[LEDIX(ix)] = CRGB::White;
+		}
+		FastLED.show();
+		break;
+	case 0:		// every change
+		FastLED.setTemperature(CRGB(whiteBalance.r, *(int*)menu->value, whiteBalance.b));
+		FastLED.show();
+		break;
+	case -1:	// last time
+		FastLED.clear(true);
+		break;
+	}
+}
+
+void UpdateStripWhiteBalanceB(MenuItem* menu, int flag)
+{
+	switch (flag) {
+	case 1:		// first time
+		for (int ix = 0; ix < 64; ++ix) {
+			leds[LEDIX(ix)] = CRGB::White;
+		}
+		FastLED.show();
+		break;
+	case 0:		// every change
+		FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, *(int*)menu->value));
 		FastLED.show();
 		break;
 	case -1:	// last time

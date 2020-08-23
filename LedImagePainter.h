@@ -218,6 +218,9 @@ void ToggleBool(MenuItem*);
 void ToggleFilesBuiltin(MenuItem* menu);
 void UpdateOledBrightness(MenuItem* menu, int flag);
 void UpdateStripBrightness(MenuItem* menu, int flag);
+void UpdateStripWhiteBalanceR(MenuItem* menu, int flag);
+void UpdateStripWhiteBalanceG(MenuItem* menu, int flag);
+void UpdateStripWhiteBalanceB(MenuItem* menu, int flag);
 bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile);
 
 // builtins
@@ -486,9 +489,9 @@ MenuItem StripMenu[] = {
     {eTextInt,false,"Strip Brightness: %d",GetIntegerValue,&nStripBrightness,1,255,0,NULL,NULL,UpdateStripBrightness},
     {eBool,false,"Two LED strips: %s",ToggleBool,&bSecondStrip,0,0,0,"Yes","No"},
     {eBool,false,"Gamma Correction: %s",ToggleBool,&bGammaCorrection,0,0,0,"On","Off"},
-    {eTextInt,false,"White Balance R: %3d",GetIntegerValue,&whiteBalance.r,0,255},
-    {eTextInt,false,"White Balance G: %3d",GetIntegerValue,&whiteBalance.g,0,255},
-    {eTextInt,false,"White Balance B: %3d",GetIntegerValue,&whiteBalance.b,0,255},
+    {eTextInt,false,"White Balance R: %3d",GetIntegerValue,&whiteBalance.r,0,255,0,NULL,NULL,UpdateStripWhiteBalanceR},
+    {eTextInt,false,"White Balance G: %3d",GetIntegerValue,&whiteBalance.g,0,255,0,NULL,NULL,UpdateStripWhiteBalanceG},
+    {eTextInt,false,"White Balance B: %3d",GetIntegerValue,&whiteBalance.b,0,255,0,NULL,NULL,UpdateStripWhiteBalanceB},
     {eText,false,"Show White Balance",ShowWhiteBalance},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
