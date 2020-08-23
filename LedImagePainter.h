@@ -73,7 +73,7 @@ CRGB leds[NUM_LEDS * 2];
 bool bSecondStrip = false;                // set true when two strips installed
 #define STRIPLENGTH (NUM_LEDS*(1+(bSecondStrip?1:0)))
 #define LEDIX(ix) (((ix)<NUM_LEDS)?(NUM_LEDS-1-(ix)):(ix))
-int nStripBrightness = 10;                // Variable and default for the Brightness of the strip,  to 100%, 0 means the dimmest
+int nStripBrightness = 25;                // Variable and default for the Brightness of the strip,  to 100%, 0 means the dimmest
 int startDelay = 0;                       // Variable for delay between button press and start of light sequence, in seconds
 //bool bRepeatForever = false;                           // Variable to select auto repeat (until select button is pressed again)
 int repeatDelay = 0;                      // Variable for delay between repeats, 0.1 seconds
@@ -198,7 +198,8 @@ struct MenuItem {
     int decimals;   // 0 for int, 1 for 0.1
     char* on;       // text for boolean
     char* off;
-    void(*change)(MenuItem*);   // call for each change, example: brightness change show effect
+    // flag is 1 for first time, 0 for changes, and -1 for last call
+	void(*change)(MenuItem*, int flag);   // call for each change, example: brightness change show effect
 };
 typedef MenuItem MenuItem;
 
@@ -215,7 +216,8 @@ void ShowWhiteBalance(MenuItem* menu);
 void GetIntegerValue(MenuItem*);
 void ToggleBool(MenuItem*);
 void ToggleFilesBuiltin(MenuItem* menu);
-void UpdateOledBrightness(MenuItem* menu);
+void UpdateOledBrightness(MenuItem* menu, int flag);
+void UpdateStripBrightness(MenuItem* menu, int flag);
 bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile);
 
 // builtins
@@ -481,7 +483,7 @@ MenuItem ImageMenu[] = {
 };
 MenuItem StripMenu[] = {
     {eClear,false},
-    {eTextInt,false,"Strip Brightness: %d%%",GetIntegerValue,&nStripBrightness,0,100},
+    {eTextInt,false,"Strip Brightness: %d",GetIntegerValue,&nStripBrightness,1,255,0,NULL,NULL,UpdateStripBrightness},
     {eBool,false,"Two LED strips: %s",ToggleBool,&bSecondStrip,0,0,0,"Yes","No"},
     {eBool,false,"Gamma Correction: %s",ToggleBool,&bGammaCorrection,0,0,0,"On","Off"},
     {eTextInt,false,"White Balance R: %3d",GetIntegerValue,&whiteBalance.r,0,255},

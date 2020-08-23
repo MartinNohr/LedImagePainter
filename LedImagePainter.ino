@@ -421,7 +421,7 @@ void setup()
 	FastLED.addLeds<NEOPIXEL, DATA_PIN2>(leds, NUM_LEDS, NUM_LEDS);
 	//FastLED.setTemperature(whiteBalance);
 	FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, whiteBalance.b));
-	FastLED.setBrightness(map(nStripBrightness, 0, 100, 1, 255));
+	FastLED.setBrightness(nStripBrightness);
 	// Turn the LED on, then pause
 	leds[0] = leds[1] = CRGB::Red;
 	leds[4] = leds[5] = CRGB::Green;
@@ -444,7 +444,7 @@ void setup()
 	delayMicroseconds(50);
 	FastLED.clear(true);
 	delayMicroseconds(50);
-	FastLED.setBrightness(map(nStripBrightness, 0, 100, 1, 255));
+	FastLED.setBrightness(nStripBrightness);
 	delay(50);
 	// Now turn the LED off
 	FastLED.clear(true);
@@ -489,7 +489,7 @@ void loop()
 	didsomething = bSettingsMode ? HandleMenus() : HandleRunMode();
 	// special handling for things that might have changed
 	if (lastDisplayBrightness != displayBrightness) {
-		OLED->setBrightness(map(displayBrightness, 0, 100, 0, 255));
+		OLED->setBrightness(displayBrightness);
 	}
 	//if (lastStrip != bSecondStrip) {
 		//******** this crashes
@@ -837,11 +837,10 @@ void GetIntegerValue(MenuItem* menu)
 	DisplayLine(1, "Range: " + String(menu->min) + " to " + String(menu->max));
 	DisplayLine(3, "Long Press to Accept");
 	int oldVal = *(int*)menu->value;
+	if (menu->change != NULL) {
+		(*menu->change)(menu, 1);
+	}
 	do {
-		if (menu->change != NULL && oldVal != *(int*)menu->value) {
-			(*menu->change)(menu);
-			oldVal = *(int*)menu->value;
-		}
 		//Serial.println("button: " + String(button));
 		switch (button) {
 		case BTN_LEFT:
@@ -875,13 +874,39 @@ void GetIntegerValue(MenuItem* menu)
 		}
 		DisplayLine(0, line);
 		DisplayLine(4, "step: " + String(stepSize) + " (Click +)");
+		if (menu->change != NULL && oldVal != *(int*)menu->value) {
+			(*menu->change)(menu, 0);
+			oldVal = *(int*)menu->value;
+		}
 		while (!done && (button = ReadButton()) == BTN_NONE) {
 			delay(1);
 		}
 	} while (!done);
+	if (menu->change != NULL) {
+		(*menu->change)(menu, -1);
+	}
 }
 
-void UpdateOledBrightness(MenuItem* menu)
+void UpdateStripBrightness(MenuItem* menu, int flag)
+{
+	switch (flag) {
+	case 1:		// first time
+		for (int ix = 0; ix < 64; ++ix) {
+			leds[LEDIX(ix)] = CRGB::White;
+			FastLED.show();
+		}
+		break;
+	case 0:		// every change
+		FastLED.setBrightness(*(int*)menu->value);
+		FastLED.show();
+		break;
+	case -1:	// last time
+		FastLED.clear(true);
+		break;
+	}
+}
+
+void UpdateOledBrightness(MenuItem* menu, int flag)
 {
 	OLED->setBrightness(map(*(int*)menu->value, 0, 100, 0, 255));
 }
@@ -1837,20 +1862,18 @@ void TestRainbow()
 // time is in mSec
 void FadeInOut(int time, bool in)
 {
-	int steps = map(nStripBrightness, 0, 100, 1, 255);
-	time = time * 100 / 255;
 	if (in) {
-		for (int i = 0; i <= steps; ++i) {
+		for (int i = 0; i <= nStripBrightness; ++i) {
 			FastLED.setBrightness(i);
 			FastLED.show();
-			delay(time / steps);
+			delay(time / nStripBrightness);
 		}
 	}
 	else {
-		for (int i = steps; i >= 0; --i) {
+		for (int i = nStripBrightness; i >= 0; --i) {
 			FastLED.setBrightness(i);
 			FastLED.show();
-			delay(time / steps);
+			delay(time / nStripBrightness);
 		}
 	}
 }
@@ -1919,7 +1942,7 @@ void ProcessFileOrTest()
 	}
 	// set the basic LED info
 	FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, whiteBalance.b));
-	FastLED.setBrightness(map(nStripBrightness, 0, 100, 1, 255));
+	FastLED.setBrightness(nStripBrightness);
 	line = "";
 	while (chainRepeatCount-- > 0) {
 		while (chainCount-- > 0) {
