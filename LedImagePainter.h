@@ -473,13 +473,17 @@ MenuItem DisplayMenu[] = {
 MenuItem ImageMenu[] = {
     {eClear,false},
     {eTextInt,false,"Frame Hold (mS): %d",GetIntegerValue,&frameHold,0,1000},
-    {eBool,false,"Frame Advance: %s",ToggleBool,&bManualFrameAdvance,0,0,0,"Click","Auto"},
-    {eTextInt,false,"Frame Pulse Counter: %d",GetIntegerValue,&nFramePulseCount,0,32},
+    {eIfEqual,false,"",NULL,&bShowBuiltInTests,false},
+        {eBool,false,"Frame Advance: %s",ToggleBool,&bManualFrameAdvance,0,0,0,"Click","Auto"},
+        {eTextInt,false,"Frame Pulse Counter: %d",GetIntegerValue,&nFramePulseCount,0,32},
+    {eEndif},
     {eTextInt,false,"Start Delay (S): %d.%d",GetIntegerValue,&startDelay,0,100,1},
-    {eBool,false,"Upside Down Image: %s",ToggleBool,&bUpsideDown,0,0,0,"Yes","No"},
-    {eBool,false,"Reverse Image: %s",ToggleBool,&bReverseImage,0,0,0,"Yes","No"},
-    {eBool,false,"Play Mirror Image: %s",ToggleBool,&bMirrorPlayImage,0,0,0,"Yes","No"},
-    {eBool,false,"Scale Height to Fit: %s",ToggleBool,&bScaleHeight,0,0,0,"On","Off"},
+    {eIfEqual,false,"",NULL,&bShowBuiltInTests,false},
+        {eBool,false,"Upside Down Image: %s",ToggleBool,&bUpsideDown,0,0,0,"Yes","No"},
+        {eBool,false,"Reverse Image: %s",ToggleBool,&bReverseImage,0,0,0,"Yes","No"},
+        {eBool,false,"Play Mirror Image: %s",ToggleBool,&bMirrorPlayImage,0,0,0,"Yes","No"},
+        {eBool,false,"Scale Height to Fit: %s",ToggleBool,&bScaleHeight,0,0,0,"On","Off"},
+    {eEndif},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}

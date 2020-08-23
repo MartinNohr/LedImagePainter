@@ -485,12 +485,12 @@ void loop()
 	static bool didsomething = false;
 	bool lastStrip = bSecondStrip;
 	bool bLastEnableBLE = bEnableBLE;
-	int lastDisplayBrightness = displayBrightness;
+	//int lastDisplayBrightness = displayBrightness;
 	didsomething = bSettingsMode ? HandleMenus() : HandleRunMode();
 	// special handling for things that might have changed
-	if (lastDisplayBrightness != displayBrightness) {
-		OLED->setBrightness(displayBrightness);
-	}
+	//if (lastDisplayBrightness != displayBrightness) {
+	//	OLED->setBrightness(displayBrightness);
+	//}
 	//if (lastStrip != bSecondStrip) {
 		//******** this crashes
 		//if (bSecondStrip)
@@ -649,7 +649,7 @@ bool RunMenus(int button)
 				}
 				break;
 			case eReboot:
-				WriteMessage("Rebooting in 2 seconds\nhold run for factory reset", false, 2000);
+				WriteMessage("Rebooting in 2 seconds\nHold button for factory reset", false, 2000);
 				ESP.restart();
 				break;
 			}
@@ -695,7 +695,7 @@ void ShowMenu(struct MenuItem* menu)
 			break;
 		case eClear:
 			OLED->clear();
-			OLED->display();
+			//OLED->display();
 			break;
 		}
 		if (skip) {
@@ -1015,17 +1015,6 @@ bool HandleMenus()
 		OLED->clear();
 		bSettingsMode = false;
 		DisplayCurrentFile();
-		bMenuChanged = true;
-		break;
-		//if (menuLevel > 0) {
-		//	--menuLevel;
-		//	activeMenuLine = menuSavedLevel[menuLevel];
-		//}
-		//else {
-		//	OLED->clear();
-		//	bSettingsMode = false;
-		//	DisplayCurrentFile();
-		//}
 		bMenuChanged = true;
 		break;
 	default:
