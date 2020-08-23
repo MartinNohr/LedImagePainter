@@ -198,6 +198,7 @@ struct MenuItem {
     int decimals;   // 0 for int, 1 for 0.1
     char* on;       // text for boolean
     char* off;
+    void(*change)(MenuItem*);   // call for each change, example: brightness change show effect
 };
 typedef MenuItem MenuItem;
 
@@ -214,7 +215,7 @@ void ShowWhiteBalance(MenuItem* menu);
 void GetIntegerValue(MenuItem*);
 void ToggleBool(MenuItem*);
 void ToggleFilesBuiltin(MenuItem* menu);
-
+void UpdateOledBrightness(MenuItem* menu);
 bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile);
 
 // builtins
@@ -456,7 +457,7 @@ MenuItem RandomBarsMenu[] = {
 };
 MenuItem DisplayMenu[] = {
     {eClear,false},
-    {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100},
+    {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100,0,NULL,NULL,UpdateOledBrightness},
     {eBool,false,"Allow Menu Wrap: %s",ToggleBool,&bAllowMenuWrap,0,0,0,"Yes","No"},
     {eBool,false,"Show Next Files: %s",ToggleBool,&bShowNextFiles,0,0,0,"Yes","No"},
     {eBool,false,"Show Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},

@@ -836,7 +836,12 @@ void GetIntegerValue(MenuItem* menu)
 	OLED->clear();
 	DisplayLine(1, "Range: " + String(menu->min) + " to " + String(menu->max));
 	DisplayLine(3, "Long Press to Accept");
+	int oldVal = *(int*)menu->value;
 	do {
+		if (menu->change != NULL && oldVal != *(int*)menu->value) {
+			(*menu->change)(menu);
+			oldVal = *(int*)menu->value;
+		}
 		//Serial.println("button: " + String(button));
 		switch (button) {
 		case BTN_LEFT:
@@ -874,6 +879,11 @@ void GetIntegerValue(MenuItem* menu)
 			delay(1);
 		}
 	} while (!done);
+}
+
+void UpdateOledBrightness(MenuItem* menu)
+{
+	OLED->setBrightness(map(*(int*)menu->value, 0, 100, 0, 255));
 }
 
 // handle the menus
@@ -919,7 +929,6 @@ bool HandleMenus()
 			--offsetMenuLines;
 		}
 		break;
-	//case BTN_HANDLE:
 	case BTN_LONG:
 		OLED->clear();
 		bSettingsMode = false;
