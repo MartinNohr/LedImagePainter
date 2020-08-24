@@ -137,40 +137,6 @@ bool bIsRunning = false;
 // show percentage
 int nProgress = 0;
 
-struct saveValues {
-    void* val;
-    int size;
-};
-const saveValues saveValueList[] = {
-    {&signature, sizeof(signature)},                // this must be first
-    {&bAutoLoadSettings, sizeof(bAutoLoadSettings)},// this must be second
-    {&nStripBrightness, sizeof(nStripBrightness)},
-    {&frameHold, sizeof(frameHold)},
-    {&nFramePulseCount, sizeof(nFramePulseCount)},
-    {&bManualFrameAdvance, sizeof(bManualFrameAdvance)},
-    {&startDelay, sizeof(startDelay)},
-    //{&bRepeatForever, sizeof(bRepeatForever)},
-    {&repeatCount, sizeof(repeatCount)},
-    {&repeatDelay, sizeof(repeatDelay)},
-    {&bGammaCorrection, sizeof(bGammaCorrection)},
-    {&bSecondStrip, sizeof(bSecondStrip)},
-    //{&nBackLightSeconds, sizeof(nBackLightSeconds)},
-    //{&nMaxBackLight, sizeof(nMaxBackLight)},
-    {&CurrentFileIndex,sizeof(CurrentFileIndex)},
-    {&bShowBuiltInTests,sizeof(bShowBuiltInTests)},
-    {&bScaleHeight,sizeof(bScaleHeight)},
-    {&bChainFiles,sizeof(bChainFiles)},
-    {&bReverseImage,sizeof(bReverseImage)},
-    {&bMirrorPlayImage,sizeof(bMirrorPlayImage)},
-    {&bUpsideDown,sizeof(bUpsideDown)},
-    {&nChainRepeats,sizeof(nChainRepeats)},
-    {&whiteBalance,sizeof(whiteBalance)},
-    {&bShowProgress,sizeof(bShowProgress)},
-    {&bAllowMenuWrap,sizeof(bAllowMenuWrap)},
-    {&bShowNextFiles,sizeof(bShowNextFiles)},
-    {&bEnableBLE,sizeof(bEnableBLE)},
-};
-
 enum eDisplayOperation {
     eClear,             // set screen background
     eText,              // handle text with optional %s value
@@ -258,9 +224,13 @@ int nMeteorRed = 255;
 int nMeteorGreen = 255;
 int nMeteorBlue = 255;
 // display all color
+bool bDisplayAllRGB = false;    // true for RGB, else HSV
 int nDisplayAllRed = 255;
 int nDisplayAllGreen = 255;
 int nDisplayAllBlue = 255;
+int nDisplayAllHue = 0;
+int nDisplayAllSaturation = 255;
+int nDisplayAllBrightness = 255;
 // rainbow
 int nRainbowRepeats = 4;
 int nRainbowRuntime = 20;
@@ -291,6 +261,97 @@ int nCheckboardBlackWidth = 12;
 int nCheckboardWhiteWidth = 12;
 bool bCheckerBoardAlternate = true;
 int nCheckerboardAddPixels = 0;
+
+struct saveValues {
+    void* val;
+    int size;
+};
+const saveValues saveValueList[] = {
+    {&signature, sizeof(signature)},                // this must be first
+    {&bAutoLoadSettings, sizeof(bAutoLoadSettings)},// this must be second
+    {&nStripBrightness, sizeof(nStripBrightness)},
+    {&frameHold, sizeof(frameHold)},
+    {&nFramePulseCount, sizeof(nFramePulseCount)},
+    {&bManualFrameAdvance, sizeof(bManualFrameAdvance)},
+    {&startDelay, sizeof(startDelay)},
+    //{&bRepeatForever, sizeof(bRepeatForever)},
+    {&repeatCount, sizeof(repeatCount)},
+    {&repeatDelay, sizeof(repeatDelay)},
+    {&bGammaCorrection, sizeof(bGammaCorrection)},
+    {&bSecondStrip, sizeof(bSecondStrip)},
+    //{&nBackLightSeconds, sizeof(nBackLightSeconds)},
+    //{&nMaxBackLight, sizeof(nMaxBackLight)},
+    {&CurrentFileIndex,sizeof(CurrentFileIndex)},
+    {&bShowBuiltInTests,sizeof(bShowBuiltInTests)},
+    {&bScaleHeight,sizeof(bScaleHeight)},
+    {&bChainFiles,sizeof(bChainFiles)},
+    {&bReverseImage,sizeof(bReverseImage)},
+    {&bMirrorPlayImage,sizeof(bMirrorPlayImage)},
+    {&bUpsideDown,sizeof(bUpsideDown)},
+    {&nChainRepeats,sizeof(nChainRepeats)},
+    {&whiteBalance,sizeof(whiteBalance)},
+    {&bShowProgress,sizeof(bShowProgress)},
+    {&bAllowMenuWrap,sizeof(bAllowMenuWrap)},
+    {&bShowNextFiles,sizeof(bShowNextFiles)},
+    {&bEnableBLE,sizeof(bEnableBLE)},
+    // the built-in values
+    // display all color
+    {&bDisplayAllRGB,sizeof(bDisplayAllRGB)},
+    {&nDisplayAllRed,sizeof(nDisplayAllRed)},
+    {&nDisplayAllGreen,sizeof(nDisplayAllGreen)},
+    {&nDisplayAllBlue,sizeof(nDisplayAllBlue)},
+    {&nDisplayAllHue,sizeof(nDisplayAllHue)},
+    {&nDisplayAllSaturation,sizeof(nDisplayAllSaturation)},
+    {&nDisplayAllBrightness,sizeof(nDisplayAllBrightness)},
+    // bouncing balls
+    {&nBouncingBallsCount,sizeof(nBouncingBallsCount)},
+    {&nBouncingBallsDecay,sizeof(nBouncingBallsDecay)},
+    {&nBouncingBallsRuntime,sizeof(nBouncingBallsRuntime)},
+    // cylon eye
+    {&nCylonEyeSize,sizeof(nCylonEyeSize)},
+    {&nCylonEyeRed,sizeof(nCylonEyeRed)},
+    {&nCylonEyeGreen,sizeof(nCylonEyeGreen)},
+    {&nCylonEyeBlue,sizeof(nCylonEyeBlue)},
+    // random bars
+    {&bRandomBarsBlacks,sizeof(bRandomBarsBlacks)},
+    {&nRandomBarsRuntime,sizeof(nRandomBarsRuntime)},
+    {&nRandomBarsHoldframes,sizeof(nRandomBarsHoldframes)},
+    // meteor
+    {&nMeteorSize,sizeof(nMeteorSize)},
+    {&nMeteorRed,sizeof(nMeteorRed)},
+    {&nMeteorGreen,sizeof(nMeteorGreen)},
+    {&nMeteorBlue,sizeof(nMeteorBlue)},
+    // rainbow
+    {&nRainbowRepeats,sizeof(nRainbowRepeats)},
+    {&nRainbowRuntime,sizeof(nRainbowRuntime)},
+    {&nRainbowFadeTime,sizeof(nRainbowFadeTime)},
+    {&bRainbowAddGlitter,sizeof(bRainbowAddGlitter)},
+    {&bRainbowCycleHue,sizeof(bRainbowCycleHue)},
+    // twinkle
+    {&nTwinkleRuntime,sizeof(nTwinkleRuntime)},
+    {&bTwinkleOnlyOne,sizeof(bTwinkleOnlyOne)},
+    // confetti
+    {&nConfettiRuntime,sizeof(nConfettiRuntime)},
+    {&bConfettiCycleHue,sizeof(bConfettiCycleHue)},
+    // juggle
+    {&nJuggleRuntime,sizeof(nJuggleRuntime)},
+    // sine
+    {&nSineRuntime,sizeof(nSineRuntime)},
+    {&nSineStartingHue,sizeof(nSineStartingHue)},
+    {&bSineCycleHue,sizeof(bSineCycleHue)},
+    {&nSineSpeed,sizeof(nSineSpeed)},
+    // bpm
+    {&nBpmRuntime,sizeof(nBpmRuntime)},
+    {&nBpmBeatsPerMinute,sizeof(nBpmBeatsPerMinute)},
+    {&bBpmCycleHue,sizeof(bBpmCycleHue)},
+    // checkerboard/bars
+    {&nCheckerBoardRuntime,sizeof(nCheckerBoardRuntime)},
+    {&nCheckerboardHoldframes,sizeof(nCheckerboardHoldframes)},
+    {&nCheckboardBlackWidth,sizeof(nCheckboardBlackWidth)},
+    {&nCheckboardWhiteWidth,sizeof(nCheckboardWhiteWidth)},
+    {&bCheckerBoardAlternate,sizeof(bCheckerBoardAlternate)},
+    {&nCheckerboardAddPixels,sizeof(nCheckerboardAddPixels)},
+};
 
 // Gramma Correction (Defalt Gamma = 2.8)
 const uint8_t gammaR[] = {
@@ -444,9 +505,16 @@ MenuItem MeteorMenu[] = {
 };
 MenuItem DisplayAllColorMenu[] = {
     {eClear,false},
-    {eTextInt,false,"Red:   %d",GetIntegerValue,&nDisplayAllRed,0,255},
-    {eTextInt,false,"Green: %d",GetIntegerValue,&nDisplayAllGreen,0,255},
-    {eTextInt,false,"Blue:  %d",GetIntegerValue,&nDisplayAllBlue,0,255},
+    {eBool,false,"Color Mode: %s",ToggleBool,&bDisplayAllRGB,0,0,0,"RGB","HSL"},
+    {eIfEqual,false,"",NULL,&bDisplayAllRGB,true},
+        {eTextInt,false,"Red: %d",GetIntegerValue,&nDisplayAllRed,0,255},
+        {eTextInt,false,"Green: %d",GetIntegerValue,&nDisplayAllGreen,0,255},
+        {eTextInt,false,"Blue: %d",GetIntegerValue,&nDisplayAllBlue,0,255},
+    {eElse},
+        {eTextInt,false,"Hue: %d",GetIntegerValue,&nDisplayAllHue,0,255},
+        {eTextInt,false,"Saturation: %d",GetIntegerValue,&nDisplayAllSaturation,0,255},
+        {eTextInt,false,"Brightness: %d",GetIntegerValue,&nDisplayAllBrightness,0,255},
+    {eEndif},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}

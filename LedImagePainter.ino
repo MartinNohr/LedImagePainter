@@ -1679,11 +1679,123 @@ void OppositeRunningDots()
 // show all in a color
 void DisplayAllColor()
 {
-	FastLED.showColor(CRGB(nDisplayAllRed, nDisplayAllGreen, nDisplayAllBlue));
-	// just show until cancelled
+	if (bDisplayAllRGB)
+		FastLED.showColor(CRGB(nDisplayAllRed, nDisplayAllGreen, nDisplayAllBlue));
+	else
+		FastLED.showColor(CHSV(nDisplayAllHue, nDisplayAllSaturation, nDisplayAllBrightness));
+	// show until cancelled, but check for rotations of the knob
+	int btn;
+	int what = 0;	// 0 for hue, 1 for saturation, 2 for brightness, 3 for increment
+	int increment = 10;
+	bool bChange = true;
 	while (true) {
+		if (bChange) {
+			switch (what) {
+			case 0:
+				if (bDisplayAllRGB)
+					DisplayLine(2, "Change Red: " + String(nDisplayAllRed));
+				else
+					DisplayLine(2, "Change HUE: " + String(nDisplayAllHue));
+				break;
+			case 1:
+				if (bDisplayAllRGB)
+					DisplayLine(2, "Change Green: " + String(nDisplayAllGreen));
+				else 
+					DisplayLine(2, "Change Saturation: " + String(nDisplayAllSaturation));
+				break;
+			case 2:
+				if (bDisplayAllRGB)
+					DisplayLine(2, "Change Blue: " + String(nDisplayAllBlue));
+				else 
+					DisplayLine(2, "Change Brightness: " + String(nDisplayAllBrightness));
+				break;
+			case 3:
+				DisplayLine(2, "Increment: " + String(increment));
+				break;
+			}
+		}
+		btn = ReadButton();
+		bChange = true;
+		switch (btn) {
+		case BTN_NONE:
+			bChange = false;
+			break;
+		case BTN_RIGHT:
+			switch (what) {
+			case 0:
+				if (bDisplayAllRGB)
+					nDisplayAllRed += increment;
+				else 
+					nDisplayAllHue += increment;
+				break;
+			case 1:
+				if (bDisplayAllRGB)
+					nDisplayAllGreen += increment;
+				else 
+					nDisplayAllSaturation += increment;
+				break;
+			case 2:
+				if (bDisplayAllRGB)
+					nDisplayAllBlue += increment;
+				else
+					nDisplayAllBrightness += increment;
+				break;
+			case 3:
+				increment *= 10;
+				break;
+			}
+			break;
+		case BTN_LEFT:
+			switch (what) {
+			case 0:
+				if (bDisplayAllRGB)
+					nDisplayAllRed -= increment;
+				else 
+					nDisplayAllHue -= increment;
+				break;
+			case 1:
+				if (bDisplayAllRGB)
+					nDisplayAllGreen -= increment;
+				else
+					nDisplayAllSaturation -= increment;
+				break;
+			case 2:
+				if (bDisplayAllRGB)
+					nDisplayAllBlue -= increment;
+				else
+					nDisplayAllBrightness -= increment;
+				break;
+			case 3:
+				increment /= 10;
+				break;
+			}
+			break;
+		case BTN_SELECT:
+			what = ++what % 4;
+			break;
+		case BTN_LONG:
+			// put it back, we don't want it
+			btnBuf.add(btn);
+			break;
+		}
 		if (CheckCancel())
 			return;
+		if (bChange) {
+			increment = constrain(increment, 1, 100);
+			if (bDisplayAllRGB) {
+				nDisplayAllRed = constrain(nDisplayAllRed, 0, 255);
+				nDisplayAllGreen = constrain(nDisplayAllGreen, 0, 255);
+				nDisplayAllBlue = constrain(nDisplayAllBlue, 0, 255);
+				FastLED.showColor(CRGB(nDisplayAllRed, nDisplayAllGreen, nDisplayAllBlue));
+			}
+			else {
+				nDisplayAllHue = constrain(nDisplayAllHue, 0, 255);
+				nDisplayAllSaturation = constrain(nDisplayAllSaturation, 0, 255);
+				nDisplayAllBrightness = constrain(nDisplayAllBrightness, 0, 255);
+				FastLED.showColor(CHSV(nDisplayAllHue, nDisplayAllSaturation, nDisplayAllBrightness));
+			}
+		}
+		delay(10);
 	}
 }
 
