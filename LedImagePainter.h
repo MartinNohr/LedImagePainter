@@ -604,9 +604,9 @@ MenuItem RepeatMenu[] = {
 };
 MenuItem EepromMenu[] = {
     {eClear,false,},
-    {eBool,false,"Autoload Defaults: %s",ToggleBool,&bAutoLoadSettings,0,0,0,"On","Off"},
-    {eText,false,"Save Default Settings",SaveEepromSettings},
-    {eText,false,"Load Default Settings",LoadEepromSettings},
+    {eBool,false,"Autoload Saved: %s",ToggleBool,&bAutoLoadSettings,0,0,0,"On","Off"},
+    {eText,false,"Save Current Settings",SaveEepromSettings},
+    {eText,false,"Load Saved Settings",LoadEepromSettings},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
@@ -626,7 +626,7 @@ MenuItem MainMenu[] = {
     {eElse},
         {eMenu,false,"LWC File Operations",NULL,StartFileMenu},
     {eEndif},
-    {eMenu,false,"Default Settings",NULL,EepromMenu},
+    {eMenu,false,"Saved Settings",NULL,EepromMenu},
     {eMenu,false,"Display Settings",NULL,DisplayMenu},
     {eBool,false,"BlueTooth Link: %s",ToggleBool,&bEnableBLE,0,0,0,"On","Off"},
     {eReboot,false,"Reboot"},
