@@ -2380,7 +2380,7 @@ void ReadAndDisplayFile(bool doingFirstHalf) {
 			else {
 				if (bDoublePixels) {
 					leds[LEDIX(2 * x)] = pixel;
-					leds[LEDIX(2 * x) + 1] = pixel;
+					leds[LEDIX(2 * x + 1)] = pixel;
 				}
 				else {
 					leds[LEDIX(x)] = pixel;
