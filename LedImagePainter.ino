@@ -362,14 +362,14 @@ void setup()
 				"one-shotLED"
 	};
 	esp_timer_create(&oneshot_LED_timer_args, &oneshot_LED_timer);
-	oneshot_BTN_timer_args = {
-			oneshot_BTN_timer_callback,
-			/* argument specified here will be passed to timer callback function */
-			(void*)TID_BTN,
-			ESP_TIMER_TASK,
-			"one-shotBTN"
-	};
-	esp_timer_create(&oneshot_BTN_timer_args, &oneshot_BTN_timer);
+	//oneshot_BTN_timer_args = {
+	//		oneshot_BTN_timer_callback,
+	//		/* argument specified here will be passed to timer callback function */
+	//		(void*)TID_BTN,
+	//		ESP_TIMER_TASK,
+	//		"one-shotBTN"
+	//};
+	//esp_timer_create(&oneshot_BTN_timer_args, &oneshot_BTN_timer);
 	// the long press timer
 	oneshot_LONGPRESS_timer_args = {
 			oneshot_LONGPRESS_timer_callback,

@@ -126,8 +126,8 @@ esp_timer_handle_t oneshot_LED_timer;
 esp_timer_create_args_t oneshot_LED_timer_args;
 // timer for button
 volatile bool bButtonWait = false;
-esp_timer_handle_t oneshot_BTN_timer;
-esp_timer_create_args_t oneshot_BTN_timer_args;
+//esp_timer_handle_t oneshot_BTN_timer;
+//esp_timer_create_args_t oneshot_BTN_timer_args;
 // long press time
 esp_timer_handle_t oneshot_LONGPRESS_timer;
 esp_timer_create_args_t oneshot_LONGPRESS_timer_args;
