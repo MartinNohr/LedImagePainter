@@ -1142,6 +1142,9 @@ void SaveRestoreDisplay(bool save)
 // just check for longpress and cancel if it was there
 bool CheckCancel()
 {
+	// if it has been set, just return true
+	if (bCancelRun)
+		return true;
 	int button = ReadButton();
 	if (button) {
 		if (button == BTN_LONG) {
@@ -1318,8 +1321,9 @@ void setupSDcard()
 	//listDir(SD, "/", 1);
 	bSdCardValid = GetFileNamesFromSD(currentFolder);
 }
-//
-void getRGBwithGamma() {
+
+// return the pixel
+CRGB getRGBwithGamma() {
 	if (bGammaCorrection) {
 		b = gammaB[readByte(false)];
 		g = gammaG[readByte(false)];
@@ -1330,6 +1334,7 @@ void getRGBwithGamma() {
 		g = readByte(false);
 		r = readByte(false);
 	}
+	return CRGB(r, g, b);
 }
 
 void fixRGBwithGamma(byte* rp, byte* gp, byte* bp) {
@@ -2351,20 +2356,33 @@ void ReadAndDisplayFile(bool doingFirstHalf) {
 		int bufpos = 0;
 		//uint32_t offset = (MYBMP_BF_OFF_BITS + (y * lineLength));
 		//dataFile.seekSet(offset);
+		CRGB pixel;
 		for (int x = 0; x < displayWidth; x++) {
 			// moved this back here because it might make it possible to reverse scan in the future
 			FileSeek((uint32_t)MYBMP_BF_OFF_BITS + ((y * lineLength) + (x * 3)));
 			//dataFile.seekSet((uint32_t)MYBMP_BF_OFF_BITS + ((y * lineLength) + (x * 3)));
-			getRGBwithGamma();
+			pixel = getRGBwithGamma();
 			// see if we want this one
 			if (bScaleHeight && (x * displayWidth) % imgWidth) {
 				continue;
 			}
 			if (bUpsideDown) {
-				leds[LEDIX(displayWidth - 1 - x)] = CRGB(r, g, b);
+				if (bDoublePixels) {
+					leds[LEDIX(displayWidth - 1 - 2 * x)] = pixel;
+					leds[LEDIX(displayWidth - 2 - 2 * x)] = pixel;
+				}
+				else {
+					leds[LEDIX(displayWidth - 1 - x)] = pixel;
+				}
 			}
 			else {
-				leds[LEDIX(x)] = CRGB(r, g, b);
+				if (bDoublePixels) {
+					leds[LEDIX(2 * x)] = pixel;
+					leds[LEDIX(2 * x) + 1] = pixel;
+				}
+				else {
+					leds[LEDIX(x)] = pixel;
+				}
 			}
 		}
 		// see how long it took to get here

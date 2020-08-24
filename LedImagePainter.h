@@ -108,6 +108,7 @@ bool bGammaCorrection = true;             // set to use the gamma table
 bool bShowBuiltInTests = false;           // list the internal file instead of the SD card
 bool bReverseImage = false;               // read the file lines in reverse
 bool bUpsideDown = false;                 // play the image upside down
+bool bDoublePixels = false;               // double the image line, to go from 144 to 288
 bool bMirrorPlayImage = false;            // play the file twice, 2nd time reversed
 bool bChainFiles = false;                 // set to run all the files from current to the last one in the current folder
 int nChainRepeats = 1;                    // how many times to repeat the chain
@@ -287,6 +288,7 @@ const saveValues saveValueList[] = {
     {&bReverseImage,sizeof(bReverseImage)},
     {&bMirrorPlayImage,sizeof(bMirrorPlayImage)},
     {&bUpsideDown,sizeof(bUpsideDown)},
+    {&bDoublePixels,sizeof(bDoublePixels)},
     {&nChainRepeats,sizeof(nChainRepeats)},
     {&whiteBalance,sizeof(whiteBalance)},
     {&bShowProgress,sizeof(bShowProgress)},
@@ -551,6 +553,9 @@ MenuItem ImageMenu[] = {
         {eBool,false,"Play Mirror Image: %s",ToggleBool,&bMirrorPlayImage,0,0,0,"Yes","No"},
         {eBool,false,"Scale Height to Fit: %s",ToggleBool,&bScaleHeight,0,0,0,"On","Off"},
     {eEndif},
+    {eIfEqual,false,"",NULL,&bSecondStrip,true},
+        {eBool,false,"144 to 288 Pixels: %s",ToggleBool,&bDoublePixels,0,0,0,"Yes","No"},
+    {eEndif},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
@@ -558,7 +563,7 @@ MenuItem ImageMenu[] = {
 MenuItem StripMenu[] = {
     {eExit,false,"Previous Menu"},
     {eTextInt,false,"Strip Brightness: %d",GetIntegerValue,&nStripBrightness,1,255,0,NULL,NULL,UpdateStripBrightness},
-    {eBool,false,"Two LED strips: %s",ToggleBool,&bSecondStrip,0,0,0,"Yes","No"},
+    {eBool,false,"LED strips: %s",ToggleBool,&bSecondStrip,0,0,0,"2","1"},
     {eBool,false,"Gamma Correction: %s",ToggleBool,&bGammaCorrection,0,0,0,"On","Off"},
     {eTextInt,false,"White Balance R: %3d",GetIntegerValue,&whiteBalance.r,0,255,0,NULL,NULL,UpdateStripWhiteBalanceR},
     {eTextInt,false,"White Balance G: %3d",GetIntegerValue,&whiteBalance.g,0,255,0,NULL,NULL,UpdateStripWhiteBalanceG},
