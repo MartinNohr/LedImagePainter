@@ -393,7 +393,7 @@ void setup()
 	OLED->setFont(ArialMT_Plain_24);
 	OLED->drawString(2, 2, "MN Painter");
 	OLED->setFont(ArialMT_Plain_16);
-	OLED->drawString(4, 30, "Version 2.03");
+	OLED->drawString(4, 30, "Version 2.04");
 	OLED->setFont(ArialMT_Plain_10);
 	OLED->drawString(4, 48, __DATE__);
 	OLED->display();
@@ -2357,10 +2357,12 @@ void ReadAndDisplayFile(bool doingFirstHalf) {
 		//uint32_t offset = (MYBMP_BF_OFF_BITS + (y * lineLength));
 		//dataFile.seekSet(offset);
 		CRGB pixel;
+		// get to start of pixel data, moved this out of the loop below to speed things up
+		FileSeek((uint32_t)MYBMP_BF_OFF_BITS + (y * lineLength));
 		for (int x = 0; x < displayWidth; x++) {
-			// moved this back here because it might make it possible to reverse scan in the future
-			FileSeek((uint32_t)MYBMP_BF_OFF_BITS + ((y * lineLength) + (x * 3)));
+			//FileSeek((uint32_t)MYBMP_BF_OFF_BITS + ((y * lineLength) + (x * 3)));
 			//dataFile.seekSet((uint32_t)MYBMP_BF_OFF_BITS + ((y * lineLength) + (x * 3)));
+			// this reads three bytes
 			pixel = getRGBwithGamma();
 			// see if we want this one
 			if (bScaleHeight && (x * displayWidth) % imgWidth) {
