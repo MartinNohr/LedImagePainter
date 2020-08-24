@@ -138,7 +138,6 @@ bool bIsRunning = false;
 int nProgress = 0;
 
 enum eDisplayOperation {
-    eClear,             // set screen background
     eText,              // handle text with optional %s value
     eTextInt,           // handle text with optional %d value
     eTextCurrentFile,   // adds current basefilename for %s in string
@@ -410,7 +409,7 @@ const uint8_t gammaB[] = {
   169,171,173,175,177,179,181,183,185,187,189,191,193,196,198,200 };
 
 MenuItem BouncingBallsMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Ball Count (1-8): %d",GetIntegerValue,&nBouncingBallsCount,1,8},
     {eTextInt,false,"Decay (500-10000): %d",GetIntegerValue,&nBouncingBallsDecay,500,10000},
     {eTextInt,false,"Runtime (seconds): %d",GetIntegerValue,&nBouncingBallsRuntime,1,120},
@@ -419,7 +418,7 @@ MenuItem BouncingBallsMenu[] = {
     {eTerminate}
 };
 MenuItem CheckerBoardMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nCheckerBoardRuntime,1,120},
     {eTextInt,false,"Hold Frames: %d",GetIntegerValue,&nCheckerboardHoldframes,1,100},
     {eTextInt,false,"Black Width (pixels): %d",GetIntegerValue,&nCheckboardBlackWidth,1,288},
@@ -431,7 +430,7 @@ MenuItem CheckerBoardMenu[] = {
     {eTerminate}
 };
 MenuItem RainbowMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Pattern Count: %d",GetIntegerValue,&nRainbowRepeats,1,100},
     {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nRainbowRuntime,1,120},
     {eTextInt,false,"Fade Time (S): %d.%d",GetIntegerValue,&nRainbowFadeTime,0,100,1},
@@ -442,7 +441,7 @@ MenuItem RainbowMenu[] = {
     {eTerminate}
 };
 MenuItem ConfettiMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nConfettiRuntime,1,120},
     {eBool,false,"Cycle Hue: %s",ToggleBool,&bConfettiCycleHue,0,0,0,"Yes","No"},
     {eExit,false,"Previous Menu"},
@@ -450,14 +449,14 @@ MenuItem ConfettiMenu[] = {
     {eTerminate}
 };
 MenuItem JuggleMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nJuggleRuntime,1,120},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
 };
 MenuItem TwinkleMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nTwinkleRuntime,1,120},
     {eBool,false,"One or Many: %s",ToggleBool,&bTwinkleOnlyOne,0,0,0,"One","Many"},
     {eExit,false,"Previous Menu"},
@@ -465,7 +464,7 @@ MenuItem TwinkleMenu[] = {
     {eTerminate}
 };
 MenuItem SineMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nSineRuntime,1,120},
     {eTextInt,false,"Starting Hue: %d",GetIntegerValue,&nSineStartingHue,0,255},
     {eBool,false,"Cycle Hue: %s",ToggleBool,&bSineCycleHue,0,0,0,"Yes","No"},
@@ -475,7 +474,7 @@ MenuItem SineMenu[] = {
     {eTerminate}
 };
 MenuItem BpmMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nBpmRuntime,1,120},
     {eTextInt,false,"Beats per minute: %d",GetIntegerValue,&nBpmBeatsPerMinute,1,300},
     {eBool,false,"Cycle Hue: %s",ToggleBool,&bBpmCycleHue,0,0,0,"Yes","No"},
@@ -484,7 +483,7 @@ MenuItem BpmMenu[] = {
     {eTerminate}
 };
 MenuItem CylonEyeMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Eye Size:  %d",GetIntegerValue,&nCylonEyeSize,1,100},
     {eTextInt,false,"Eye Red:   %d",GetIntegerValue,&nCylonEyeRed,0,255},
     {eTextInt,false,"Eye Green: %d",GetIntegerValue,&nCylonEyeGreen,0,255},
@@ -494,7 +493,7 @@ MenuItem CylonEyeMenu[] = {
     {eTerminate}
 };
 MenuItem MeteorMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Meteor Size:  %d",GetIntegerValue,&nMeteorSize,1,100},
     {eTextInt,false,"Meteor Red:   %d",GetIntegerValue,&nMeteorRed,0,255},
     {eTextInt,false,"Meteor Green: %d",GetIntegerValue,&nMeteorGreen,0,255},
@@ -504,7 +503,7 @@ MenuItem MeteorMenu[] = {
     {eTerminate}
 };
 MenuItem DisplayAllColorMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eBool,false,"Color Mode: %s",ToggleBool,&bDisplayAllRGB,0,0,0,"RGB","HSL"},
     {eIfEqual,false,"",NULL,&bDisplayAllRGB,true},
         {eTextInt,false,"Red: %d",GetIntegerValue,&nDisplayAllRed,0,255},
@@ -520,7 +519,7 @@ MenuItem DisplayAllColorMenu[] = {
     {eTerminate}
 };
 MenuItem RandomBarsMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nRandomBarsRuntime,1,120},
     {eTextInt,false,"Hold Frames: %d",GetIntegerValue,&nRandomBarsHoldframes,1,100},
     {eBool,false,"Alternating Blacks: %s",ToggleBool,&bRandomBarsBlacks,0,0,0,"Yes","No"},
@@ -529,7 +528,7 @@ MenuItem RandomBarsMenu[] = {
     {eTerminate}
 };
 MenuItem DisplayMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100,0,NULL,NULL,UpdateOledBrightness},
     {eBool,false,"Allow Menu Wrap: %s",ToggleBool,&bAllowMenuWrap,0,0,0,"Yes","No"},
     {eBool,false,"Show Next Files: %s",ToggleBool,&bShowNextFiles,0,0,0,"Yes","No"},
@@ -539,7 +538,7 @@ MenuItem DisplayMenu[] = {
     {eTerminate}
 };
 MenuItem ImageMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Frame Hold (mS): %d",GetIntegerValue,&frameHold,0,1000},
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,false},
         {eBool,false,"Frame Advance: %s",ToggleBool,&bManualFrameAdvance,0,0,0,"Click","Auto"},
@@ -557,7 +556,7 @@ MenuItem ImageMenu[] = {
     {eTerminate}
 };
 MenuItem StripMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Strip Brightness: %d",GetIntegerValue,&nStripBrightness,1,255,0,NULL,NULL,UpdateStripBrightness},
     {eBool,false,"Two LED strips: %s",ToggleBool,&bSecondStrip,0,0,0,"Yes","No"},
     {eBool,false,"Gamma Correction: %s",ToggleBool,&bGammaCorrection,0,0,0,"On","Off"},
@@ -570,7 +569,7 @@ MenuItem StripMenu[] = {
     {eTerminate}
 };
 MenuItem AssociatedFileMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextCurrentFile,false,"Save  %s.LWC",SaveAssociatedFile},
     {eTextCurrentFile,false,"Load  %s.LWC",LoadAssociatedFile},
     {eTextCurrentFile,false,"Erase %s.LWC",EraseAssociatedFile},
@@ -579,7 +578,7 @@ MenuItem AssociatedFileMenu[] = {
     {eTerminate}
 };
 MenuItem StartFileMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eText,false,"Save  START.LWC",SaveStartFile},
     {eText,false,"Load  START.LWC",LoadStartFile},
     {eText,false,"Erase START.LWC",EraseStartFile},
@@ -589,7 +588,7 @@ MenuItem StartFileMenu[] = {
     {eTerminate}
 };
 MenuItem RepeatMenu[] = {
-    {eClear,false},
+    {eExit,false,"Previous Menu"},
     {eTextInt,false,"Repeat Count: %d",GetIntegerValue,&repeatCount,1,100},
     {eTextInt,false,"Repeat Delay (S): %d.%d",GetIntegerValue,&repeatDelay,0,100,1},
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,false},
@@ -603,7 +602,7 @@ MenuItem RepeatMenu[] = {
     {eTerminate}
 };
 MenuItem EepromMenu[] = {
-    {eClear,false,},
+    {eExit,false,"Previous Menu"},
     {eBool,false,"Autoload Saved: %s",ToggleBool,&bAutoLoadSettings,0,0,0,"On","Off"},
     {eText,false,"Save Current Settings",SaveEepromSettings},
     {eText,false,"Load Saved Settings",LoadEepromSettings},
@@ -612,7 +611,6 @@ MenuItem EepromMenu[] = {
     {eTerminate}
 };
 MenuItem MainMenu[] = {
-    {eClear,false},
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,true},
         {eBool,false,"Switch to SD Card",ToggleFilesBuiltin,&bShowBuiltInTests,0,0,0,"On","Off"},
     {eElse},

@@ -693,10 +693,6 @@ void ShowMenu(struct MenuItem* menu)
 		case eEndif:
 			skip = false;
 			break;
-		case eClear:
-			OLED->clear();
-			//OLED->display();
-			break;
 		}
 		if (skip) {
 			menu->valid = false;
@@ -772,6 +768,10 @@ void ShowMenu(struct MenuItem* menu)
 	}
 	//Serial.println("menu: " + String(offsetLines) + ":" + String(y) + " active: " + String(activeMenuLine));
 	activeMenuCount = y;
+	// blank the rest of the lines
+	for (int ix = y; ix < 5; ++ix) {
+		DisplayLine(ix, "");
+	}
 	// show line if menu has been scrolled
 	if (offsetMenuLines > 0)
 		OLED->drawLine(0, 0, 5, 0);
