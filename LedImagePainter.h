@@ -655,6 +655,10 @@ BuiltInItem BuiltInFiles[] = {
     {"Two Dots",OppositeRunningDots},
 };
 
+#include <stackarray.h>
+StackArray<int>FileIndexStack;
+// a stack to hold the file indexes as we navigate folders
+
 #define MAX_MENUS 10
 // a stack for menus so we can find our way back
 struct MENUINFO {
@@ -662,6 +666,8 @@ struct MENUINFO {
     int offset;
     MenuItem* menu;
 } menuSavedInfo[MAX_MENUS];
+typedef MENUINFO MenuInfo;
+
 int menuLevel = 0;
 bool bMenuChanged = true;
 int activeMenuLine = 0;

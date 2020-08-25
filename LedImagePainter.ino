@@ -2076,6 +2076,7 @@ void ProcessFileOrTest()
 	// let's see if this is a folder command
 	String tmp = FileNames[CurrentFileIndex];
 	if (tmp[0] == NEXT_FOLDER_CHAR) {
+		FileIndexStack.push(CurrentFileIndex);
 		tmp = tmp.substring(1);
 		// change folder, reload files
 		currentFolder += tmp + "/";
@@ -2091,6 +2092,7 @@ void ProcessFileOrTest()
 		// change folder, reload files
 		currentFolder = tmp;
 		GetFileNamesFromSD(currentFolder);
+		CurrentFileIndex = FileIndexStack.pop();
 		DisplayCurrentFile();
 		return;
 	}
