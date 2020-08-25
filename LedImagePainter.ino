@@ -722,7 +722,7 @@ void ShowMenu(struct MenuItem* menu)
 			}
 			else {
 				if (menu->op == eTextCurrentFile) {
-					sprintf(line, menu->text, MakeLWCFilename(FileNames[CurrentFileIndex], false).c_str());
+					sprintf(line, menu->text, MakeIPCFilename(FileNames[CurrentFileIndex], false).c_str());
 					//Serial.println("menu text2: " + String(line));
 				}
 				else {
@@ -2221,7 +2221,7 @@ void SendFile(String Filename) {
 	Filename.toCharArray(temp, 14);
 	// see if there is an associated config file
 	String cfFile = temp;
-	cfFile = MakeLWCFilename(cfFile, true);
+	cfFile = MakeIPCFilename(cfFile, true);
 	SettingsSaveRestore(true);
 	ProcessConfigFile(cfFile);
 	String fn = currentFolder + temp;
@@ -2623,13 +2623,13 @@ void WriteMessage(String txt, bool error, int wait)
 	delay(wait);
 }
 
-// create the associated LWC name
-String MakeLWCFilename(String filename, bool addext)
+// create the associated IPC name
+String MakeIPCFilename(String filename, bool addext)
 {
 	String cfFile = filename;
 	cfFile = cfFile.substring(0, cfFile.lastIndexOf('.'));
 	if (addext)
-		cfFile += String(".LWC");
+		cfFile += String(".IPC");
 	return cfFile;
 }
 
@@ -2698,7 +2698,7 @@ bool ProcessConfigFile(String filename)
 }
 
 // read the files from the card or list the built-ins
-// look for start.lwc, and process it, but don't add it to the list
+// look for start.IPC, and process it, but don't add it to the list
 bool GetFileNamesFromSD(String dir) {
 	// start over
 	// first empty the current file names
@@ -2760,7 +2760,7 @@ bool GetFileNamesFromSD(String dir) {
 						//Serial.println("file: " + CurrentFilename);
 						NumberOfFiles++;
 					}
-					else if (uppername == "START.LWC") {
+					else if (uppername == "START.IPC") {
 						startfile = CurrentFilename;
 					}
 				}
@@ -2851,7 +2851,7 @@ void SaveAssociatedFile(MenuItem* menu)
 void LoadAssociatedFile(MenuItem* menu)
 {
 	String name = FileNames[CurrentFileIndex];
-	name = MakeLWCFilename(name, true);
+	name = MakeIPCFilename(name, true);
 	if (ProcessConfigFile(name)) {
 		WriteMessage(String("Processed:\n") + name);
 	}
@@ -2862,7 +2862,7 @@ void LoadAssociatedFile(MenuItem* menu)
 
 void LoadStartFile(MenuItem* menu)
 {
-	String name = "START.LWC";
+	String name = "START.IPC";
 	if (ProcessConfigFile(name)) {
 		WriteMessage(String("Processed:\n") + name);
 	}
@@ -2872,16 +2872,16 @@ void LoadStartFile(MenuItem* menu)
 }
 
 // create the config file, or remove it
-// startfile true makes it use the start.lwc file, else it handles the associated name file
+// startfile true makes it use the start.IPC file, else it handles the associated name file
 bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile)
 {
 	bool retval = true;
 	String filepath;
 	if (startfile) {
-		filepath = currentFolder + String("START.LWC");
+		filepath = currentFolder + String("START.IPC");
 	}
 	else {
-		filepath = currentFolder + MakeLWCFilename(filename, true);
+		filepath = currentFolder + MakeIPCFilename(filename, true);
 	}
 	if (remove) {
 		if (!SD.exists(filepath.c_str()))

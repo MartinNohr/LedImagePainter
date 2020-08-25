@@ -575,18 +575,18 @@ MenuItem StripMenu[] = {
 };
 MenuItem AssociatedFileMenu[] = {
     {eExit,false,"Previous Menu"},
-    {eTextCurrentFile,false,"Save  %s.LWC",SaveAssociatedFile},
-    {eTextCurrentFile,false,"Load  %s.LWC",LoadAssociatedFile},
-    {eTextCurrentFile,false,"Erase %s.LWC",EraseAssociatedFile},
+    {eTextCurrentFile,false,"Save  %s.IPC",SaveAssociatedFile},
+    {eTextCurrentFile,false,"Load  %s.IPC",LoadAssociatedFile},
+    {eTextCurrentFile,false,"Erase %s.IPC",EraseAssociatedFile},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
 };
 MenuItem StartFileMenu[] = {
     {eExit,false,"Previous Menu"},
-    {eText,false,"Save  START.LWC",SaveStartFile},
-    {eText,false,"Load  START.LWC",LoadStartFile},
-    {eText,false,"Erase START.LWC",EraseStartFile},
+    {eText,false,"Save  START.IPC",SaveStartFile},
+    {eText,false,"Load  START.IPC",LoadStartFile},
+    {eText,false,"Erase START.IPC",EraseStartFile},
     {eMenu,false,"Associated Files",NULL,AssociatedFileMenu},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
@@ -627,7 +627,7 @@ MenuItem MainMenu[] = {
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,true},
         {eBuiltinOptions,false,"%s Options",NULL,BuiltInFiles},
     {eElse},
-        {eMenu,false,"LWC File Operations",NULL,StartFileMenu},
+        {eMenu,false,"IPC File Operations",NULL,StartFileMenu},
     {eEndif},
     {eMenu,false,"Saved Settings",NULL,EepromMenu},
     {eMenu,false,"Display Settings",NULL,DisplayMenu},
@@ -668,7 +668,7 @@ int activeMenuLine = 0;
 int offsetMenuLines = 0;
 int activeMenuCount = 0;
 
-// save and load variables from lwc files
+// save and load variables from IPC files
 enum SETVARTYPE {
     vtInt,
     vtBool,
