@@ -453,16 +453,16 @@ void setup()
 	delayMicroseconds(50);
 	// run a white dot up the display and back
 	for (int ix = 0; ix < STRIPLENGTH; ++ix) {
-		leds[LEDIX(ix)] = CRGB::White;
+		SetPixel(ix, CRGB::White);
 		if (ix)
-			leds[LEDIX(ix - 1)] = CRGB::Black;
+			SetPixel(ix - 1, CRGB::Black);
 		FastLED.show();
 		delayMicroseconds(50);
 	}
 	for (int ix = STRIPLENGTH - 1; ix >= 0; --ix) {
-		leds[LEDIX(ix)] = CRGB::White;
+		SetPixel(ix, CRGB::White);
 		if (ix)
-			leds[LEDIX(ix + 1)] = CRGB::Black;
+			SetPixel(ix + 1, CRGB::Black);
 		FastLED.show();
 		delayMicroseconds(50);
 	}
@@ -907,7 +907,7 @@ void UpdateStripBrightness(MenuItem* menu, int flag)
 	switch (flag) {
 	case 1:		// first time
 		for (int ix = 0; ix < 64; ++ix) {
-			leds[LEDIX(ix)] = CRGB::White;
+			SetPixel(ix, CRGB::White);
 		}
 		FastLED.show();
 		break;
@@ -926,7 +926,7 @@ void UpdateStripWhiteBalanceR(MenuItem* menu, int flag)
 	switch (flag) {
 	case 1:		// first time
 		for (int ix = 0; ix < 64; ++ix) {
-			leds[LEDIX(ix)] = CRGB::White;
+			SetPixel(ix, CRGB::White);
 		}
 		FastLED.show();
 		break;
@@ -945,7 +945,7 @@ void UpdateStripWhiteBalanceG(MenuItem* menu, int flag)
 	switch (flag) {
 	case 1:		// first time
 		for (int ix = 0; ix < 64; ++ix) {
-			leds[LEDIX(ix)] = CRGB::White;
+			SetPixel(ix, CRGB::White);
 		}
 		FastLED.show();
 		break;
@@ -964,7 +964,7 @@ void UpdateStripWhiteBalanceB(MenuItem* menu, int flag)
 	switch (flag) {
 	case 1:		// first time
 		for (int ix = 0; ix < 64; ++ix) {
-			leds[LEDIX(ix)] = CRGB::White;
+			SetPixel(ix, CRGB::White);
 		}
 		FastLED.show();
 		break;
@@ -1449,7 +1449,7 @@ void BouncingColoredBalls(int balls, CRGB colors[]) {
 		for (int i = 0; i < balls; i++) {
 			if (CheckCancel())
 				return;
-			leds[LEDIX(Position[i])] = colors[i];
+			SetPixel(Position[i], colors[i]);
 		}
 		FastLED.show();
 		delayMicroseconds(50);
@@ -1491,14 +1491,14 @@ CRGB:CRGB red, white, blue;
 			// figure out what color
 			switch (((ledIx + loop) % BARBERCOUNT) / BARBERSIZE) {
 			case 0: // red
-				leds[LEDIX(ledIx)] = red;
+				SetPixel(ledIx, red);
 				break;
 			case 1: // white
 			case 3:
-				leds[LEDIX(ledIx)] = white;
+				SetPixel(ledIx, white);
 				break;
 			case 2: // blue
-				leds[LEDIX(ledIx)] = blue;
+				SetPixel(ledIx, blue);
 				break;
 			}
 		}
@@ -1520,7 +1520,7 @@ void CheckerBoard()
 	int addPixels = 0;
 	while (bStripWaiting) {
 		for (int y = 0; y < STRIPLENGTH; ++y) {
-			leds[LEDIX(y)] = ((y + addPixels) % width) < nCheckboardBlackWidth ? color1 : color2;
+			SetPixel(y, ((y + addPixels) % width) < nCheckboardBlackWidth ? color1 : color2);
 		}
 		FastLED.show();
 		ShowProgressBar((time(NULL) - start) * 100 /nCheckerBoardRuntime);
@@ -1623,14 +1623,14 @@ void RunningDot()
 			//sprintf(line, "%3d", ix);
 			//lcd.print(line);
 			if (ix > 0) {
-				leds[LEDIX(ix - 1)] = CRGB::Black;
+				SetPixel(ix - 1, CRGB::Black);
 			}
-			leds[LEDIX(ix)] = CRGB(r, g, b);
+			SetPixel(ix, CRGB(r, g, b));
 			FastLED.show();
 			delay(frameHold);
 		}
 		// remember the last one, turn it off
-		leds[LEDIX(STRIPLENGTH - 1)] = CRGB::Black;
+		SetPixel(STRIPLENGTH - 1, CRGB::Black);
 		FastLED.show();
 	}
 }
@@ -1669,11 +1669,11 @@ void OppositeRunningDots()
 			if (CheckCancel())
 				return;
 			if (ix > 0) {
-				leds[LEDIX(ix - 1)] = CRGB::Black;
-				leds[LEDIX(STRIPLENGTH - ix + 1)] = CRGB::Black;
+				SetPixel(ix - 1, CRGB::Black);
+				SetPixel(STRIPLENGTH - ix + 1, CRGB::Black);
 			}
-			leds[LEDIX(STRIPLENGTH - ix)] = CRGB(r, g, b);
-			leds[LEDIX(ix)] = CRGB(r, g, b);
+			SetPixel(STRIPLENGTH - ix, CRGB(r, g, b));
+			SetPixel(ix, CRGB(r, g, b));
 			FastLED.show();
 			delay(frameHold);
 		}
@@ -1812,7 +1812,7 @@ void TwinkleRandom(int Runtime, int SpeedDelay, boolean OnlyOne) {
 	esp_timer_start_once(oneshot_LED_timer, Runtime * 1000000);
 	while (bStripWaiting) {
 		ShowProgressBar((time(NULL) - start) * 100 / nTwinkleRuntime);
-		leds[LEDIX(random(STRIPLENGTH))] = CRGB(random(0, 255), random(0, 255), random(0, 255));
+		SetPixel(random(STRIPLENGTH), CRGB(random(0, 255), random(0, 255), random(0, 255)));
 		FastLED.show();
 		delay(SpeedDelay);
 		if (OnlyOne) {
@@ -1835,11 +1835,11 @@ void CylonBounce(byte red, byte green, byte blue, int EyeSize, int SpeedDelay, i
 		if (CheckCancel())
 			return;
 		FastLED.clear();
-		leds[LEDIX(i)] = CRGB(red / 10, green / 10, blue / 10);
+		SetPixel(i, CRGB(red / 10, green / 10, blue / 10));
 		for (int j = 1; j <= EyeSize; j++) {
-			leds[LEDIX(i + j)] = CRGB(red, green, blue);
+			SetPixel(i + j, CRGB(red, green, blue));
 		}
-		leds[LEDIX(i + EyeSize + 1)] = CRGB(red / 10, green / 10, blue / 10);
+		SetPixel(i + EyeSize + 1, CRGB(red / 10, green / 10, blue / 10));
 		FastLED.show();
 		delay(SpeedDelay);
 	}
@@ -1849,11 +1849,11 @@ void CylonBounce(byte red, byte green, byte blue, int EyeSize, int SpeedDelay, i
 		if (CheckCancel())
 			return;
 		FastLED.clear();
-		leds[LEDIX(i)] = CRGB(red / 10, green / 10, blue / 10);
+		SetPixel(i, CRGB(red / 10, green / 10, blue / 10));
 		for (int j = 1; j <= EyeSize; j++) {
-			leds[LEDIX(i + j)] = CRGB(red, green, blue);
+			SetPixel(i + j, CRGB(red, green, blue));
 		}
-		leds[LEDIX(i + EyeSize + 1)] = CRGB(red / 10, green / 10, blue / 10);
+		SetPixel(i + EyeSize + 1, CRGB(red / 10, green / 10, blue / 10));
 		FastLED.show();
 		delay(SpeedDelay);
 	}
@@ -1884,7 +1884,7 @@ void meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTra
 			if (CheckCancel())
 				return;
 			if ((i - j < STRIPLENGTH) && (i - j >= 0)) {
-				leds[LEDIX(i - j)] = CRGB(red, green, blue);
+				SetPixel(i - j, CRGB(red, green, blue));
 			}
 		}
 		FastLED.show();
@@ -2005,7 +2005,7 @@ void bpm()
 	CRGBPalette16 palette = PartyColors_p;
 	uint8_t beat = beatsin8(nBpmBeatsPerMinute, 64, 255);
 	for (int i = 0; i < STRIPLENGTH; i++) { //9948
-		leds[i] = ColorFromPalette(palette, gHue + (i * 2), beat - gHue + (i * 10));
+		SetPixel(i, ColorFromPalette(palette, gHue + (i * 2), beat - gHue + (i * 10)));
 	}
 	if (bBpmCycleHue)
 		++gHue;
@@ -2253,7 +2253,7 @@ void SendFile(String Filename) {
 	SettingsSaveRestore(false);
 }
 
-void ReadAndDisplayFile(bool doingFirstHalf) {
+void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 	static int totalSeconds;
 	if (doingFirstHalf)
 		totalSeconds = -1;
@@ -2369,24 +2369,7 @@ void ReadAndDisplayFile(bool doingFirstHalf) {
 			if (bScaleHeight && (x * displayWidth) % imgWidth) {
 				continue;
 			}
-			if (bUpsideDown) {
-				if (bDoublePixels) {
-					leds[LEDIX(displayWidth - 1 - 2 * x)] = pixel;
-					leds[LEDIX(displayWidth - 2 - 2 * x)] = pixel;
-				}
-				else {
-					leds[LEDIX(displayWidth - 1 - x)] = pixel;
-				}
-			}
-			else {
-				if (bDoublePixels) {
-					leds[LEDIX(2 * x)] = pixel;
-					leds[LEDIX(2 * x + 1)] = pixel;
-				}
-				else {
-					leds[LEDIX(x)] = pixel;
-				}
-			}
+			SetPixel(x, pixel);
 		}
 		// see how long it took to get here
 		if (!bLoopTimed) {
@@ -3004,7 +2987,7 @@ void LoadEepromSettings(MenuItem* menu)
 void ShowWhiteBalance(MenuItem* menu)
 {
 	for (int ix = 0; ix < 32; ++ix) {
-		leds[LEDIX(ix)] = CRGB(255, 255, 255);
+		SetPixel(ix, CRGB(255, 255, 255));
 	}
 	FastLED.setTemperature(CRGB(255, 255, 255));
 	FastLED.show();
@@ -3015,4 +2998,31 @@ void ShowWhiteBalance(MenuItem* menu)
 	FastLED.show();
 	delay(3000);
 	FastLED.clear(true);
+}
+
+// the bottom strip is reversed
+// the top strip is normal
+void IRAM_ATTR SetPixel(int ix, CRGB pixel)
+{
+	if (ix < NUM_LEDS) {
+		ix = (NUM_LEDS - 1 - ix);
+	}
+	if (bUpsideDown) {
+		if (bDoublePixels) {
+			leds[STRIPLENGTH - 1 - 2 * ix] = pixel;
+			leds[STRIPLENGTH - 2 - 2 * ix] = pixel;
+		}
+		else {
+			leds[STRIPLENGTH - 1 - ix] = pixel;
+		}
+	}
+	else {
+		if (bDoublePixels) {
+			leds[2 * ix] = pixel;
+			leds[2 * ix + 1] = pixel;
+		}
+		else {
+			leds[ix] = pixel;
+		}
+	}
 }

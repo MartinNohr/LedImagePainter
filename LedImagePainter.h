@@ -72,7 +72,9 @@ bool bSdCardValid = false;              // set to true when card is found
 CRGB leds[NUM_LEDS * 2];
 bool bSecondStrip = false;                // set true when two strips installed
 #define STRIPLENGTH (NUM_LEDS*(1+(bSecondStrip?1:0)))
-#define LEDIX(ix) (((ix)<NUM_LEDS)?(NUM_LEDS-1-(ix)):(ix))
+// get the real LED strip index from the desired index
+void SetPixel(int ix, CRGB pixel);
+//#define LEDIX(ix) (((ix)<NUM_LEDS)?(NUM_LEDS-1-(ix)):(ix))
 int nStripBrightness = 25;                // Variable and default for the Brightness of the strip,  to 100%, 0 means the dimmest
 int startDelay = 0;                       // Variable for delay between button press and start of light sequence, in seconds
 //bool bRepeatForever = false;                           // Variable to select auto repeat (until select button is pressed again)
@@ -547,8 +549,8 @@ MenuItem ImageMenu[] = {
         {eTextInt,false,"Frame Pulse Counter: %d",GetIntegerValue,&nFramePulseCount,0,32},
     {eEndif},
     {eTextInt,false,"Start Delay (S): %d.%d",GetIntegerValue,&startDelay,0,100,1},
+    {eBool,false,"Upside Down Image: %s",ToggleBool,&bUpsideDown,0,0,0,"Yes","No"},
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,false},
-        {eBool,false,"Upside Down Image: %s",ToggleBool,&bUpsideDown,0,0,0,"Yes","No"},
         {eBool,false,"Reverse Image: %s",ToggleBool,&bReverseImage,0,0,0,"Yes","No"},
         {eBool,false,"Play Mirror Image: %s",ToggleBool,&bMirrorPlayImage,0,0,0,"Yes","No"},
         {eBool,false,"Scale Height to Fit: %s",ToggleBool,&bScaleHeight,0,0,0,"On","Off"},
