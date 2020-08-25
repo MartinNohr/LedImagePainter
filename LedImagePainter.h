@@ -656,23 +656,21 @@ BuiltInItem BuiltInFiles[] = {
 };
 
 #include <stackarray.h>
-StackArray<int>FileIndexStack;
 // a stack to hold the file indexes as we navigate folders
+StackArray<int> FileIndexStack;
 
-#define MAX_MENUS 10
 // a stack for menus so we can find our way back
 struct MENUINFO {
     int index;
     int offset;
+    int menucount;
     MenuItem* menu;
-} menuSavedInfo[MAX_MENUS];
+};
 typedef MENUINFO MenuInfo;
+MenuInfo* menuPtr;
+StackArray<MenuInfo*> MenuStack;
 
-int menuLevel = 0;
 bool bMenuChanged = true;
-int activeMenuLine = 0;
-int offsetMenuLines = 0;
-int activeMenuCount = 0;
 
 // save and load variables from IPC files
 enum SETVARTYPE {

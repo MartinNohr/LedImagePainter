@@ -404,9 +404,11 @@ void setup()
 		SaveSettings(true, bAutoLoadSettings);
 	}
 	setupSDcard();
-	menuSavedInfo[0].menu = MainMenu;
-	menuSavedInfo[0].index = 0;
-	menuSavedInfo[0].offset = 0;
+	menuPtr = new MenuInfo;
+	MenuStack.push(menuPtr);
+	MenuStack.peek()->menu = MainMenu;
+	MenuStack.peek()->index = 0;
+	MenuStack.peek()->offset = 0;
 	//const int ledPin = 16;  // 16 corresponds to GPIO16
 
 	//// configure LED PWM functionalitites
@@ -594,46 +596,45 @@ bool RunMenus(int button)
 	// see if we got a menu match
 	bool gotmatch = false;
 	int menuix = 0;
-	for (int ix = 0; !gotmatch && menuSavedInfo[menuLevel].menu[ix].op != eTerminate; ++ix) {
+	MenuInfo* oldMenu;
+	for (int ix = 0; !gotmatch && MenuStack.peek()->menu[ix].op != eTerminate; ++ix) {
 		// see if this is one is valid
-		if (!menuSavedInfo[menuLevel].menu[ix].valid) {
+		if (!MenuStack.peek()->menu[ix].valid) {
 			continue;
 		}
 		//Serial.println("menu button: " + String(button));
-		if (button == BTN_SELECT && menuix == activeMenuLine) {
-			//Serial.println("got match " + String(menuix) + " " + String(activeMenuLine));
+		if (button == BTN_SELECT && menuix == MenuStack.peek()->index) {
+			//Serial.println("got match " + String(menuix) + " " + String(MenuStack.peek()->index));
 			gotmatch = true;
 			//Serial.println("clicked on menu");
 			// got one, service it
-			switch (menuSavedInfo[menuLevel].menu[ix].op) {
+			switch (MenuStack.peek()->menu[ix].op) {
 			case eText:
 			case eTextInt:
 			case eTextCurrentFile:
 			case eBool:
-				if (menuSavedInfo[menuLevel].menu[ix].function) {
+				if (MenuStack.peek()->menu[ix].function) {
 					//Serial.println(ix);
-					(*menuSavedInfo[menuLevel].menu[ix].function)(&menuSavedInfo[menuLevel].menu[ix]);
+					(*MenuStack.peek()->menu[ix].function)(&MenuStack.peek()->menu[ix]);
 					bMenuChanged = true;
 				}
 				break;
 			case eMenu:
-				menuSavedInfo[menuLevel].index = activeMenuLine;
-				menuSavedInfo[menuLevel].offset = offsetMenuLines;
-				++menuLevel;
-				menuSavedInfo[menuLevel].menu = (MenuItem*)(menuSavedInfo[menuLevel - 1].menu[ix].value);
+				oldMenu = MenuStack.peek();
+				MenuStack.push(new MenuInfo);
+				MenuStack.peek()->menu = (MenuItem*)(oldMenu->menu[ix].value);
 				bMenuChanged = true;
-				activeMenuLine = 0;
-				offsetMenuLines = 0;
+				MenuStack.peek()->index = 0;
+				MenuStack.peek()->offset = 0;
 				//Serial.println("change menu");
 				break;
 			case eBuiltinOptions: // find it in builtins
 				if (BuiltInFiles[CurrentFileIndex].menu != NULL) {
-					menuSavedInfo[menuLevel].index = activeMenuLine;
-					menuSavedInfo[menuLevel].offset = offsetMenuLines;
-					++menuLevel;
-					menuSavedInfo[menuLevel].menu = (MenuItem*)(BuiltInFiles[CurrentFileIndex].menu);
-					activeMenuLine = 0;
-					offsetMenuLines = 0;
+					MenuStack.peek()->index = MenuStack.peek()->index;
+					MenuStack.push(new MenuInfo);
+					MenuStack.peek()->menu = (MenuItem*)(BuiltInFiles[CurrentFileIndex].menu);
+					MenuStack.peek()->index = 0;
+					MenuStack.peek()->offset = 0;
 				}
 				else {
 					WriteMessage("No settings available for:\n" + String(BuiltInFiles[CurrentFileIndex].text));
@@ -641,10 +642,9 @@ bool RunMenus(int button)
 				bMenuChanged = true;
 				break;
 			case eExit: // go back a level
-				if (menuLevel) {
-					--menuLevel;
-					activeMenuLine = menuSavedInfo[menuLevel].index;
-					offsetMenuLines = menuSavedInfo[menuLevel].offset;
+				if (MenuStack.count() > 1) {
+					delete MenuStack.peek();
+					MenuStack.pop();
 					bMenuChanged = true;
 				}
 				break;
@@ -657,21 +657,20 @@ bool RunMenus(int button)
 		++menuix;
 	}
 	// if no match, and we are in a submenu, go back one level
-	if (!bMenuChanged && menuLevel) {
+	if (!bMenuChanged && MenuStack.count() > 1) {
 		bMenuChanged = true;
-		--menuLevel;
-		activeMenuLine = menuSavedInfo[menuLevel].index;
-		offsetMenuLines = menuSavedInfo[menuLevel].offset;
+		menuPtr = MenuStack.pop();
+		delete menuPtr;
 	}
 }
 
 // display the menu
-// if activeMenuLine is > 5, then shift the lines up by enough to display them
+// if MenuStack.peek()->index is > 5, then shift the lines up by enough to display them
 // remember that we only have room for 5 lines
 void ShowMenu(struct MenuItem* menu)
 {
-	activeMenuCount = 0;
-	//offsetLines = max(0, activeMenuLine - 4);
+	MenuStack.peek()->menucount = 0;
+	//offsetLines = max(0, MenuStack.peek()->index - 4);
 	//Serial.println("offset: " + String(offsetLines));
 	int y = 0;
 	int x = 0;
@@ -762,21 +761,21 @@ void ShowMenu(struct MenuItem* menu)
 			//Serial.println("menu text4: " + String(line));
 			break;
 		}
-		if (strlen(line) && y >= offsetMenuLines) {
-			DisplayMenuLine(y - 1, y - 1 - offsetMenuLines, line);
+		if (strlen(line) && y >= MenuStack.peek()->offset) {
+			DisplayMenuLine(y - 1, y - 1 - MenuStack.peek()->offset, line);
 		}
 	}
-	//Serial.println("menu: " + String(offsetLines) + ":" + String(y) + " active: " + String(activeMenuLine));
-	activeMenuCount = y;
+	//Serial.println("menu: " + String(offsetLines) + ":" + String(y) + " active: " + String(MenuStack.peek()->index));
+	MenuStack.peek()->menucount = y;
 	// blank the rest of the lines
 	for (int ix = y; ix < 5; ++ix) {
 		DisplayLine(ix, "");
 	}
 	// show line if menu has been scrolled
-	if (offsetMenuLines > 0)
+	if (MenuStack.peek()->offset > 0)
 		OLED->drawLine(0, 0, 5, 0);
 	// show bottom line if last line is showing
-	if (offsetMenuLines + 4 < activeMenuCount - 1)
+	if (MenuStack.peek()->offset + 4 < MenuStack.peek()->menucount - 1)
 		OLED->drawLine(0, OLED->getHeight() - 1, 5, OLED->getHeight() - 1);
 	OLED->display();
 }
@@ -988,43 +987,43 @@ void UpdateOledBrightness(MenuItem* menu, int flag)
 bool HandleMenus()
 {
 	if (bMenuChanged) {
-		ShowMenu(menuSavedInfo[menuLevel].menu);
+		ShowMenu(MenuStack.peek()->menu);
 		//ShowGo();
 		bMenuChanged = false;
 	}
 	bool didsomething = true;
 	int button = ReadButton();
-	int lastOffset = offsetMenuLines;
-	int lastMenu = activeMenuLine;
+	int lastOffset = MenuStack.peek()->offset;
+	int lastMenu = MenuStack.peek()->index;
 	switch (button) {
 	case BTN_SELECT:
 		RunMenus(button);
 		bMenuChanged = true;
 		break;
 	case BTN_RIGHT:
-		if (bAllowMenuWrap || activeMenuLine < activeMenuCount - 1) {
-			++activeMenuLine;
+		if (bAllowMenuWrap || MenuStack.peek()->index < MenuStack.peek()->menucount - 1) {
+			++MenuStack.peek()->index;
 		}
-		if (activeMenuLine >= activeMenuCount) {
-			activeMenuLine = 0;
+		if (MenuStack.peek()->index >= MenuStack.peek()->menucount) {
+			MenuStack.peek()->index = 0;
 		}
 		// see if we need to scroll the menu
-		if (activeMenuLine - offsetMenuLines > 4) {
-			if (offsetMenuLines < activeMenuCount - 5) {
-				++offsetMenuLines;
+		if (MenuStack.peek()->index - MenuStack.peek()->offset > 4) {
+			if (MenuStack.peek()->offset < MenuStack.peek()->menucount - 5) {
+				++MenuStack.peek()->offset;
 			}
 		}
 		break;
 	case BTN_LEFT:
-		if (bAllowMenuWrap || activeMenuLine > 0) {
-			--activeMenuLine;
+		if (bAllowMenuWrap || MenuStack.peek()->index > 0) {
+			--MenuStack.peek()->index;
 		}
-		if (activeMenuLine < 0) {
-			activeMenuLine = activeMenuCount - 1;
+		if (MenuStack.peek()->index < 0) {
+			MenuStack.peek()->index = MenuStack.peek()->menucount - 1;
 		}
 		// see if we need to adjust the offset
-		if (offsetMenuLines && activeMenuLine < offsetMenuLines) {
-			--offsetMenuLines;
+		if (MenuStack.peek()->offset && MenuStack.peek()->index < MenuStack.peek()->offset) {
+			--MenuStack.peek()->offset;
 		}
 		break;
 	case BTN_LONG:
@@ -1037,7 +1036,7 @@ bool HandleMenus()
 		didsomething = false;
 		break;
 	}
-	if (lastMenu != activeMenuLine || lastOffset != offsetMenuLines) {
+	if (lastMenu != MenuStack.peek()->index || lastOffset != MenuStack.peek()->offset) {
 		bMenuChanged = true;
 	}
 	return didsomething;
@@ -2464,8 +2463,8 @@ void DisplayLine(int line, String text, bool bOverRide)
 // the star is used to indicate active menu line
 void DisplayMenuLine(int line, int displine, String text)
 {
-	String mline = (activeMenuLine == line ? "* " : "  ") + text;
-	//if (activeMenuLine == line)
+	String mline = (MenuStack.peek()->index == line ? "* " : "  ") + text;
+	//if (MenuStack.peek()->index == line)
 		//OLED->setFont(SansSerif_bold_10);
 	DisplayLine(displine, mline);
 	//OLED->setFont(ArialMT_Plain_10);
