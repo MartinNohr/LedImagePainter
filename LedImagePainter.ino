@@ -425,14 +425,22 @@ void setup()
 	FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, whiteBalance.b));
 	FastLED.setBrightness(nStripBrightness);
 	// Turn the LED on, then pause
-	leds[0] = leds[1] = CRGB::Red;
-	leds[4] = leds[5] = CRGB::Green;
-	leds[8] = leds[9] = CRGB::Blue;
-	leds[12] = leds[13] = CRGB::White;
-	leds[0 + NUM_LEDS] = leds[1 + NUM_LEDS] = CRGB::Red;
-	leds[4 + NUM_LEDS] = leds[5 + NUM_LEDS] = CRGB::Green;
-	leds[8 + NUM_LEDS] = leds[9 + NUM_LEDS] = CRGB::Blue;
-	leds[12 + NUM_LEDS] = leds[13 + NUM_LEDS] = CRGB::White;
+	SetPixel(0, CRGB::Red);
+	SetPixel(1, CRGB::Red);
+	SetPixel(4, CRGB::Green);
+	SetPixel(5, CRGB::Green);
+	SetPixel(8, CRGB::Blue);
+	SetPixel(9, CRGB::Blue);
+	SetPixel(12, CRGB::White);
+	SetPixel(13, CRGB::White);
+	SetPixel(0 + NUM_LEDS, CRGB::Red);
+	SetPixel(1 + NUM_LEDS, CRGB::Red);
+	SetPixel(4 + NUM_LEDS, CRGB::Green);
+	SetPixel(5 + NUM_LEDS, CRGB::Green);
+	SetPixel(8 + NUM_LEDS, CRGB::Blue);
+	SetPixel(9 + NUM_LEDS, CRGB::Blue);
+	SetPixel(12 + NUM_LEDS, CRGB::White);
+	SetPixel(13 + NUM_LEDS, CRGB::White);
 	for (int ix = 0; ix < 255; ix += 5) {
 		FastLED.setBrightness(ix);
 		FastLED.show();
