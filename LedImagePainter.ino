@@ -433,6 +433,14 @@ void setup()
 	SetPixel(9, CRGB::Blue);
 	SetPixel(12, CRGB::White);
 	SetPixel(13, CRGB::White);
+	SetPixel(NUM_LEDS - 0, CRGB::Red);
+	SetPixel(NUM_LEDS - 1, CRGB::Red);
+	SetPixel(NUM_LEDS - 4, CRGB::Green);
+	SetPixel(NUM_LEDS - 5, CRGB::Green);
+	SetPixel(NUM_LEDS - 8, CRGB::Blue);
+	SetPixel(NUM_LEDS - 9, CRGB::Blue);
+	SetPixel(NUM_LEDS - 12, CRGB::White);
+	SetPixel(NUM_LEDS - 13, CRGB::White);
 	SetPixel(0 + NUM_LEDS, CRGB::Red);
 	SetPixel(1 + NUM_LEDS, CRGB::Red);
 	SetPixel(4 + NUM_LEDS, CRGB::Green);
