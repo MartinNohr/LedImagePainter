@@ -2637,6 +2637,18 @@ String MakeIPCFilename(String filename, bool addext)
 	return cfFile;
 }
 
+// look for the file in the list
+// return -1 if not found
+int LookUpFile(String name)
+{
+	for (int ix = 0; ix < NumberOfFiles; ++ix) {
+		if (name.equalsIgnoreCase(FileNames[ix])) {
+			return ix;
+		}
+	}
+	return -1;
+}
+
 // process the lines in the config file
 bool ProcessConfigFile(String filename)
 {
@@ -2655,6 +2667,7 @@ bool ProcessConfigFile(String filename)
 				command.trim();
 				command.toUpperCase();
 				args = line.substring(ix + 1);
+				args.trim();
 				// loop through the var list looking for a match
 				for (int which = 0; which < sizeof(SettingsVarList) / sizeof(*SettingsVarList); ++which) {
 					if (command.compareTo(SettingsVarList[which].name) == 0) {
@@ -2675,10 +2688,16 @@ bool ProcessConfigFile(String filename)
 							*(bool*)(SettingsVarList[which].address) = args[0] == 'T';
 							break;
 						case vtShowFile:
-							// fake the current filename and call the process routine
-							strcpy(FileToShow, args.c_str());
-							DisplayLine(3, FileToShow);
-							delay(5000);
+						{
+							// search for the file in the list
+							int which = LookUpFile(args);
+							if (which > 0) {
+								CurrentFileIndex = which;
+								// call the process routine
+								strcpy(FileToShow, args.c_str());
+								ProcessFileOrTest();
+							}
+						}
 							break;
 						case vtRGB:
 						{
@@ -2905,14 +2924,14 @@ bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile)
 	}
 	else {
 		String line;
-		File file = SD.open(filepath.c_str(), FILE_WRITE);
+		File file = SD.open(filepath.c_str(), bRecordingMacro ? FILE_APPEND : FILE_WRITE);
 		if (file) {
 			// loop through the var list
 			for (int ix = 0; ix < sizeof(SettingsVarList) / sizeof(*SettingsVarList); ++ix) {
 				switch (SettingsVarList[ix].type) {
 				case vtShowFile:
 					if (*(char*)(SettingsVarList[ix].address)) {
-						line = String(SettingsVarList[ix].name) + "=" + String(*(char*)(SettingsVarList[ix].address));
+						line = String(SettingsVarList[ix].name) + "=" + String((char*)(SettingsVarList[ix].address));
 					}
 					break;
 				case vtInt:
@@ -3012,6 +3031,22 @@ void SaveEepromSettings(MenuItem* menu)
 void LoadEepromSettings(MenuItem* menu)
 {
 	SaveSettings(false, false);
+}
+
+void RunMacro(MenuItem* menu)
+{
+	bRunningMacro = true;
+	bRecordingMacro = false;
+	bIsRunning = true;
+	ProcessConfigFile(String(nCurrentMacro) + ".ipc");
+	bIsRunning = false;
+	bRunningMacro = false;
+}
+
+void DeleteMacro(MenuItem* menu)
+{
+	bRecordingMacro = false;
+	WriteOrDeleteConfigFile(String(nCurrentMacro), true, false);
 }
 
 // show some LED's with and without white balance adjust

@@ -193,6 +193,8 @@ void UpdateStripWhiteBalanceR(MenuItem* menu, int flag);
 void UpdateStripWhiteBalanceG(MenuItem* menu, int flag);
 void UpdateStripWhiteBalanceB(MenuItem* menu, int flag);
 bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile);
+void RunMacro(MenuItem* menu);
+void DeleteMacro(MenuItem* menu);
 
 // builtins
 // built-in "files"
@@ -623,9 +625,10 @@ MenuItem EepromMenu[] = {
 };
 MenuItem MacroMenu[] = {
     {eExit,false,"Previous Menu"},
-    {eTextInt,false,"Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
+    {eTextInt,false,"Selected Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
     {eBool,false,"Recording Macro: %s",ToggleFilesBuiltin,&bRecordingMacro,0,0,0,"On","Off"},
-    {eBool,false,"Run Macro: %s",ToggleFilesBuiltin,&bRunningMacro,0,0,0,"On","Off"},
+    {eText,false,"Run Macro",RunMacro},
+    {eText,false,"Delete Macro",DeleteMacro},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
