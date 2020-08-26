@@ -697,7 +697,7 @@ enum SETVARTYPE {
     vtInt,
     vtBool,
     vtRGB,
-    vtShowFile,     // run a file on the display
+    vtShowFile,     // run a file on the display, the file has the path which is used to set the current path
 };
 struct SETTINGVAR {
     char* name;

@@ -2689,12 +2689,23 @@ bool ProcessConfigFile(String filename)
 							break;
 						case vtShowFile:
 						{
+							// get the folder and set it first
+							String folder;
+							String name;
+							int ix = args.lastIndexOf('/');
+							folder = args.substring(0, ix);
+							name = args.substring(ix + 1);
+							// set the folder
+							if (folder.length() > 1)
+								folder += "/";	// must end on /
+							currentFolder = folder;
+							GetFileNamesFromSD(currentFolder);
 							// search for the file in the list
-							int which = LookUpFile(args);
+							int which = LookUpFile(name);
 							if (which > 0) {
 								CurrentFileIndex = which;
 								// call the process routine
-								strcpy(FileToShow, args.c_str());
+								strcpy(FileToShow, name.c_str());
 								ProcessFileOrTest();
 							}
 						}
@@ -2931,7 +2942,7 @@ bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile)
 				switch (SettingsVarList[ix].type) {
 				case vtShowFile:
 					if (*(char*)(SettingsVarList[ix].address)) {
-						line = String(SettingsVarList[ix].name) + "=" + String((char*)(SettingsVarList[ix].address));
+						line = String(SettingsVarList[ix].name) + "=" + currentFolder + String((char*)(SettingsVarList[ix].address));
 					}
 					break;
 				case vtInt:
