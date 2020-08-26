@@ -1338,7 +1338,7 @@ void setupSDcard()
 }
 
 // return the pixel
-CRGB getRGBwithGamma() {
+CRGB IRAM_ATTR getRGBwithGamma() {
 	if (bGammaCorrection) {
 		b = gammaB[readByte(false)];
 		g = gammaG[readByte(false)];
@@ -2375,9 +2375,9 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 		//dataFile.seekSet(offset);
 		CRGB pixel;
 		// get to start of pixel data, moved this out of the loop below to speed things up
-		FileSeek((uint32_t)MYBMP_BF_OFF_BITS + (y * lineLength));
+		FileSeekBuf((uint32_t)MYBMP_BF_OFF_BITS + (y * lineLength));
 		for (int x = 0; x < displayWidth; x++) {
-			//FileSeek((uint32_t)MYBMP_BF_OFF_BITS + ((y * lineLength) + (x * 3)));
+			//FileSeekBuf((uint32_t)MYBMP_BF_OFF_BITS + ((y * lineLength) + (x * 3)));
 			//dataFile.seekSet((uint32_t)MYBMP_BF_OFF_BITS + ((y * lineLength) + (x * 3)));
 			// this reads three bytes
 			pixel = getRGBwithGamma();
@@ -2469,7 +2469,7 @@ void DisplayMenuLine(int line, int displine, String text)
 	//OLED->setFont(ArialMT_Plain_10);
 }
 
-uint32_t readLong() {
+uint32_t IRAM_ATTR readLong() {
 	uint32_t retValue;
 	byte incomingbyte;
 
@@ -2488,7 +2488,7 @@ uint32_t readLong() {
 	return retValue;
 }
 
-uint16_t readInt() {
+uint16_t IRAM_ATTR readInt() {
 	byte incomingbyte;
 	uint16_t retValue;
 
@@ -2505,7 +2505,7 @@ int fileindex = 0;
 int filebufsize = 0;
 uint32_t filePosition = 0;
 
-int readByte(bool clear) {
+int IRAM_ATTR readByte(bool clear) {
 	//int retbyte = -1;
 	if (clear) {
 		filebufsize = 0;
@@ -2534,7 +2534,7 @@ int readByte(bool clear) {
 }
 
 // make sure we are the right place
-uint32_t FileSeek(uint32_t place)
+void IRAM_ATTR FileSeekBuf(uint32_t place)
 {
 	if (place < filePosition || place >= filePosition + filebufsize) {
 		// we need to read some more
