@@ -62,7 +62,7 @@ char signature[]{ "MLW11" };              // set to make sure saved values are v
 bool bAutoLoadSettings = false;           // set to automatically load saved settings from eeprom
 
 // settings
-int displayBrightness = 100;
+int displayBrightness = 100;            // this is in %
 bool bSdCardValid = false;              // set to true when card is found
 // strip leds
 #define DATA_PIN1 17
@@ -119,6 +119,9 @@ bool bScaleHeight = false;                // scale the Y values to fit the numbe
 bool bCancelRun = false;                  // set to cancel a running job
 bool bAllowMenuWrap = false;              // allows menus to wrap around from end and start instead of pinning
 bool bShowNextFiles = true;               // show the next files in the main display
+int nCurrentMacro = 0;                    // the number of the macro to record or run
+bool bRecordingMacro = false;             // set while recording
+bool bRunningMacro = false;               // set while running
 // timer argument vale
 enum TIMER_ID { TID_LED, TID_BTN, TID_LONGPRESS };
 volatile int nTimerSeconds;
@@ -354,6 +357,7 @@ const saveValues saveValueList[] = {
     {&nCheckboardWhiteWidth,sizeof(nCheckboardWhiteWidth)},
     {&bCheckerBoardAlternate,sizeof(bCheckerBoardAlternate)},
     {&nCheckerboardAddPixels,sizeof(nCheckerboardAddPixels)},
+    {&nCurrentMacro,sizeof(nCurrentMacro)},
 };
 
 // Gramma Correction (Defalt Gamma = 2.8)
@@ -617,6 +621,15 @@ MenuItem EepromMenu[] = {
     // make sure this one is last
     {eTerminate}
 };
+MenuItem MacroMenu[] = {
+    {eExit,false,"Previous Menu"},
+    {eTextInt,false,"Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
+    {eBool,false,"Recording Macro: %s",ToggleFilesBuiltin,&bRecordingMacro,0,0,0,"On","Off"},
+    {eBool,false,"Run Macro: %s",ToggleFilesBuiltin,&bRunningMacro,0,0,0,"On","Off"},
+    {eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
 MenuItem MainMenu[] = {
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,true},
         {eBool,false,"Switch to SD Card",ToggleFilesBuiltin,&bShowBuiltInTests,0,0,0,"On","Off"},
@@ -631,6 +644,7 @@ MenuItem MainMenu[] = {
     {eElse},
         {eMenu,false,"IPC File Operations",NULL,StartFileMenu},
     {eEndif},
+    {eMenu,false,"Macro Files",NULL,MacroMenu},
     {eMenu,false,"Saved Settings",NULL,EepromMenu},
     {eMenu,false,"Display Settings",NULL,DisplayMenu},
     {eBool,false,"BlueTooth Link: %s",ToggleBool,&bEnableBLE,0,0,0,"On","Off"},
@@ -674,11 +688,13 @@ StackArray<MenuInfo*> MenuStack;
 
 bool bMenuChanged = true;
 
+char FileToShow[40];
 // save and load variables from IPC files
 enum SETVARTYPE {
     vtInt,
     vtBool,
     vtRGB,
+    vtShowFile,     // run a file on the display
 };
 struct SETTINGVAR {
     char* name;
@@ -688,7 +704,7 @@ struct SETTINGVAR {
 };
 struct SETTINGVAR SettingsVarList[] = {
     {"SECOND STRIP",&bSecondStrip,vtBool},
-    {"STRIP BRIGHTNESS",&nStripBrightness,vtInt,0,100},
+    {"STRIP BRIGHTNESS",&nStripBrightness,vtInt,1,255},
     {"REPEAT COUNT",&repeatCount,vtInt},
     {"REPEAT DELAY",&repeatDelay,vtInt},
     {"FRAME TIME",&frameHold,vtInt},
@@ -701,4 +717,5 @@ struct SETTINGVAR SettingsVarList[] = {
     {"WHITE BALANCE",&whiteBalance,vtRGB},
     {"DISPLAY BRIGHTNESS",&displayBrightness,vtInt,0,100},
     {"GAMMA CORRECTION",&bGammaCorrection,vtBool},
+    {"SHOW FILE",&FileToShow,vtShowFile},
 };

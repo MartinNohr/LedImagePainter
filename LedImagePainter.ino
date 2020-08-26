@@ -2111,6 +2111,10 @@ void ProcessFileOrTest()
 		DisplayCurrentFile();
 		return;
 	}
+	if (bRecordingMacro) {
+		strcpy(FileToShow, FileNames[CurrentFileIndex].c_str());
+		WriteOrDeleteConfigFile(String(nCurrentMacro), false, false);
+	}
 	bIsRunning = true;
 	nProgress = 0;
 	DisplayLine(3, "");
@@ -2670,6 +2674,12 @@ bool ProcessConfigFile(String filename)
 							args.toUpperCase();
 							*(bool*)(SettingsVarList[which].address) = args[0] == 'T';
 							break;
+						case vtShowFile:
+							// fake the current filename and call the process routine
+							strcpy(FileToShow, args.c_str());
+							DisplayLine(3, FileToShow);
+							delay(5000);
+							break;
 						case vtRGB:
 						{
 							// handle the RBG colors
@@ -2900,19 +2910,24 @@ bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile)
 			// loop through the var list
 			for (int ix = 0; ix < sizeof(SettingsVarList) / sizeof(*SettingsVarList); ++ix) {
 				switch (SettingsVarList[ix].type) {
+				case vtShowFile:
+					if (*(char*)(SettingsVarList[ix].address)) {
+						line = String(SettingsVarList[ix].name) + "=" + String(*(char*)(SettingsVarList[ix].address));
+					}
+					break;
 				case vtInt:
-					line = String(SettingsVarList[ix].name) + String(*(int*)(SettingsVarList[ix].address));
+					line = String(SettingsVarList[ix].name) + "=" + String(*(int*)(SettingsVarList[ix].address));
 					break;
 				case vtBool:
-					line = String(SettingsVarList[ix].name) + String(*(bool*)(SettingsVarList[ix].address) ? "TRUE" : "FALSE");
+					line = String(SettingsVarList[ix].name) + "=" + String(*(bool*)(SettingsVarList[ix].address) ? "TRUE" : "FALSE");
 					break;
 				case vtRGB:
-				{
-					// handle the RBG colors
-					CRGB* cp = (CRGB*)(SettingsVarList[ix].address);
-					line = String("WHITE BALANCE=") + String(cp->r) + "," + String(cp->g) + "," + String(cp->b);
-				}
-				break;
+					{
+						// handle the RBG colors
+						CRGB* cp = (CRGB*)(SettingsVarList[ix].address);
+						line = String(SettingsVarList[ix].name) + "=" + String(cp->r) + "," + String(cp->g) + "," + String(cp->b);
+					}
+					break;
 				default:
 					line = "";
 					break;
