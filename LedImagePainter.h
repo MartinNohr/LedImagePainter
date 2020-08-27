@@ -627,12 +627,12 @@ MenuItem EepromMenu[] = {
 };
 MenuItem MacroMenu[] = {
     {eExit,false,"Previous Menu"},
-    {eTextInt,false,"Selected Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
-    {eText,false,"Run Macro",RunMacro},
-    {eBool,false,"Recording Macro: %s",ToggleFilesBuiltin,&bRecordingMacro,0,0,0,"On","Off"},
-    {eText,false,"Load Macro",LoadMacro},
-    {eText,false,"Save Macro",SaveMacro},
-    {eText,false,"Delete Macro",DeleteMacro},
+    {eTextInt,false,"Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
+    {eText,false,"Run",RunMacro},
+    {eBool,false,"Recording: %s",ToggleFilesBuiltin,&bRecordingMacro,0,0,0,"On","Off"},
+    {eText,false,"Load",LoadMacro},
+    {eText,false,"Save",SaveMacro},
+    {eText,false,"Delete",DeleteMacro},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
