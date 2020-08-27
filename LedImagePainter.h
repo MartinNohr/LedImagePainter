@@ -542,9 +542,9 @@ MenuItem RandomBarsMenu[] = {
 MenuItem DisplayMenu[] = {
     {eExit,false,"Previous Menu"},
     {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100,0,NULL,NULL,UpdateOledBrightness},
-    {eBool,false,"Allow Menu Wrap: %s",ToggleBool,&bAllowMenuWrap,0,0,0,"Yes","No"},
-    {eBool,false,"Show Next Files: %s",ToggleBool,&bShowNextFiles,0,0,0,"Yes","No"},
-    {eBool,false,"Show Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
+    {eBool,false,"Menu Wrap: %s",ToggleBool,&bAllowMenuWrap,0,0,0,"Yes","No"},
+    {eBool,false,"Show More Files: %s",ToggleBool,&bShowNextFiles,0,0,0,"Yes","No"},
+    {eBool,false,"Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
