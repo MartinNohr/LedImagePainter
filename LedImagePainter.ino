@@ -2653,7 +2653,7 @@ int LookUpFile(String name)
 bool ProcessConfigFile(String filename)
 {
 	bool retval = true;
-	String filepath = currentFolder + filename;
+	String filepath = ((bRunningMacro || bRecordingMacro) ? String("/") : currentFolder) + filename;
 	SDFile rdfile;
 	rdfile = SD.open(filepath);
 	if (rdfile.available()) {
@@ -2922,7 +2922,7 @@ bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile)
 		filepath = currentFolder + String("START.IPC");
 	}
 	else {
-		filepath = currentFolder + MakeIPCFilename(filename, true);
+		filepath = ((bRecordingMacro || bRunningMacro) ? String("/") : currentFolder) + MakeIPCFilename(filename, true);
 	}
 	if (remove) {
 		if (!SD.exists(filepath.c_str()))
@@ -3059,7 +3059,6 @@ void RunMacro(MenuItem* menu)
 
 void DeleteMacro(MenuItem* menu)
 {
-	bRecordingMacro = false;
 	WriteOrDeleteConfigFile(String(nCurrentMacro), true, false);
 }
 
