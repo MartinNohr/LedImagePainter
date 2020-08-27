@@ -2454,7 +2454,7 @@ void DisplayLine(int line, String text, bool bOverRide)
 {
 	if (bPauseDisplay && !bOverRide)
 		return;
-	int y = line * charHeight + (bSettingsMode ? 0 : 6);
+	int y = line * charHeight + (bSettingsMode && !bRunningMacro ? 0 : 6);
 	//int wide = OLED->getStringWidth(num);
 	OLED->setColor(BLACK);
 	OLED->fillRect(0, y, /*wide*/OLED->getWidth(), charHeight);
@@ -2693,7 +2693,7 @@ bool ProcessConfigFile(String filename)
 							String folder;
 							String name;
 							int ix = args.lastIndexOf('/');
-							folder = args.substring(0, ix);
+							folder = args.substring(0, ix + 1);
 							name = args.substring(ix + 1);
 							// set the folder
 							if (folder.length() > 1)
@@ -2706,6 +2706,7 @@ bool ProcessConfigFile(String filename)
 								CurrentFileIndex = which;
 								// call the process routine
 								strcpy(FileToShow, name.c_str());
+								OLED->clear();
 								ProcessFileOrTest();
 							}
 						}
@@ -3048,9 +3049,7 @@ void RunMacro(MenuItem* menu)
 {
 	bRunningMacro = true;
 	bRecordingMacro = false;
-	bIsRunning = true;
 	ProcessConfigFile(String(nCurrentMacro) + ".ipc");
-	bIsRunning = false;
 	bRunningMacro = false;
 }
 
