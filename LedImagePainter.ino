@@ -2696,9 +2696,8 @@ bool ProcessConfigFile(String filename)
 							folder = args.substring(0, ix + 1);
 							name = args.substring(ix + 1);
 							// set the folder
-							if (folder.length() > 1)
-								folder += "/";	// must end on /
 							String oldFolder = currentFolder;
+							int oldFileIndex = CurrentFileIndex;
 							currentFolder = folder;
 							GetFileNamesFromSD(currentFolder);
 							// search for the file in the list
@@ -2712,6 +2711,7 @@ bool ProcessConfigFile(String filename)
 							}
 							currentFolder = oldFolder;
 							GetFileNamesFromSD(currentFolder);
+							CurrentFileIndex = oldFileIndex;
 						}
 							break;
 						case vtRGB:
