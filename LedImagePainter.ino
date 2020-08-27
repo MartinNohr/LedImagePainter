@@ -2698,6 +2698,7 @@ bool ProcessConfigFile(String filename)
 							// set the folder
 							if (folder.length() > 1)
 								folder += "/";	// must end on /
+							String oldFolder = currentFolder;
 							currentFolder = folder;
 							GetFileNamesFromSD(currentFolder);
 							// search for the file in the list
@@ -2709,6 +2710,8 @@ bool ProcessConfigFile(String filename)
 								OLED->clear();
 								ProcessFileOrTest();
 							}
+							currentFolder = oldFolder;
+							GetFileNamesFromSD(currentFolder);
 						}
 							break;
 						case vtRGB:
