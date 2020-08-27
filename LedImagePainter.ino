@@ -3049,7 +3049,11 @@ void RunMacro(MenuItem* menu)
 {
 	bRunningMacro = true;
 	bRecordingMacro = false;
-	ProcessConfigFile(String(nCurrentMacro) + ".ipc");
+	String line = String(nCurrentMacro) + ".ipc";
+	if (!ProcessConfigFile(line)) {
+		line +=" not found";
+		WriteMessage(line, true);
+	}
 	bRunningMacro = false;
 }
 
