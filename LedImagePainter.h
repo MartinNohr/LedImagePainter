@@ -194,6 +194,8 @@ void UpdateStripWhiteBalanceG(MenuItem* menu, int flag);
 void UpdateStripWhiteBalanceB(MenuItem* menu, int flag);
 bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile);
 void RunMacro(MenuItem* menu);
+void LoadMacro(MenuItem* menu);
+void SaveMacro(MenuItem* menu);
 void DeleteMacro(MenuItem* menu);
 
 // builtins
@@ -626,8 +628,10 @@ MenuItem EepromMenu[] = {
 MenuItem MacroMenu[] = {
     {eExit,false,"Previous Menu"},
     {eTextInt,false,"Selected Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
-    {eBool,false,"Recording Macro: %s",ToggleFilesBuiltin,&bRecordingMacro,0,0,0,"On","Off"},
     {eText,false,"Run Macro",RunMacro},
+    {eBool,false,"Recording Macro: %s",ToggleFilesBuiltin,&bRecordingMacro,0,0,0,"On","Off"},
+    {eText,false,"Load Macro",LoadMacro},
+    {eText,false,"Save Macro",SaveMacro},
     {eText,false,"Delete Macro",DeleteMacro},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
@@ -647,7 +651,7 @@ MenuItem MainMenu[] = {
     {eElse},
         {eMenu,false,"IPC File Operations",NULL,StartFileMenu},
     {eEndif},
-    {eMenu,false,"Macro Files",NULL,MacroMenu},
+    {eMenu,false,"Macros",NULL,MacroMenu},
     {eMenu,false,"Saved Settings",NULL,EepromMenu},
     {eMenu,false,"Display Settings",NULL,DisplayMenu},
     {eBool,false,"BlueTooth Link: %s",ToggleBool,&bEnableBLE,0,0,0,"On","Off"},

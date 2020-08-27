@@ -3058,18 +3058,40 @@ void LoadEepromSettings(MenuItem* menu)
 	SaveSettings(false, false);
 }
 
+// save the macro with the current settings
+void SaveMacro(MenuItem* menu)
+{
+	bRecordingMacro = true;
+	WriteOrDeleteConfigFile(String(nCurrentMacro), false, false);
+	bRecordingMacro = false;
+}
+
+// saves and restores settings
 void RunMacro(MenuItem* menu)
 {
-	SettingsSaveRestore(true, 1);
+	MacroLoadRun(menu, true);
+}
+
+// like run, but doesn't restore settings
+void LoadMacro(MenuItem* menu)
+{
+	MacroLoadRun(menu, false);
+}
+
+void MacroLoadRun(MenuItem* menu, bool save)
+{
+	if (save)
+		SettingsSaveRestore(true, 1);
 	bRunningMacro = true;
 	bRecordingMacro = false;
 	String line = String(nCurrentMacro) + ".ipc";
 	if (!ProcessConfigFile(line)) {
-		line +=" not found";
+		line += " not found";
 		WriteMessage(line, true);
 	}
 	bRunningMacro = false;
-	SettingsSaveRestore(false, 1);
+	if (save)
+		SettingsSaveRestore(false, 1);
 }
 
 void DeleteMacro(MenuItem* menu)
