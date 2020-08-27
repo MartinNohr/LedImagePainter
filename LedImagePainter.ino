@@ -2243,7 +2243,7 @@ void SendFile(String Filename) {
 	// see if there is an associated config file
 	String cfFile = temp;
 	cfFile = MakeIPCFilename(cfFile, true);
-	SettingsSaveRestore(true);
+	SettingsSaveRestore(true, 0);
 	ProcessConfigFile(cfFile);
 	String fn = currentFolder + temp;
 	dataFile = SD.open(fn);
@@ -2270,7 +2270,7 @@ void SendFile(String Filename) {
 		return;
 	}
 	ShowProgressBar(100);
-	SettingsSaveRestore(false);
+	SettingsSaveRestore(false, 0);
 }
 
 void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
@@ -2695,11 +2695,14 @@ bool ProcessConfigFile(String filename)
 							int ix = args.lastIndexOf('/');
 							folder = args.substring(0, ix + 1);
 							name = args.substring(ix + 1);
-							// set the folder
-							String oldFolder = currentFolder;
 							int oldFileIndex = CurrentFileIndex;
-							currentFolder = folder;
-							GetFileNamesFromSD(currentFolder);
+							// save the old folder if necessary
+							String oldFolder;
+							if (!currentFolder.equalsIgnoreCase(folder)) {
+								oldFolder = currentFolder;
+								currentFolder = folder;
+								GetFileNamesFromSD(folder);
+							}
 							// search for the file in the list
 							int which = LookUpFile(name);
 							if (which > 0) {
@@ -2709,8 +2712,10 @@ bool ProcessConfigFile(String filename)
 								OLED->clear();
 								ProcessFileOrTest();
 							}
-							currentFolder = oldFolder;
-							GetFileNamesFromSD(currentFolder);
+							if (oldFolder.length()) {
+								currentFolder = oldFolder;
+								GetFileNamesFromSD(currentFolder);
+							}
 							CurrentFileIndex = oldFileIndex;
 						}
 							break;
@@ -2841,18 +2846,23 @@ int CompareStrings(String one, String two)
 	return one.compareTo(two);
 }
 
-bool SettingsSaveRestore(bool save)
+// save and restore important settings, two sets are available
+// 0 is used by file display, and 1 is used when running macros
+bool SettingsSaveRestore(bool save, int set)
 {
-	static void* memptr = NULL;
+	static void* memptr[2] = { NULL, NULL };
 	if (save) {
 		// get some memory and save the values
-		if (memptr)
-			free(memptr);
-		memptr = malloc(sizeof saveValueList);
-		if (!memptr)
+		if (memptr[set])
+			free(memptr[set]);
+		memptr[set] = malloc(sizeof saveValueList);
+		if (!memptr[set])
 			return false;
 	}
-	void* blockptr = memptr;
+	void* blockptr = memptr[set];
+	if (memptr[set] == NULL) {
+		return false;
+	}
 	for (int ix = 0; ix < (sizeof saveValueList / sizeof * saveValueList); ++ix) {
 		if (save) {
 			memcpy(blockptr, saveValueList[ix].val, saveValueList[ix].size);
@@ -2864,9 +2874,9 @@ bool SettingsSaveRestore(bool save)
 	}
 	if (!save) {
 		// if it was saved, restore it and free the memory
-		if (memptr) {
-			free(memptr);
-			memptr = NULL;
+		if (memptr[set]) {
+			free(memptr[set]);
+			memptr[set] = NULL;
 		}
 	}
 	return true;
@@ -3050,6 +3060,7 @@ void LoadEepromSettings(MenuItem* menu)
 
 void RunMacro(MenuItem* menu)
 {
+	SettingsSaveRestore(true, 1);
 	bRunningMacro = true;
 	bRecordingMacro = false;
 	String line = String(nCurrentMacro) + ".ipc";
@@ -3058,6 +3069,7 @@ void RunMacro(MenuItem* menu)
 		WriteMessage(line, true);
 	}
 	bRunningMacro = false;
+	SettingsSaveRestore(false, 1);
 }
 
 void DeleteMacro(MenuItem* menu)
