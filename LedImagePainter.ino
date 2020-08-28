@@ -2128,7 +2128,7 @@ void ProcessFileOrTest()
 					(*BuiltInFiles[CurrentFileIndex].function)();
 				}
 				else {
-					if (nRepeatCountMacro > 1) {
+					if (nRepeatCountMacro > 1 && bRunningMacro) {
 						DisplayLine(3, String("Macro Repeats: ") + String(nMacroRepeatsLeft));
 					}
 					// output the file
