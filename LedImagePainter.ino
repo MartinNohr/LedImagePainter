@@ -2190,7 +2190,8 @@ void ProcessFileOrTest()
 	FastLED.clear(true);
 	OLED->clear();
 	bIsRunning = false;
-	DisplayCurrentFile();
+	if (!bRunningMacro)
+		DisplayCurrentFile();
 	nProgress = 0;
 	// clear buttons
 	int btn;
