@@ -61,79 +61,24 @@ void IRAM_ATTR oneshot_LONGPRESS_timer_callback(void* arg)
 	bButtonTimerRunning = false;
 }
 
-// state table for the rotary encoder
-#define T true
-#define F false
-#define DIRECTIONS 2
-#define MAXSTATE 4
-#define CONTACTS 2
-bool stateTest[DIRECTIONS][MAXSTATE][CONTACTS] =
+// interrupt routines for the A and B rotary switches
+void IRAM_ATTR IntBtnA()
 {
-	{{T,F},{F,F},{F,T},{T,T}},
-	{{F,T},{F,F},{T,F},{T,T}}
-};
-#define A 0
-#define B 1
-#define ROTARY_RETRIES 10
-void IRAM_ATTR IntBtnAB()
-{
-	static bool forward;
-	static int state = 0;
-	static int tries;
+	noInterrupts();
+	static unsigned long lastTime;
 	static bool lastValA = true;
-	static bool lastValB = true;
-	bool valA = digitalRead(BTNA);
-	bool valB = digitalRead(BTNB);
-	//Serial.println("A:" + String(valA) + " B:" + String(valB));
-	//Serial.println("start state: " + String(state));
-	//Serial.println("forward: " + String(forward));
-	if (valA == lastValA && valB == lastValB)
-		return;
-	if (state == 0) {
-		// starting
-		// see if one of the first tests is correct, then go to state 1
-		if (stateTest[0][state][A] == valA && stateTest[0][state][B] == valB) {
-			//Serial.println("down");
-			forward = false;
-			tries = ROTARY_RETRIES;
-			++state;
+	bool valA = gpio_get_level((gpio_num_t)BTNA);
+	bool valB = gpio_get_level((gpio_num_t)BTNB);
+	// ignore until the time has expired
+	if (lastValA != valA && millis() > lastTime + 4) {
+		lastTime = millis();
+		if (lastValA && !valA) {
+			int btn = valB ? BTN_RIGHT : BTN_LEFT;
+			btnBuf.add(btn);
 		}
-		else if (stateTest[1][state][A] == valA && stateTest[1][state][B] == valB) {
-			//Serial.println("up");
-			forward = true;
-			tries = ROTARY_RETRIES;
-			++state;
-		}
+		lastValA = valA;
 	}
-	else {
-		// check if we can advance
-		if (stateTest[forward ? 1 : 0][state][A] == valA && stateTest[forward ? 1 : 0][state][B] == valB) {
-			tries = ROTARY_RETRIES;
-			++state;
-		}
-		else {
-			//state = 0;
-		}
-	}
-	//Serial.println("end state: " + String(state));
-	//Serial.println("forward: " + String(forward));
-	if (state == MAXSTATE) {
-		// we're done
-		//Serial.println(String(forward ? "+" : "-"));
-		state = 0;
-		int btn = forward ? BTN_RIGHT : BTN_LEFT;
-		//Serial.println("add: " + String(btn));
-		btnBuf.add(btn);
-	}
-	else if ((tries-- <= 0 && state > 0) || (valA == true && valB == true)) {
-		// something failed, start over
-		//Serial.println("failed");
-		//int btn = BTN_NONE;
-		//btnBuf.add(btn);
-		state = 0;
-	}
-	lastValA = valA;
-	lastValB = valB;
+	interrupts();
 }
 
 //static const char* TAG = "lightwand";
@@ -381,8 +326,7 @@ void setup()
 	esp_timer_create(&oneshot_LONGPRESS_timer_args, &oneshot_LONGPRESS_timer);
 
 	attachInterrupt(BTNPUSH, IntBtnCenter, FALLING);
-	attachInterrupt(BTNA, IntBtnAB, CHANGE);
-	attachInterrupt(BTNB, IntBtnAB, CHANGE);
+	attachInterrupt(BTNA, IntBtnA, CHANGE);
 	Heltec.begin(true /*DisplayEnable Enable*/, false /*LoRa Enable*/, true /*Serial Enable*/);
 	delay(100);
 	digitalWrite(LED, LOW);
