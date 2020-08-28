@@ -117,11 +117,15 @@ int nChainRepeats = 1;                    // how many times to repeat the chain
 bool bShowProgress = true;                // show the progress bar
 bool bScaleHeight = false;                // scale the Y values to fit the number of pixels
 bool bCancelRun = false;                  // set to cancel a running job
+bool bCancelMacro = false;                // set to cancel a running macro
 bool bAllowMenuWrap = false;              // allows menus to wrap around from end and start instead of pinning
 bool bShowNextFiles = true;               // show the next files in the main display
 int nCurrentMacro = 0;                    // the number of the macro to record or run
 bool bRecordingMacro = false;             // set while recording
 bool bRunningMacro = false;               // set while running
+int nRepeatWaitMacro = 0;                 // time between macro repeats, in 1/10 seconds
+int nRepeatCountMacro = 1;                // repeat count for macros
+int nMacroRepeatsLeft = 1;                // set during macro running
 // timer argument vale
 enum TIMER_ID { TID_LED, TID_BTN, TID_LONGPRESS };
 volatile int nTimerSeconds;
@@ -362,6 +366,8 @@ const saveValues saveValueList[] = {
     {&bCheckerBoardAlternate,sizeof(bCheckerBoardAlternate)},
     {&nCheckerboardAddPixels,sizeof(nCheckerboardAddPixels)},
     {&nCurrentMacro,sizeof(nCurrentMacro)},
+    {&nRepeatCountMacro,sizeof(nRepeatCountMacro)},
+    {&nRepeatWaitMacro,sizeof(nRepeatWaitMacro)},
 };
 
 // Gramma Correction (Defalt Gamma = 2.8)
@@ -629,6 +635,8 @@ MenuItem MacroMenu[] = {
     {eExit,false,"Previous Menu"},
     {eTextInt,false,"Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
     {eText,false,"Run",RunMacro},
+    {eTextInt,false,"Repeat Count: %d",GetIntegerValue,&nRepeatCountMacro,1,100},
+    {eTextInt,false,"Repeat Delay (S): %d.%d",GetIntegerValue,&nRepeatWaitMacro,0,100,1},
     {eBool,false,"Recording: %s",ToggleFilesBuiltin,&bRecordingMacro,0,0,0,"On","Off"},
     {eText,false,"Load",LoadMacro},
     {eText,false,"Save",SaveMacro},

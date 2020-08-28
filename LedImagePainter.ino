@@ -28,7 +28,7 @@
 
 #define MAX_KEY_BUF 10
 RingBufCPP<int, MAX_KEY_BUF> btnBuf;
-enum BUTTONS { BTN_RIGHT, BTN_LEFT, BTN_SELECT, BTN_LONG, BTN_NONE };
+enum BUTTONS { BTN_NONE = 1, BTN_RIGHT, BTN_LEFT, BTN_SELECT, BTN_LONG };
 // for debugging missed buttons
 volatile int nButtonDowns;
 volatile int nButtonUps;
@@ -62,19 +62,33 @@ void IRAM_ATTR oneshot_LONGPRESS_timer_callback(void* arg)
 }
 
 // interrupt routines for the A and B rotary switches
+// the pendingBtn is used to hold the right rotation until A goes up, this makes
+// the left and right rotation happen at the same apparent time when rotating the dial,
+// unlike without that where the right rotation was faster, I.E. it moved before the
+// click of the button happened.
 void IRAM_ATTR IntBtnA()
 {
 	noInterrupts();
+	static int pendingBtn = BTN_NONE;
 	static unsigned long lastTime;
 	static bool lastValA = true;
 	bool valA = gpio_get_level((gpio_num_t)BTNA);
 	bool valB = gpio_get_level((gpio_num_t)BTNB);
 	// ignore until the time has expired
-	if (lastValA != valA && millis() > lastTime + 4) {
+	if (lastValA != valA && millis() > lastTime + 5) {
 		lastTime = millis();
-		if (lastValA && !valA) {
+		if (pendingBtn != BTN_NONE) {
+			btnBuf.add(pendingBtn);
+			pendingBtn = BTN_NONE;
+		}
+		else if (lastValA && !valA) {
 			int btn = valB ? BTN_RIGHT : BTN_LEFT;
-			btnBuf.add(btn);
+			if (btn == BTN_RIGHT) {
+				pendingBtn = btn;
+			}
+			else {
+				btnBuf.add(btn);
+			}
 		}
 		lastValA = valA;
 	}
@@ -1107,7 +1121,7 @@ bool CheckCancel()
 	int button = ReadButton();
 	if (button) {
 		if (button == BTN_LONG) {
-			bCancelRun = true;
+			bCancelMacro = bCancelRun = true;
 			return true;
 		}
 	}
@@ -2114,6 +2128,9 @@ void ProcessFileOrTest()
 					(*BuiltInFiles[CurrentFileIndex].function)();
 				}
 				else {
+					if (nRepeatCountMacro > 1) {
+						DisplayLine(3, String("Macro Repeats: ") + String(nMacroRepeatsLeft));
+					}
 					// output the file
 					SendFile(FileNames[CurrentFileIndex]);
 				}
@@ -3013,7 +3030,22 @@ void SaveMacro(MenuItem* menu)
 // saves and restores settings
 void RunMacro(MenuItem* menu)
 {
-	MacroLoadRun(menu, true);
+	for (nMacroRepeatsLeft = nRepeatCountMacro; nMacroRepeatsLeft; --nMacroRepeatsLeft) {
+		MacroLoadRun(menu, true);
+		if (bCancelMacro) {
+			break;
+		}
+		OLED->clear();
+		for (int wait = nRepeatWaitMacro; nMacroRepeatsLeft > 1 && wait; --wait) {
+			if (CheckCancel()) {
+				nMacroRepeatsLeft = 0;
+				break;
+			}
+			DisplayLine(4, String("Macro Wait: ") + String(wait) + " Repeat: " + String(nMacroRepeatsLeft - 1));
+			delay(100);
+		}
+	}
+	bCancelMacro = false;
 }
 
 // like run, but doesn't restore settings
