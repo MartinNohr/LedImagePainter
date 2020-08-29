@@ -201,6 +201,7 @@ void RunMacro(MenuItem* menu);
 void LoadMacro(MenuItem* menu);
 void SaveMacro(MenuItem* menu);
 void DeleteMacro(MenuItem* menu);
+void LightBar(MenuItem* menu);
 
 // builtins
 // built-in "files"
@@ -662,6 +663,7 @@ MenuItem MainMenu[] = {
     {eMenu,false,"Macros",NULL,MacroMenu},
     {eMenu,false,"Saved Settings",NULL,EepromMenu},
     {eMenu,false,"Display Settings",NULL,DisplayMenu},
+    {eText,false,"Light Bar",LightBar},
     {eBool,false,"BlueTooth Link: %s",ToggleBool,&bEnableBLE,0,0,0,"On","Off"},
     {eReboot,false,"Reboot"},
     // make sure this one is last

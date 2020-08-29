@@ -1654,9 +1654,22 @@ void OppositeRunningDots()
 	}
 }
 
+void LightBar(MenuItem* menu)
+{
+	OLED->clear();
+	DisplayLine(0, "Light Bar");
+	DisplayLine(3, "Rotate Dial to Change");
+	DisplayLine(4, "Click to Set Operation");
+	DisplayAllColor();
+	FastLED.clear(true);
+	// these were set by CheckCancel() in DisplayAllColor() and need to be cleared
+	bCancelRun = bCancelRun = false;
+}
+
 // show all in a color
 void DisplayAllColor()
 {
+	DisplayLine(1, "");
 	if (bDisplayAllRGB)
 		FastLED.showColor(CRGB(nDisplayAllRed, nDisplayAllGreen, nDisplayAllBlue));
 	else
@@ -1668,29 +1681,32 @@ void DisplayAllColor()
 	bool bChange = true;
 	while (true) {
 		if (bChange) {
+			String line;
 			switch (what) {
 			case 0:
 				if (bDisplayAllRGB)
-					DisplayLine(2, "Change Red: " + String(nDisplayAllRed));
+					line = "Red: " + String(nDisplayAllRed);
 				else
-					DisplayLine(2, "Change HUE: " + String(nDisplayAllHue));
+					line = "HUE: " + String(nDisplayAllHue);
 				break;
 			case 1:
 				if (bDisplayAllRGB)
-					DisplayLine(2, "Change Green: " + String(nDisplayAllGreen));
-				else 
-					DisplayLine(2, "Change Saturation: " + String(nDisplayAllSaturation));
+					line = "Green: " + String(nDisplayAllGreen);
+				else
+					line = "Saturation: " + String(nDisplayAllSaturation);
 				break;
 			case 2:
 				if (bDisplayAllRGB)
-					DisplayLine(2, "Change Blue: " + String(nDisplayAllBlue));
-				else 
-					DisplayLine(2, "Change Brightness: " + String(nDisplayAllBrightness));
+					line = "Blue: " + String(nDisplayAllBlue);
+				else
+					line = "Brightness: " + String(nDisplayAllBrightness);
 				break;
 			case 3:
-				DisplayLine(2, "Increment: " + String(increment));
+				line = "";
 				break;
 			}
+			line += " (step: " + String(increment) + ")";
+			DisplayLine(2, line);
 		}
 		btn = ReadButton();
 		bChange = true;
