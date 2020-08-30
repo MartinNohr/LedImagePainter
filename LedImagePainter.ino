@@ -351,7 +351,7 @@ void setup()
 	OLED->setFont(ArialMT_Plain_24);
 	OLED->drawString(2, 2, "MN Painter");
 	OLED->setFont(ArialMT_Plain_16);
-	OLED->drawString(4, 30, "Version 2.05");
+	OLED->drawString(4, 30, "Version 2.06");
 	OLED->setFont(ArialMT_Plain_10);
 	OLED->drawString(4, 48, __DATE__);
 	OLED->display();
@@ -2146,6 +2146,7 @@ void ProcessFileOrTest()
 	int chainCount = bChainFiles ? FileCountOnly() - CurrentFileIndex : 1;
 	int chainRepeatCount = bChainFiles ? nChainRepeats : 1;
 	int lastFileIndex = CurrentFileIndex;
+	// don't allow chaining for built-ins, although maybe we should
 	if (bShowBuiltInTests) {
 		chainCount = 1;
 		chainRepeatCount = 1;
@@ -2702,6 +2703,16 @@ bool ProcessConfigFile(String filename)
 							args.toUpperCase();
 							*(bool*)(SettingsVarList[which].address) = args[0] == 'T';
 							break;
+						case vtBuiltIn:
+							{
+								bool bLastBuiltIn = bShowBuiltInTests;
+								args.toUpperCase();
+								bool value = args[0] == 'T';
+								if (value != bLastBuiltIn) {
+									ToggleFilesBuiltin(NULL);
+								}
+							}
+							break;
 						case vtShowFile:
 							{
 								// get the folder and set it first
@@ -2713,14 +2724,14 @@ bool ProcessConfigFile(String filename)
 								int oldFileIndex = CurrentFileIndex;
 								// save the old folder if necessary
 								String oldFolder;
-								if (!currentFolder.equalsIgnoreCase(folder)) {
+								if (!bShowBuiltInTests && !currentFolder.equalsIgnoreCase(folder)) {
 									oldFolder = currentFolder;
 									currentFolder = folder;
 									GetFileNamesFromSD(folder);
 								}
 								// search for the file in the list
 								int which = LookUpFile(name);
-								if (which > 0) {
+								if (which >= 0) {
 									CurrentFileIndex = which;
 									// call the process routine
 									strcpy(FileToShow, name.c_str());
@@ -2969,9 +2980,12 @@ bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile)
 			// loop through the var list
 			for (int ix = 0; ix < sizeof(SettingsVarList) / sizeof(*SettingsVarList); ++ix) {
 				switch (SettingsVarList[ix].type) {
+				case vtBuiltIn:
+					line = String(SettingsVarList[ix].name) + "=" + String(*(bool*)(SettingsVarList[ix].address) ? "TRUE" : "FALSE");
+					break;
 				case vtShowFile:
 					if (*(char*)(SettingsVarList[ix].address)) {
-						line = String(SettingsVarList[ix].name) + "=" + currentFolder + String((char*)(SettingsVarList[ix].address));
+						line = String(SettingsVarList[ix].name) + "=" + (bShowBuiltInTests ? "" : currentFolder) + String((char*)(SettingsVarList[ix].address));
 					}
 					break;
 				case vtInt:
@@ -3101,8 +3115,11 @@ void LoadMacro(MenuItem* menu)
 
 void MacroLoadRun(MenuItem* menu, bool save)
 {
-	if (save)
+	bool oldShowBuiltins;
+	if (save) {
+		oldShowBuiltins = bShowBuiltInTests;
 		SettingsSaveRestore(true, 1);
+	}
 	bRunningMacro = true;
 	bRecordingMacro = false;
 	String line = String(nCurrentMacro) + ".ipc";
@@ -3111,8 +3128,13 @@ void MacroLoadRun(MenuItem* menu, bool save)
 		WriteMessage(line, true);
 	}
 	bRunningMacro = false;
-	if (save)
+	if (save) {
+		// need to handle if the builtins was changed
+		if (oldShowBuiltins != bShowBuiltInTests) {
+			ToggleFilesBuiltin(NULL);
+		}
 		SettingsSaveRestore(false, 1);
+	}
 }
 
 void DeleteMacro(MenuItem* menu)

@@ -711,6 +711,7 @@ enum SETVARTYPE {
     vtBool,
     vtRGB,
     vtShowFile,     // run a file on the display, the file has the path which is used to set the current path
+    vtBuiltIn,      // bool for builtins or SD
 };
 struct SETTINGVAR {
     char* name;
@@ -733,5 +734,6 @@ struct SETTINGVAR SettingsVarList[] = {
     {"WHITE BALANCE",&whiteBalance,vtRGB},
     {"DISPLAY BRIGHTNESS",&displayBrightness,vtInt,0,100},
     {"GAMMA CORRECTION",&bGammaCorrection,vtBool},
+    {"SELECT BUILTINS",&bShowBuiltInTests,vtBuiltIn},       // this must be before the SHOW FILE command
     {"SHOW FILE",&FileToShow,vtShowFile},
 };
