@@ -351,7 +351,7 @@ void setup()
 	OLED->setFont(ArialMT_Plain_24);
 	OLED->drawString(2, 2, "MN Painter");
 	OLED->setFont(ArialMT_Plain_16);
-	OLED->drawString(4, 30, "Version 2.04");
+	OLED->drawString(4, 30, "Version 2.05");
 	OLED->setFont(ArialMT_Plain_10);
 	OLED->drawString(4, 48, __DATE__);
 	OLED->display();
@@ -980,6 +980,8 @@ bool HandleMenus()
 		}
 		if (MenuStack.peek()->index >= MenuStack.peek()->menucount) {
 			MenuStack.peek()->index = 0;
+			bMenuChanged = true;
+			MenuStack.peek()->offset = 0;
 		}
 		// see if we need to scroll the menu
 		if (MenuStack.peek()->index - MenuStack.peek()->offset > 4) {
@@ -994,6 +996,8 @@ bool HandleMenus()
 		}
 		if (MenuStack.peek()->index < 0) {
 			MenuStack.peek()->index = MenuStack.peek()->menucount - 1;
+			bMenuChanged = true;
+			MenuStack.peek()->offset = MenuStack.peek()->menucount - 5;
 		}
 		// see if we need to adjust the offset
 		if (MenuStack.peek()->offset && MenuStack.peek()->index < MenuStack.peek()->offset) {
