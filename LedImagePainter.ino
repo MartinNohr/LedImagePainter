@@ -813,7 +813,6 @@ void ToggleFilesBuiltin(MenuItem* menu)
 // toggle a boolean value
 void ToggleBool(MenuItem* menu)
 {
-	Serial.println("toggle bool");
 	bool* pb = (bool*)menu->value;
 	*pb = !*pb;
 	*pb &= 1;	// just to make the only bit set is bit0
@@ -1047,6 +1046,7 @@ bool HandleRunMode()
 	bool didsomething = true;
 	switch (ReadButton()) {
 	case BTN_SELECT:
+		bCancelRun = bCancelMacro = false;
 		ProcessFileOrTest();
 		break;
 	case BTN_RIGHT:
@@ -1688,7 +1688,7 @@ void LightBar(MenuItem* menu)
 	DisplayAllColor();
 	FastLED.clear(true);
 	// these were set by CheckCancel() in DisplayAllColor() and need to be cleared
-	bCancelRun = bCancelRun = false;
+	bCancelMacro = bCancelRun = false;
 }
 
 // show all in a color
@@ -1847,8 +1847,11 @@ void TestCylon()
 void CylonBounce(byte red, byte green, byte blue, int EyeSize, int SpeedDelay, int ReturnDelay)
 {
 	for (int i = 0; i < STRIPLENGTH - EyeSize - 2; i++) {
-		if (CheckCancel())
+		if (CheckCancel()) {
+			esp_timer_stop(oneshot_LED_timer);
+			bStripWaiting = false;
 			return;
+		}
 		FastLED.clear();
 		SetPixel(i, CRGB(red / 10, green / 10, blue / 10));
 		for (int j = 1; j <= EyeSize; j++) {
@@ -1861,8 +1864,11 @@ void CylonBounce(byte red, byte green, byte blue, int EyeSize, int SpeedDelay, i
 	delay(ReturnDelay);
 
 	for (int i = STRIPLENGTH - EyeSize - 2; i > 0; i--) {
-		if (CheckCancel())
+		if (CheckCancel()) {
+			esp_timer_stop(oneshot_LED_timer);
+			bStripWaiting = false;
 			return;
+		}
 		FastLED.clear();
 		SetPixel(i, CRGB(red / 10, green / 10, blue / 10));
 		for (int j = 1; j <= EyeSize; j++) {
@@ -1879,7 +1885,8 @@ void TestMeteor() {
 	meteorRain(nMeteorRed, nMeteorGreen, nMeteorBlue, nMeteorSize, 64, true, 30);
 }
 
-void meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay) {
+void meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay)
+{
 	FastLED.clear(true);
 
 	for (int i = 0; i < STRIPLENGTH + STRIPLENGTH; i++) {
@@ -2031,9 +2038,10 @@ void TestRainbow()
 	time_t start = time(NULL);
 	gHue = 0;
 	bStripWaiting = true;
-	esp_timer_start_once(oneshot_LED_timer, nRainbowRuntime * 1000000);
+	ShowProgressBar(0);
 	fill_rainbow(leds, STRIPLENGTH, gHue, nRainbowRepeats);
 	FadeInOut(nRainbowFadeTime * 100, true);
+	esp_timer_start_once(oneshot_LED_timer, nRainbowRuntime * 1000000);
 	while (bStripWaiting) {
 		EVERY_N_MILLISECONDS(frameHold) {
 			if (bRainbowCycleHue)
@@ -2046,10 +2054,13 @@ void TestRainbow()
 		}
 		if (CheckCancel()) {
 			esp_timer_stop(oneshot_LED_timer);
+			bStripWaiting = false;
+			FastLED.setBrightness(nStripBrightness);
 			return;
 		}
 	}
 	FadeInOut(nRainbowFadeTime * 100, false);
+	FastLED.setBrightness(nStripBrightness);
 }
 
 // time is in mSec
@@ -2660,7 +2671,6 @@ bool ProcessConfigFile(String filename)
 	SDFile rdfile;
 	rdfile = SD.open(filepath);
 	if (rdfile.available()) {
-		//Serial.println("Processing: " + filepath);
 		String line, command, args;
 		while (line = rdfile.readStringUntil('\n'), line.length()) {
 			if (CheckCancel())
@@ -2693,48 +2703,48 @@ bool ProcessConfigFile(String filename)
 							*(bool*)(SettingsVarList[which].address) = args[0] == 'T';
 							break;
 						case vtShowFile:
-						{
-							// get the folder and set it first
-							String folder;
-							String name;
-							int ix = args.lastIndexOf('/');
-							folder = args.substring(0, ix + 1);
-							name = args.substring(ix + 1);
-							int oldFileIndex = CurrentFileIndex;
-							// save the old folder if necessary
-							String oldFolder;
-							if (!currentFolder.equalsIgnoreCase(folder)) {
-								oldFolder = currentFolder;
-								currentFolder = folder;
-								GetFileNamesFromSD(folder);
+							{
+								// get the folder and set it first
+								String folder;
+								String name;
+								int ix = args.lastIndexOf('/');
+								folder = args.substring(0, ix + 1);
+								name = args.substring(ix + 1);
+								int oldFileIndex = CurrentFileIndex;
+								// save the old folder if necessary
+								String oldFolder;
+								if (!currentFolder.equalsIgnoreCase(folder)) {
+									oldFolder = currentFolder;
+									currentFolder = folder;
+									GetFileNamesFromSD(folder);
+								}
+								// search for the file in the list
+								int which = LookUpFile(name);
+								if (which > 0) {
+									CurrentFileIndex = which;
+									// call the process routine
+									strcpy(FileToShow, name.c_str());
+									OLED->clear();
+									ProcessFileOrTest();
+								}
+								if (oldFolder.length()) {
+									currentFolder = oldFolder;
+									GetFileNamesFromSD(currentFolder);
+								}
+								CurrentFileIndex = oldFileIndex;
 							}
-							// search for the file in the list
-							int which = LookUpFile(name);
-							if (which > 0) {
-								CurrentFileIndex = which;
-								// call the process routine
-								strcpy(FileToShow, name.c_str());
-								OLED->clear();
-								ProcessFileOrTest();
-							}
-							if (oldFolder.length()) {
-								currentFolder = oldFolder;
-								GetFileNamesFromSD(currentFolder);
-							}
-							CurrentFileIndex = oldFileIndex;
-						}
 							break;
 						case vtRGB:
-						{
-							// handle the RBG colors
-							CRGB* cp = (CRGB*)(SettingsVarList[which].address);
-							cp->r = args.toInt();
-							args = args.substring(args.indexOf(',') + 1);
-							cp->g = args.toInt();
-							args = args.substring(args.indexOf(',') + 1);
-							cp->b = args.toInt();
-						}
-						break;
+							{
+								// handle the RBG colors
+								CRGB* cp = (CRGB*)(SettingsVarList[which].address);
+								cp->r = args.toInt();
+								args = args.substring(args.indexOf(',') + 1);
+								cp->g = args.toInt();
+								args = args.substring(args.indexOf(',') + 1);
+								cp->b = args.toInt();
+							}
+							break;
 						default:
 							break;
 						}
@@ -3064,6 +3074,7 @@ void SaveMacro(MenuItem* menu)
 // saves and restores settings
 void RunMacro(MenuItem* menu)
 {
+	bCancelMacro = false;
 	for (nMacroRepeatsLeft = nRepeatCountMacro; nMacroRepeatsLeft; --nMacroRepeatsLeft) {
 		MacroLoadRun(menu, true);
 		if (bCancelMacro) {
