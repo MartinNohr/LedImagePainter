@@ -1141,7 +1141,7 @@ void SaveRestoreDisplay(bool save)
 bool CheckCancel()
 {
 	// if it has been set, just return true
-	if (bCancelRun)
+	if (bCancelRun || bCancelMacro)
 		return true;
 	int button = ReadButton();
 	if (button) {
@@ -2663,6 +2663,8 @@ bool ProcessConfigFile(String filename)
 		//Serial.println("Processing: " + filepath);
 		String line, command, args;
 		while (line = rdfile.readStringUntil('\n'), line.length()) {
+			if (CheckCancel())
+				break;
 			// read the lines and do what they say
 			int ix = line.indexOf('=', 0);
 			if (ix > 0) {
