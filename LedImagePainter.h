@@ -58,7 +58,7 @@ int ReadButton();
 bool CheckCancel();
 
 // eeprom values
-char signature[]{ "MLW11" };              // set to make sure saved values are valid, change when savevalues is changed
+char signature[]{ "MIP20" };              // set to make sure saved values are valid, change when savevalues is changed
 bool bAutoLoadSettings = false;           // set to automatically load saved settings from eeprom
 
 // settings
@@ -282,7 +282,6 @@ struct saveValues {
 };
 const saveValues saveValueList[] = {
     {&signature, sizeof(signature)},                // this must be first
-    {&bAutoLoadSettings, sizeof(bAutoLoadSettings)},// this must be second
     {&nStripBrightness, sizeof(nStripBrightness)},
     {&frameHold, sizeof(frameHold)},
     {&nFramePulseCount, sizeof(nFramePulseCount)},

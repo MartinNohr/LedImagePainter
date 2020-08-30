@@ -357,11 +357,14 @@ void setup()
 	OLED->display();
 	OLED->setFont(ArialMT_Plain_10);
 	charHeight = 13;
-	EEPROM.begin(1024);
-	if (!SaveSettings(false, true) || digitalRead(BTNPUSH) == LOW) {
-		SaveSettings(true, bAutoLoadSettings);
-	}
 	setupSDcard();
+
+	EEPROM.begin(1024);
+	// load the saved settings if flag is true and the button isn't pushed
+	EEPROM.readBytes(0, &bAutoLoadSettings, sizeof(bAutoLoadSettings));
+	if (bAutoLoadSettings && digitalRead(BTNPUSH))
+		SaveSettings(false);
+
 	menuPtr = new MenuInfo;
 	MenuStack.push(menuPtr);
 	MenuStack.peek()->menu = MainMenu;
@@ -449,11 +452,21 @@ void setup()
 		delay(2000);
 		ToggleFilesBuiltin(NULL);
 	}
-	DisplayCurrentFile();
 	
 	if (bEnableBLE) {
 		EnableBLE();
 	}
+	// wait for button release
+	while (!digitalRead(BTNPUSH))
+		;
+	delay(30);	// debounce
+	while (!digitalRead(BTNPUSH))
+		;
+	// clear the button buffer
+	int btn;
+	while (btnBuf.pull(&btn))
+		;
+	DisplayCurrentFile();
 }
 
 void loop()
@@ -567,6 +580,8 @@ void UpdateBLE(bool bProgressOnly)
 
 bool RunMenus(int button)
 {
+	// save this so we can see if we need save a new changed value
+	bool lastAutoLoadFlag = bAutoLoadSettings;
 	// see if we got a menu match
 	bool gotmatch = false;
 	int menuix = 0;
@@ -635,6 +650,11 @@ bool RunMenus(int button)
 		bMenuChanged = true;
 		menuPtr = MenuStack.pop();
 		delete menuPtr;
+	}
+	// see if the autoload flag changed
+	if (bAutoLoadSettings != lastAutoLoadFlag) {
+		EEPROM.writeBytes(0, &bAutoLoadSettings, sizeof(bAutoLoadSettings));
+		EEPROM.commit();
 	}
 }
 
@@ -793,9 +813,10 @@ void ToggleFilesBuiltin(MenuItem* menu)
 // toggle a boolean value
 void ToggleBool(MenuItem* menu)
 {
-	//Serial.println("toggle bool");
+	Serial.println("toggle bool");
 	bool* pb = (bool*)menu->value;
 	*pb = !*pb;
+	*pb &= 1;	// just to make the only bit set is bit0
 }
 
 // get integer values
@@ -2973,14 +2994,10 @@ bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile)
 }
 
 // save some settings in the eeprom
-// if autoload is true, check the first flag, and load the rest if it is true
 // return true if valid, false if failed
-// note that the calvalues must always be read
-bool SaveSettings(bool save, bool autoload)
+bool SaveSettings(bool save)
 {
-	int blockpointer = 0;
-	//Serial.println(save ? "saving" : "reading");
-	//Serial.println(autoload ? "autoload On" : "autoload off");
+	int blockpointer = sizeof(bAutoLoadSettings);	// we start here because the location is the autoload flag
 	for (int ix = 0; ix < (sizeof saveValueList / sizeof * saveValueList); ++ix) {
 		//Serial.println("savesettings ix:" + String(ix));
 		if (save) {
@@ -2990,7 +3007,7 @@ bool SaveSettings(bool save, bool autoload)
 			if (ix == 0) {
 				// check signature
 				char svalue[sizeof signature];
-				EEPROM.readBytes(0, svalue, sizeof(signature));
+				EEPROM.readBytes(blockpointer, svalue, sizeof(signature));
 				//Serial.println("svalue:" + String(svalue));
 				if (strncmp(svalue, signature, sizeof signature)) {
 					WriteMessage("bad eeprom signature\nSave Default to fix", true);
@@ -2999,12 +3016,6 @@ bool SaveSettings(bool save, bool autoload)
 			}
 			else {
 				EEPROM.readBytes(blockpointer, saveValueList[ix].val, saveValueList[ix].size);
-			}
-			// if autoload, exit if the save value is not true
-			if (autoload && ix == 1) {  // we use 1 here so that the signature and autoload flag are read
-				if (!bAutoLoadSettings) {
-					return true;
-				}
 			}
 		}
 		blockpointer += saveValueList[ix].size;
@@ -3031,13 +3042,13 @@ bool SaveSettings(bool save, bool autoload)
 // save the eeprom settings
 void SaveEepromSettings(MenuItem* menu)
 {
-	SaveSettings(true, false);
+	SaveSettings(true);
 }
 
 // load eeprom settings
 void LoadEepromSettings(MenuItem* menu)
 {
-	SaveSettings(false, false);
+	SaveSettings(false);
 }
 
 // save the macro with the current settings
