@@ -75,7 +75,7 @@ void IRAM_ATTR IntBtnA()
 	bool valA = gpio_get_level((gpio_num_t)BTNA);
 	bool valB = gpio_get_level((gpio_num_t)BTNB);
 	// ignore until the time has expired
-	if (lastValA != valA && millis() > lastTime + 5) {
+	if (lastValA != valA && millis() > lastTime + 2) {
 		lastTime = millis();
 		if (pendingBtn != BTN_NONE) {
 			btnBuf.add(pendingBtn);
