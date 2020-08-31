@@ -2036,17 +2036,17 @@ void bpm()
 void TestRainbow()
 {
 	time_t start = time(NULL);
-	gHue = 0;
+	gHue = nRainbowInitialHue;
 	bStripWaiting = true;
 	ShowProgressBar(0);
-	fill_rainbow(leds, STRIPLENGTH, gHue, nRainbowRepeats);
+	fill_rainbow(leds, STRIPLENGTH, gHue, nRainbowHueDelta);
 	FadeInOut(nRainbowFadeTime * 100, true);
 	esp_timer_start_once(oneshot_LED_timer, nRainbowRuntime * 1000000);
 	while (bStripWaiting) {
 		EVERY_N_MILLISECONDS(frameHold) {
 			if (bRainbowCycleHue)
 				++gHue;
-			fill_rainbow(leds, STRIPLENGTH, gHue, nRainbowRepeats);
+			fill_rainbow(leds, STRIPLENGTH, gHue, nRainbowHueDelta);
 			if (bRainbowAddGlitter)
 				addGlitter(80);
 			FastLED.show();

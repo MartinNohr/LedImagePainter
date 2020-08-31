@@ -247,8 +247,9 @@ int nDisplayAllHue = 0;
 int nDisplayAllSaturation = 255;
 int nDisplayAllBrightness = 255;
 // rainbow
-int nRainbowRepeats = 4;
+int nRainbowHueDelta = 4;
 int nRainbowRuntime = 20;
+int nRainbowInitialHue = 0;
 int nRainbowFadeTime = 10;       // fade in out 0.1 Sec
 bool bRainbowAddGlitter = false;
 bool bRainbowCycleHue = false;
@@ -338,7 +339,8 @@ const saveValues saveValueList[] = {
     {&nMeteorGreen,sizeof(nMeteorGreen)},
     {&nMeteorBlue,sizeof(nMeteorBlue)},
     // rainbow
-    {&nRainbowRepeats,sizeof(nRainbowRepeats)},
+    {&nRainbowHueDelta,sizeof(nRainbowHueDelta)},
+    {&nRainbowInitialHue,sizeof(nRainbowInitialHue)},
     {&nRainbowRuntime,sizeof(nRainbowRuntime)},
     {&nRainbowFadeTime,sizeof(nRainbowFadeTime)},
     {&bRainbowAddGlitter,sizeof(bRainbowAddGlitter)},
@@ -451,10 +453,11 @@ MenuItem CheckerBoardMenu[] = {
 };
 MenuItem RainbowMenu[] = {
     {eExit,false,"Previous Menu"},
-    {eTextInt,false,"Pattern Count: %d",GetIntegerValue,&nRainbowRepeats,1,100},
     {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nRainbowRuntime,1,120},
     {eTextInt,false,"Fade Time (S): %d.%d",GetIntegerValue,&nRainbowFadeTime,0,100,1},
+    {eTextInt,false,"Starting Hue: %d",GetIntegerValue,&nRainbowInitialHue,0,255},
     {eBool,false,"Cycle Hue: %s",ToggleBool,&bRainbowCycleHue,0,0,0,"Yes","No"},
+    {eTextInt,false,"Hue Delta Size: %d",GetIntegerValue,&nRainbowHueDelta,1,255},
     {eBool,false,"Add Glitter: %s",ToggleBool,&bRainbowAddGlitter,0,0,0,"Yes","No"},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
