@@ -115,6 +115,7 @@ bool bMirrorPlayImage = false;            // play the file twice, 2nd time rever
 bool bChainFiles = false;                 // set to run all the files from current to the last one in the current folder
 int nChainRepeats = 1;                    // how many times to repeat the chain
 bool bShowProgress = true;                // show the progress bar
+bool bShowFolder = true;                  // show the path in front of the file
 bool bScaleHeight = false;                // scale the Y values to fit the number of pixels
 bool bCancelRun = false;                  // set to cancel a running job
 bool bCancelMacro = false;                // set to cancel a running macro
@@ -305,6 +306,7 @@ const saveValues saveValueList[] = {
     {&nChainRepeats,sizeof(nChainRepeats)},
     {&whiteBalance,sizeof(whiteBalance)},
     {&bShowProgress,sizeof(bShowProgress)},
+    {&bShowFolder,sizeof(bShowFolder)},
     {&bAllowMenuWrap,sizeof(bAllowMenuWrap)},
     {&bShowNextFiles,sizeof(bShowNextFiles)},
     {&bEnableBLE,sizeof(bEnableBLE)},
@@ -550,6 +552,7 @@ MenuItem DisplayMenu[] = {
     {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100,0,NULL,NULL,UpdateOledBrightness},
     {eBool,false,"Menu Wrap: %s",ToggleBool,&bAllowMenuWrap,0,0,0,"Yes","No"},
     {eBool,false,"Show More Files: %s",ToggleBool,&bShowNextFiles,0,0,0,"Yes","No"},
+	{eBool,false,"Show Folder: %s",ToggleBool,&bShowFolder,0,0,0,"Yes","No"},
     {eBool,false,"Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
     {eExit,false,"Previous Menu"},
     // make sure this one is last

@@ -2594,7 +2594,7 @@ void DisplayCurrentFile(bool path)
 	}
 	else {
 		if (bSdCardValid) {
-			DisplayLine(0, (path ? currentFolder : "") + FileNames[CurrentFileIndex] + (bMirrorPlayImage ? "><" : ""));
+			DisplayLine(0, ((path && bShowFolder) ? currentFolder : "") + FileNames[CurrentFileIndex] + (bMirrorPlayImage ? "><" : ""));
 		}
 		else {
 			DisplayLine(0, "No SD Card or Files");
