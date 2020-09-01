@@ -21,10 +21,10 @@
 #include "LedImagePainter.h"
 
 // rotary switch
-#define BTNPUSH 27
-#define BTNA 12
-#define BTNB 14
-#define FRAMEBUTTON 26
+#define BTNPUSH GPIO_NUM_27
+#define BTNA GPIO_NUM_12
+#define BTNB GPIO_NUM_14
+#define FRAMEBUTTON GPIO_NUM_26
 
 #define MAX_KEY_BUF 10
 RingBufCPP<int, MAX_KEY_BUF> btnBuf;
@@ -40,7 +40,7 @@ void IRAM_ATTR IntBtnCenter()
 {
 	// went low, if timer not started, start it
 	if (!bButtonTimerRunning && bButtonArmed) {
-		//esp_timer_stop(oneshot_LONGPRESS_timer);	// just in case
+		esp_timer_stop(oneshot_LONGPRESS_timer);	// just in case
 		esp_timer_start_once(oneshot_LONGPRESS_timer, 400 * 1000);
 		bButtonTimerRunning = true;
 	}
@@ -50,10 +50,9 @@ void IRAM_ATTR oneshot_LONGPRESS_timer_callback(void* arg)
 {
 	int btn;
 	// if the button is down, it must be a long press
-	btn = digitalRead(BTNPUSH) ? BTN_SELECT : BTN_LONG;
+	btn = gpio_get_level(BTNPUSH) ? BTN_SELECT : BTN_LONG;
 	if (bButtonArmed) {
 		btnBuf.add(btn);
-		//Serial.println("btn: " + String(btn));
 		if (btn == BTN_LONG) {
 			bButtonArmed = false;
 		}
@@ -72,8 +71,8 @@ void IRAM_ATTR IntBtnA()
 	static int pendingBtn = BTN_NONE;
 	static unsigned long lastTime;
 	static bool lastValA = true;
-	bool valA = gpio_get_level((gpio_num_t)BTNA);
-	bool valB = gpio_get_level((gpio_num_t)BTNB);
+	bool valA = gpio_get_level(BTNA);
+	bool valB = gpio_get_level(BTNB);
 	// ignore until the time has expired
 	if (lastValA != valA && millis() > lastTime + 2) {
 		lastTime = millis();
@@ -307,12 +306,18 @@ void EnableBLE()
 
 void setup()
 {
-	pinMode(LED, OUTPUT);
+	Serial.begin(115200);
+	delay(100);
+	gpio_set_direction((gpio_num_t)LED, GPIO_MODE_OUTPUT);
 	digitalWrite(LED, HIGH);
-	pinMode(BTNPUSH, INPUT_PULLUP);
-	pinMode(BTNA, INPUT_PULLUP);
-	pinMode(BTNB, INPUT_PULLUP);
-	pinMode(FRAMEBUTTON, INPUT_PULLUP);
+	gpio_set_direction(BTNPUSH, GPIO_MODE_INPUT);
+	gpio_set_pull_mode(BTNPUSH, GPIO_PULLUP_ONLY);
+	gpio_set_direction(BTNA, GPIO_MODE_INPUT);
+	gpio_set_pull_mode(BTNA, GPIO_PULLUP_ONLY);
+	gpio_set_direction(BTNB, GPIO_MODE_INPUT);
+	gpio_set_pull_mode(BTNB, GPIO_PULLUP_ONLY);
+	gpio_set_direction(FRAMEBUTTON, GPIO_MODE_INPUT);
+	gpio_set_pull_mode(FRAMEBUTTON, GPIO_PULLUP_ONLY);
 	oneshot_LED_timer_args = {
 				oneshot_LED_timer_callback,
 				/* argument specified here will be passed to timer callback function */
@@ -351,18 +356,19 @@ void setup()
 	OLED->setFont(ArialMT_Plain_24);
 	OLED->drawString(2, 2, "MN Painter");
 	OLED->setFont(ArialMT_Plain_16);
-	OLED->drawString(4, 30, "Version 2.06");
+	OLED->drawString(4, 30, "Version 2.07");
 	OLED->setFont(ArialMT_Plain_10);
 	OLED->drawString(4, 48, __DATE__);
 	OLED->display();
-	OLED->setFont(ArialMT_Plain_10);
+	//OLED->setFont(ArialMT_Plain_10);
 	charHeight = 13;
 	setupSDcard();
 
 	EEPROM.begin(1024);
 	// load the saved settings if flag is true and the button isn't pushed
 	EEPROM.readBytes(0, &bAutoLoadSettings, sizeof(bAutoLoadSettings));
-	if (bAutoLoadSettings && digitalRead(BTNPUSH))
+	// the &1 is to make sure we just look at bit 0, on first load sometimes more bits are set
+	if ((bAutoLoadSettings & 1) && gpio_get_level(BTNPUSH))
 		SaveSettings(false);
 
 	menuPtr = new MenuInfo;
@@ -580,7 +586,7 @@ void UpdateBLE(bool bProgressOnly)
 
 bool RunMenus(int button)
 {
-	// save this so we can see if we need save a new changed value
+	// save this so we can see if we need to save a new changed value
 	bool lastAutoLoadFlag = bAutoLoadSettings;
 	// see if we got a menu match
 	bool gotmatch = false;
@@ -653,6 +659,8 @@ bool RunMenus(int button)
 	}
 	// see if the autoload flag changed
 	if (bAutoLoadSettings != lastAutoLoadFlag) {
+		// make sure only 1 bit
+		bAutoLoadSettings = bAutoLoadSettings ? true : false;
 		EEPROM.writeBytes(0, &bAutoLoadSettings, sizeof(bAutoLoadSettings));
 		EEPROM.commit();
 	}
@@ -664,13 +672,10 @@ bool RunMenus(int button)
 void ShowMenu(struct MenuItem* menu)
 {
 	MenuStack.peek()->menucount = 0;
-	//offsetLines = max(0, MenuStack.peek()->index - 4);
-	//Serial.println("offset: " + String(offsetLines));
 	int y = 0;
 	int x = 0;
 	char line[100];
 	bool skip = false;
-	//Serial.println("enter showmenu");
 	// loop through the menu
 	for (; menu->op != eTerminate; ++menu) {
 		menu->valid = false;
@@ -729,7 +734,10 @@ void ShowMenu(struct MenuItem* menu)
 		case eBool:
 			menu->valid = true;
 			if (menu->value) {
-				sprintf(line, menu->text, *(bool*)menu->value ? menu->on : menu->off);
+				// clean extra bits, just in case
+				bool* pb = (bool*)menu->value;
+				//*pb &= 1;
+				sprintf(line, menu->text, *pb ? menu->on : menu->off);
 				//Serial.println("bool line: " + String(line));
 			}
 			else {
@@ -815,7 +823,6 @@ void ToggleBool(MenuItem* menu)
 {
 	bool* pb = (bool*)menu->value;
 	*pb = !*pb;
-	*pb &= 1;	// just to make the only bit set is bit0
 }
 
 // get integer values
@@ -1118,6 +1125,8 @@ int ReadButton()
 		bButtonArmed = true;
 		nSawLongPress = 0;
 	}
+	//if (retValue != BTN_NONE)
+	//	Serial.println("button:" + String(retValue));
 	return retValue;
 }
 
