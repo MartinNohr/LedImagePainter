@@ -2141,12 +2141,9 @@ void ProcessFileOrTest()
 	if (startDelay) {
 		// set a timer
 		nTimerSeconds = startDelay;
-		while (nTimerSeconds) {
-			//Serial.println("timer " + String(nTimerSeconds));
+		while (nTimerSeconds && !CheckCancel()) {
 			line = "Start Delay: " + String(nTimerSeconds / 10) + "." + String(nTimerSeconds % 10);
 			DisplayLine(1, line);
-			if (CheckCancel())
-				break;
 			delay(100);
 			--nTimerSeconds;
 		}
@@ -2206,12 +2203,10 @@ void ProcessFileOrTest()
 						FastLED.clear(true);
 						// start timer
 						nTimerSeconds = repeatDelay;
-						while (nTimerSeconds > 0) {
+						while (nTimerSeconds > 0 && !CheckCancel()) {
 							line = "Repeat Delay: " + String(nTimerSeconds / 10) + "." + String(nTimerSeconds % 10);
 							DisplayLine(1, line);
 							line = "";
-							if (CheckCancel())
-								break;
 							delay(100);
 							--nTimerSeconds;
 						}
@@ -2234,6 +2229,8 @@ void ProcessFileOrTest()
 					break;
 				// handle any chain delay
 				for (int dly = nChainDelay; dly > 0 && !CheckCancel(); --dly) {
+					line = "Chain Delay: " + String(dly / 10) + "." + String(dly % 10);
+					DisplayLine(1, line);
 					delay(100);
 				}
 			}
@@ -2250,6 +2247,18 @@ void ProcessFileOrTest()
 		// start again
 		CurrentFileIndex = lastFileIndex;
 		chainCount = bChainFiles ? FileCountOnly() - CurrentFileIndex : 1;
+		if (repeatDelay) {
+			FastLED.clear(true);
+			// start timer
+			nTimerSeconds = repeatDelay;
+			while (nTimerSeconds > 0 && !CheckCancel()) {
+				line = "Repeat Delay: " + String(nTimerSeconds / 10) + "." + String(nTimerSeconds % 10);
+				DisplayLine(1, line);
+				line = "";
+				delay(100);
+				--nTimerSeconds;
+			}
+		}
 	}
 	if (bChainFiles)
 		CurrentFileIndex = lastFileIndex;
