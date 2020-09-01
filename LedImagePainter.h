@@ -58,7 +58,7 @@ int ReadButton();
 bool CheckCancel();
 
 // eeprom values
-char signature[]{ "MIP20" };              // set to make sure saved values are valid, change when savevalues is changed
+char signature[]{ "MIP21" };              // set to make sure saved values are valid, change when savevalues is changed
 bool bAutoLoadSettings = false;           // set to automatically load saved settings from eeprom
 
 // settings
@@ -114,6 +114,7 @@ bool bDoublePixels = false;               // double the image line, to go from 1
 bool bMirrorPlayImage = false;            // play the file twice, 2nd time reversed
 bool bChainFiles = false;                 // set to run all the files from current to the last one in the current folder
 int nChainRepeats = 1;                    // how many times to repeat the chain
+int nChainDelay = 0;                      // number of 1/10 seconds to delay between chained files
 bool bShowProgress = true;                // show the progress bar
 bool bShowFolder = true;                  // show the path in front of the file
 bool bScaleHeight = false;                // scale the Y values to fit the number of pixels
@@ -305,6 +306,7 @@ const saveValues saveValueList[] = {
     {&bUpsideDown,sizeof(bUpsideDown)},
     {&bDoublePixels,sizeof(bDoublePixels)},
     {&nChainRepeats,sizeof(nChainRepeats)},
+    {&nChainDelay,sizeof(nChainDelay)},
     {&whiteBalance,sizeof(whiteBalance)},
     {&bShowProgress,sizeof(bShowProgress)},
     {&bShowFolder,sizeof(bShowFolder)},
@@ -622,6 +624,7 @@ MenuItem RepeatMenu[] = {
         {eBool,false,"Chain Files: %s",ToggleBool,&bChainFiles,0,0,0,"On","Off"},
         {eIfEqual,false,"",NULL,&bChainFiles,true},
             {eTextInt,false,"Chain Repeats: %d",GetIntegerValue,&nChainRepeats,1,100},
+            {eTextInt,false,"Chain Delay (S): %d.%d",GetIntegerValue,&nChainDelay,0,100,1},
         {eEndif},
     {eEndif},
     {eExit,false,"Previous Menu"},
@@ -737,6 +740,7 @@ struct SETTINGVAR SettingsVarList[] = {
     {"MIRROR PLAY IMAGE",&bMirrorPlayImage,vtBool},
     {"CHAIN FILES",&bChainFiles,vtBool},
     {"CHAIN REPEATS",&nChainRepeats,vtInt},
+    {"CHAIN DELAY",&nChainDelay,vtInt},
     {"WHITE BALANCE",&whiteBalance,vtRGB},
     {"DISPLAY BRIGHTNESS",&displayBrightness,vtInt,0,100},
     {"GAMMA CORRECTION",&bGammaCorrection,vtBool},

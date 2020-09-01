@@ -2232,6 +2232,10 @@ void ProcessFileOrTest()
 					++CurrentFileIndex;
 				if (IsFolder(CurrentFileIndex))
 					break;
+				// handle any chain delay
+				for (int dly = nChainDelay; dly > 0 && !CheckCancel(); --dly) {
+					delay(100);
+				}
 			}
 			line = "";
 			// clear
