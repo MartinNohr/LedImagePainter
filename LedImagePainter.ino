@@ -183,12 +183,29 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
 				if (!jv.isNull()) {
 					String fn = jv.as<char*>();
 					// lets search for the file
-					for (int ix = 0; ix < NumberOfFiles; ++ix) {
-						if (FileNames[ix].equals(fn)) {
-							CurrentFileIndex = ix;
-							DisplayCurrentFile();
-							break;
-						}
+					int ix = LookUpFile(fn);
+					if (ix != -1) {
+						CurrentFileIndex = ix;
+						DisplayCurrentFile();
+					}
+				}
+				// change framehold
+				jv = doc.getMember("framehold");
+				if (!jv.isNull()) {
+					frameHold = jv.as<int>();
+				}
+				// change builtin setting
+				jv = doc.getMember("builtin");
+				if (!jv.isNull()) {
+					String bist = jv.as<char*>();
+					bist.toUpperCase();
+					bool bi = bist[0] == 'T';
+					if (bi != bShowBuiltInTests) {
+						ToggleFilesBuiltin(NULL);
+						//Serial.println("builtin:" + String(bShowBuiltInTests ? "true" : "false"));
+						CurrentFileIndex = 0;
+						OLED->clear();
+						DisplayCurrentFile();
 					}
 				}
 			}
