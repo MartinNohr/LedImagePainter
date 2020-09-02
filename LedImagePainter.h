@@ -434,7 +434,7 @@ const uint8_t gammaB[] = {
 
 MenuItem BouncingBallsMenu[] = {
     {eExit,false,"Previous Menu"},
-    {eTextInt,false,"Ball Count (1-8): %d",GetIntegerValue,&nBouncingBallsCount,1,8},
+    {eTextInt,false,"Ball Count: %d",GetIntegerValue,&nBouncingBallsCount,1,32},
     {eTextInt,false,"Decay (500-10000): %d",GetIntegerValue,&nBouncingBallsDecay,500,10000},
     {eTextInt,false,"Runtime (seconds): %d",GetIntegerValue,&nBouncingBallsRuntime,1,120},
     {eExit,false,"Previous Menu"},

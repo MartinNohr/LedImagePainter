@@ -2153,6 +2153,8 @@ void ProcessFileOrTest()
 	}
 	bIsRunning = true;
 	nProgress = 0;
+	DisplayLine(1, "");
+	DisplayLine(2, "");
 	DisplayLine(3, "");
 	//DisplayCurrentFile();
 	if (startDelay) {
