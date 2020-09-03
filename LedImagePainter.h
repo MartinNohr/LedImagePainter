@@ -161,6 +161,7 @@ enum eDisplayOperation {
     eEndif,             // ends an if block
     eBuiltinOptions,    // use an internal settings menu if available, see the internal name,function list below (BuiltInFiles[])
     eReboot,            // reboot the system
+    eList,              // used to make a selection from multiple choices
     eTerminate,         // must be last in a menu
 };
 
@@ -204,6 +205,7 @@ void LoadMacro(MenuItem* menu);
 void SaveMacro(MenuItem* menu);
 void DeleteMacro(MenuItem* menu);
 void LightBar(MenuItem* menu);
+void SelectMacro(MenuItem* menu);
 
 // builtins
 // built-in "files"
@@ -637,6 +639,14 @@ MenuItem EepromMenu[] = {
     {eText,false,"Save Current Settings",SaveEepromSettings},
     {eText,false,"Load Saved Settings",LoadEepromSettings},
     {eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem MacroSelect[] = {
+    {eList,false,"Macro 0: %s",SelectMacro,&nCurrentMacro,0,0,0,"Used","Empty"},
+    {eList,false,"Macro 1: %s",SelectMacro,&nCurrentMacro,1,0,0,"Used","Empty"},
+    {eList,false,"Macro 2: %s",SelectMacro,&nCurrentMacro,2,0,0,"Used","Empty"},
+    {eList,false,"Macro 3: %s",SelectMacro,&nCurrentMacro,3,0,0,"Used","Empty"},
     // make sure this one is last
     {eTerminate}
 };

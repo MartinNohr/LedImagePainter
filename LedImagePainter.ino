@@ -20,6 +20,10 @@
 #include <ringbufcpp.h>
 #include "LedImagePainter.h"
 
+#include <vector>
+#include <queue>
+using namespace std;
+
 // rotary switch
 #define BTNPUSH GPIO_NUM_27
 #define BTNA GPIO_NUM_12
@@ -325,6 +329,8 @@ void setup()
 {
 	Serial.begin(115200);
 	delay(100);
+	vector<int> vi;
+	queue<int> qu;
 	gpio_set_direction((gpio_num_t)LED, GPIO_MODE_OUTPUT);
 	digitalWrite(LED, HIGH);
 	gpio_set_direction(BTNPUSH, GPIO_MODE_INPUT);
