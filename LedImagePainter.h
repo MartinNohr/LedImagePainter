@@ -219,7 +219,7 @@ extern BuiltInItem BuiltInFiles[];
 
 // SD details
 #define SDcsPin 5                        // SD card CS pin
-SPIClass spi1;
+SPIClass spiSDCard;
 
 // adjustment values for builtins
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns

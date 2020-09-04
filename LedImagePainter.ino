@@ -20,9 +20,9 @@
 #include <ringbufcpp.h>
 #include "LedImagePainter.h"
 
-#include <vector>
+//#include <vector>
 #include <queue>
-using namespace std;
+//using namespace std;
 
 // rotary switch
 #define BTNPUSH GPIO_NUM_27
@@ -329,8 +329,8 @@ void setup()
 {
 	Serial.begin(115200);
 	delay(100);
-	vector<int> vi;
-	queue<int> qu;
+	//vector<int> vi;
+	//queue<int> qu;
 	gpio_set_direction((gpio_num_t)LED, GPIO_MODE_OUTPUT);
 	digitalWrite(LED, HIGH);
 	gpio_set_direction(BTNPUSH, GPIO_MODE_INPUT);
@@ -1318,9 +1318,9 @@ void setupSDcard()
 	bSdCardValid = false;
 	pinMode(SDcsPin, OUTPUT);
 	SPIClass(1);
-	spi1.begin(18, 19, 23, SDcsPin);	// SCK,MISO,MOSI,CS
+	spiSDCard.begin(18, 19, 23, SDcsPin);	// SCK,MISO,MOSI,CS
 
-	if (!SD.begin(SDcsPin, spi1)) {
+	if (!SD.begin(SDcsPin, spiSDCard)) {
 		//Serial.println("Card Mount Failed");
 		return;
 	}
