@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #include "heltec.h"
 #include <time.h>
 #include "FS.h"
@@ -167,15 +166,15 @@ enum eDisplayOperation {
 
 struct MenuItem {
     enum eDisplayOperation op;
-    bool valid;     // set to true if displayed for use
-    char* text;
-    void(*function)(MenuItem*);
-    const void* value;
-    long min;       // also used for ifequal
-    long max;       // size to compare for if
-    int decimals;   // 0 for int, 1 for 0.1
-    char* on;       // text for boolean
-    char* off;
+    bool valid;                 // set to true if displayed for use
+    char* text;                 // text to display
+    void(*function)(MenuItem*); // called on click
+    const void* value;          // associated variable
+    long min;                   // the minimum value, also used for ifequal
+    long max;                   // the maximum value, also size to compare for if
+    int decimals;               // 0 for int, 1 for 0.1
+    char* on;                   // text for boolean true
+    char* off;                  // text for boolean false
     // flag is 1 for first time, 0 for changes, and -1 for last call
 	void(*change)(MenuItem*, int flag);   // call for each change, example: brightness change show effect
 };
@@ -642,7 +641,7 @@ MenuItem EepromMenu[] = {
     // make sure this one is last
     {eTerminate}
 };
-MenuItem MacroSelect[] = {
+MenuItem MacroSelectMenu[] = {
     {eList,false,"Macro 0: %s",SelectMacro,&nCurrentMacro,0,0,0,"Used","Empty"},
     {eList,false,"Macro 1: %s",SelectMacro,&nCurrentMacro,1,0,0,"Used","Empty"},
     {eList,false,"Macro 2: %s",SelectMacro,&nCurrentMacro,2,0,0,"Used","Empty"},
@@ -652,6 +651,7 @@ MenuItem MacroSelect[] = {
 };
 MenuItem MacroMenu[] = {
     {eExit,false,"Previous Menu"},
+    {eMenu,false,"Select Macro",NULL,MacroSelectMenu},
     {eTextInt,false,"Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
     {eText,false,"Run",RunMacro},
     {eTextInt,false,"Repeat Count: %d",GetIntegerValue,&nRepeatCountMacro,1,100},
@@ -712,10 +712,10 @@ StackArray<int> FileIndexStack;
 
 // a stack for menus so we can find our way back
 struct MENUINFO {
-    int index;
-    int offset;
-    int menucount;
-    MenuItem* menu;
+    int index;      // active entry
+    int offset;     // scrolled amount
+    int menucount;  // how many entries in this menu
+    MenuItem* menu; // pointer to the menu
 };
 typedef MENUINFO MenuInfo;
 MenuInfo* menuPtr;

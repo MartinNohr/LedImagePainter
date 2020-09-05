@@ -21,8 +21,7 @@
 #include "LedImagePainter.h"
 
 //#include <vector>
-#include <queue>
-//using namespace std;
+//#include <queue>
 
 // rotary switch
 #define BTNPUSH GPIO_NUM_27
@@ -38,6 +37,8 @@ volatile int nButtonDowns;
 volatile int nButtonUps;
 volatile bool bButtonTimerRunning;
 volatile bool bButtonArmed = true;	// must be reset after reading a long press, it stops the noise on button release
+
+//std::queue<int> buttonQueue;
 
 // interrupt handlers
 void IRAM_ATTR IntBtnCenter()
@@ -631,6 +632,7 @@ bool RunMenus(int button)
 			case eTextInt:
 			case eTextCurrentFile:
 			case eBool:
+			case eList:
 				if (MenuStack.peek()->menu[ix].function) {
 					//Serial.println(ix);
 					(*MenuStack.peek()->menu[ix].function)(&MenuStack.peek()->menu[ix]);
@@ -753,6 +755,9 @@ void ShowMenu(struct MenuItem* menu)
 			}
 			// next line
 			++y;
+			break;
+		case eList:
+			// the list of macro files
 			break;
 		case eBool:
 			menu->valid = true;
@@ -3231,4 +3236,10 @@ void IRAM_ATTR SetPixel(int ix, CRGB pixel)
 			leds[ix] = pixel;
 		}
 	}
+}
+
+// display all the macro lines on display
+// clicking on one selects it
+void SelectMacro(MenuItem* menu)
+{
 }
