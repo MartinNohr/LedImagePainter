@@ -616,6 +616,7 @@ bool RunMenus(int button)
 	bool gotmatch = false;
 	int menuix = 0;
 	MenuInfo* oldMenu;
+	bool bExit = false;
 	for (int ix = 0; !gotmatch && MenuStack.peek()->menu[ix].op != eTerminate; ++ix) {
 		// see if this is one is valid
 		if (!MenuStack.peek()->menu[ix].valid) {
@@ -634,9 +635,10 @@ bool RunMenus(int button)
 			case eBool:
 			case eList:
 				if (MenuStack.peek()->menu[ix].function) {
-					//Serial.println(ix);
 					(*MenuStack.peek()->menu[ix].function)(&MenuStack.peek()->menu[ix]);
 					bMenuChanged = true;
+					if (MenuStack.peek()->menu[ix].op == eList)
+						bExit = true;
 				}
 				break;
 			case eMenu:
@@ -662,11 +664,7 @@ bool RunMenus(int button)
 				bMenuChanged = true;
 				break;
 			case eExit: // go back a level
-				if (MenuStack.count() > 1) {
-					delete MenuStack.peek();
-					MenuStack.pop();
-					bMenuChanged = true;
-				}
+				bExit = true;
 				break;
 			case eReboot:
 				WriteMessage("Rebooting in 2 seconds\nHold button for factory reset", false, 2000);
@@ -676,8 +674,8 @@ bool RunMenus(int button)
 		}
 		++menuix;
 	}
-	// if no match, and we are in a submenu, go back one level
-	if (!bMenuChanged && MenuStack.count() > 1) {
+	// if no match, and we are in a submenu, go back one level, or is bExit is et
+	if (bExit || (!bMenuChanged && MenuStack.count() > 1)) {
 		bMenuChanged = true;
 		menuPtr = MenuStack.pop();
 		delete menuPtr;
@@ -759,11 +757,14 @@ void ShowMenu(struct MenuItem* menu)
 			++y;
 			break;
 		case eList:
+			menu->valid = true;
 			// the list of macro files
-			val = MenuStack.peek()->menu->min;
+			val = menu->min;
 			// see if the macro is there and append the text
 			exists = SD.exists("/" + String(val) + ".ipc");
-			sprintf(line, menu->text, val, exists ? MenuStack.peek()->menu->on : MenuStack.peek()->menu->off);
+			sprintf(line, menu->text, val, exists ? menu->on : menu->off);
+			// next line
+			++y;
 			break;
 		case eBool:
 			menu->valid = true;
@@ -1023,7 +1024,6 @@ bool HandleMenus()
 {
 	if (bMenuChanged) {
 		ShowMenu(MenuStack.peek()->menu);
-		//ShowGo();
 		bMenuChanged = false;
 	}
 	bool didsomething = true;
@@ -1031,6 +1031,7 @@ bool HandleMenus()
 	int lastOffset = MenuStack.peek()->offset;
 	int lastMenu = MenuStack.peek()->index;
 	int lastMenuCount = MenuStack.peek()->menucount;
+	bool lastRecording = bRecordingMacro;
 	switch (button) {
 	case BTN_SELECT:
 		RunMenus(button);
@@ -1079,12 +1080,13 @@ bool HandleMenus()
 	// check some conditions that should redraw the menu
 	if (lastMenu != MenuStack.peek()->index || lastOffset != MenuStack.peek()->offset) {
 		bMenuChanged = true;
+		//Serial.println("menu changed");
 	}
-	// if the menu size changed we don't where we are anymore, so reset
-	if (lastMenuCount != MenuStack.peek()->menucount) {
-		bMenuChanged = true;
-		MenuStack.peek()->offset = 0;
+	// see if the recording status changed
+	if (lastRecording != bRecordingMacro) {
 		MenuStack.peek()->index = 0;
+		MenuStack.peek()->offset = 0;
+		bMenuChanged = true;
 	}
 	return didsomething;
 }
@@ -3255,5 +3257,5 @@ void IRAM_ATTR SetPixel(int ix, CRGB pixel)
 // set the current macro
 void SelectMacro(MenuItem* menu)
 {
-	nCurrentMacro = MenuStack.peek()->menu->min;
+	nCurrentMacro = menu->min;
 }
