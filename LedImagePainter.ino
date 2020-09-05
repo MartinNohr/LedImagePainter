@@ -725,6 +725,7 @@ void ShowMenu(struct MenuItem* menu)
 		// only displayable menu items should be in this switch
 		line[0] = '\0';
 		int val;
+		bool exists;
 		switch (menu->op) {
 		case eTextInt:
 		case eText:
@@ -759,16 +760,10 @@ void ShowMenu(struct MenuItem* menu)
 			break;
 		case eList:
 			// the list of macro files
-			if (menu->value) {
-				val = *(int*)menu->value;
-				// see if the macro is there and append the text
-				String mname = "/" + String(nCurrentMacro) + ".ipc";
-				bool exists = SD.exists(mname);
-				sprintf(line, menu->text, val, exists ? MenuStack.peek()->menu->on : MenuStack.peek()->menu->off);
-			}
-			else {
-				strcpy(line, menu->text);
-			}
+			val = MenuStack.peek()->menu->min;
+			// see if the macro is there and append the text
+			exists = SD.exists("/" + String(val) + ".ipc");
+			sprintf(line, menu->text, val, exists ? MenuStack.peek()->menu->on : MenuStack.peek()->menu->off);
 			break;
 		case eBool:
 			menu->valid = true;
@@ -1082,11 +1077,14 @@ bool HandleMenus()
 		break;
 	}
 	// check some conditions that should redraw the menu
-	if (lastMenu != MenuStack.peek()->index
-			|| lastOffset != MenuStack.peek()->offset
-			|| lastMenuCount != MenuStack.peek()->menucount
-		) {
+	if (lastMenu != MenuStack.peek()->index || lastOffset != MenuStack.peek()->offset) {
 		bMenuChanged = true;
+	}
+	// if the menu size changed we don't where we are anymore, so reset
+	if (lastMenuCount != MenuStack.peek()->menucount) {
+		bMenuChanged = true;
+		MenuStack.peek()->offset = 0;
+		MenuStack.peek()->index = 0;
 	}
 	return didsomething;
 }
