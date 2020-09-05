@@ -724,16 +724,17 @@ void ShowMenu(struct MenuItem* menu)
 		char line[100];
 		// only displayable menu items should be in this switch
 		line[0] = '\0';
+		int val;
 		switch (menu->op) {
 		case eTextInt:
 		case eText:
 		case eTextCurrentFile:
 			menu->valid = true;
 			if (menu->value) {
+				val = *(int*)menu->value;
 				if (menu->op == eText)
-					sprintf(line, menu->text, (char*)menu->value);
+					sprintf(line, menu->text, val);
 				else if (menu->op == eTextInt) {
-					int val = *(int*)menu->value;
 					if (menu->decimals == 0) {
 						sprintf(line, menu->text, val);
 					}

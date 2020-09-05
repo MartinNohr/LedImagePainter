@@ -650,17 +650,21 @@ MenuItem MacroSelectMenu[] = {
     {eTerminate}
 };
 MenuItem MacroMenu[] = {
-    {eExit,false,"Previous Menu"},
-    {eMenu,false,"Select Macro",NULL,MacroSelectMenu},
-    {eTextInt,false,"Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
-    {eText,false,"Run",RunMacro},
-    {eTextInt,false,"Repeat Count: %d",GetIntegerValue,&nRepeatCountMacro,1,100},
-    {eTextInt,false,"Repeat Delay (S): %d.%d",GetIntegerValue,&nRepeatWaitMacro,0,100,1},
+    {eExit,false,"Main Menu"},
+    {eIfEqual,false,"",NULL,&bRecordingMacro,false},
+        {eMenu,false,"Select Macro",NULL,MacroSelectMenu},
+        {eTextInt,false,"Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
+        {eText,false,"Run: #%d",RunMacro,&nCurrentMacro},
+        {eTextInt,false,"Repeat Count: %d",GetIntegerValue,&nRepeatCountMacro,1,100},
+        {eTextInt,false,"Repeat Delay (S): %d.%d",GetIntegerValue,&nRepeatWaitMacro,0,100,1},
+    {eEndif},
     {eBool,false,"Recording: %s",ToggleFilesBuiltin,&bRecordingMacro,0,0,0,"On","Off"},
-    {eText,false,"Load",LoadMacro},
-    {eText,false,"Save",SaveMacro},
-    {eText,false,"Delete",DeleteMacro},
-    {eExit,false,"Previous Menu"},
+    {eIfEqual,false,"",NULL,&bRecordingMacro,false},
+        {eText,false,"Load: #%d",LoadMacro,&nCurrentMacro},
+        {eText,false,"Save: #%d",SaveMacro,&nCurrentMacro},
+        {eText,false,"Delete: #%d",DeleteMacro,&nCurrentMacro},
+    {eEndif},
+    {eExit,false,"Main Menu"},
     // make sure this one is last
     {eTerminate}
 };
