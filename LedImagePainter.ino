@@ -759,6 +759,16 @@ void ShowMenu(struct MenuItem* menu)
 			break;
 		case eList:
 			// the list of macro files
+			if (menu->value) {
+				val = *(int*)menu->value;
+				// see if the macro is there and append the text
+				String mname = "/" + String(nCurrentMacro) + ".ipc";
+				bool exists = SD.exists(mname);
+				sprintf(line, menu->text, val, exists ? MenuStack.peek()->menu->on : MenuStack.peek()->menu->off);
+			}
+			else {
+				strcpy(line, menu->text);
+			}
 			break;
 		case eBool:
 			menu->valid = true;
@@ -1025,6 +1035,7 @@ bool HandleMenus()
 	int button = ReadButton();
 	int lastOffset = MenuStack.peek()->offset;
 	int lastMenu = MenuStack.peek()->index;
+	int lastMenuCount = MenuStack.peek()->menucount;
 	switch (button) {
 	case BTN_SELECT:
 		RunMenus(button);
@@ -1070,7 +1081,11 @@ bool HandleMenus()
 		didsomething = false;
 		break;
 	}
-	if (lastMenu != MenuStack.peek()->index || lastOffset != MenuStack.peek()->offset) {
+	// check some conditions that should redraw the menu
+	if (lastMenu != MenuStack.peek()->index
+			|| lastOffset != MenuStack.peek()->offset
+			|| lastMenuCount != MenuStack.peek()->menucount
+		) {
 		bMenuChanged = true;
 	}
 	return didsomething;
@@ -3239,8 +3254,8 @@ void IRAM_ATTR SetPixel(int ix, CRGB pixel)
 	}
 }
 
-// display all the macro lines on display
-// clicking on one selects it
+// set the current macro
 void SelectMacro(MenuItem* menu)
 {
+	nCurrentMacro = MenuStack.peek()->menu->min;
 }
