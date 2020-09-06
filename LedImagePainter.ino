@@ -719,7 +719,7 @@ void ShowMenu(struct MenuItem* menu)
 			menu->valid = false;
 			continue;
 		}
-		char line[100];
+		char line[100], xtraline[100];
 		// only displayable menu items should be in this switch
 		line[0] = '\0';
 		int val;
@@ -801,7 +801,13 @@ void ShowMenu(struct MenuItem* menu)
 		case eExit:
 		case eReboot:
 			menu->valid = true;
-			strcpy(line, (String((menu->op == eReboot) ? "" : "+") + menu->text).c_str());
+			if (menu->value) {
+				sprintf(xtraline, menu->text, *(int*)menu->value);
+			}
+			else {
+				strcpy(xtraline, menu->text);
+			}
+			sprintf(line, "%s%s", (menu->op == eReboot) ? "" : "+", xtraline);
 			++y;
 			//Serial.println("menu text4: " + String(line));
 			break;

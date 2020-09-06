@@ -667,8 +667,8 @@ MenuItem MacroSelectMenu[] = {
 MenuItem MacroMenu[] = {
     {eExit,false,"Previous Menu"},
     {eIfEqual,false,"",NULL,&bRecordingMacro,false},
-        {eMenu,false,"Select Macro",{.menu = MacroSelectMenu}},
-        {eTextInt,false,"Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
+        {eMenu,false,"Select Macro: %d",{.menu = MacroSelectMenu},&nCurrentMacro},
+        //{eTextInt,false,"Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
         {eText,false,"Run: #%d",RunMacro,&nCurrentMacro},
         {eTextInt,false,"Repeat Count: %d",GetIntegerValue,&nRepeatCountMacro,1,100},
         {eTextInt,false,"Repeat Delay (S): %d.%d",GetIntegerValue,&nRepeatWaitMacro,0,100,1},
