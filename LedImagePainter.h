@@ -697,7 +697,7 @@ MenuItem MainMenu[] = {
     {eElse},
         {eMenu,false,"IPC File Operations",{.menu = StartFileMenu}},
     {eEndif},
-    {eMenu,false,"Macros",{.menu = MacroMenu}},
+	{eMenu,false,"Macros",{.menu = MacroMenu},&nCurrentMacro},
     {eMenu,false,"Saved Settings",{.menu = EepromMenu}},
 	{eMenu,false,"Display Settings",{.menu = DisplayMenu}},
     {eText,false,"Light Bar",LightBar},
