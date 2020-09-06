@@ -763,6 +763,14 @@ void ShowMenu(struct MenuItem* menu)
 			// see if the macro is there and append the text
 			exists = SD.exists("/" + String(val) + ".ipc");
 			sprintf(line, menu->text, val, exists ? menu->on : menu->off);
+			//// set the index if the int matches
+			//if (menu->value) {
+			//	Serial.println(String(*(int*)menu->value) + ":" + String(y) + ":" + String(nCurrentMacro));
+			//	if (*(int*)menu->value == y) {
+			//		Serial.println("==" + String(y) + ":" + MenuStack.peek()->index);
+			//		MenuStack.peek()->index = y;
+			//	}
+			//}
 			// next line
 			++y;
 			break;
