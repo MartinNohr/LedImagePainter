@@ -649,7 +649,7 @@ MenuItem EepromMenu[] = {
     {eTerminate}
 };
 MenuItem MacroSelectMenu[] = {
-    {eExit,false,"Previous Menu"},
+    //{eExit,false,"Previous Menu"},
     {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,0,0,0,"Used","Empty"},
     {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,1,0,0,"Used","Empty"},
     {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,2,0,0,"Used","Empty"},
@@ -660,7 +660,7 @@ MenuItem MacroSelectMenu[] = {
     {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,7,0,0,"Used","Empty"},
     {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,8,0,0,"Used","Empty"},
     {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,9,0,0,"Used","Empty"},
-    {eExit,false,"Previous Menu"},
+    //{eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
 };
