@@ -642,7 +642,7 @@ bool RunMenus(int button)
 			case eMenu:
 				oldMenu = MenuStack.peek();
 				MenuStack.push(new MenuInfo);
-				MenuStack.peek()->menu = (MenuItem*)(oldMenu->menu[ix].value);
+				MenuStack.peek()->menu = oldMenu->menu[ix].menu;
 				bMenuChanged = true;
 				MenuStack.peek()->index = 0;
 				MenuStack.peek()->offset = 0;
@@ -652,7 +652,7 @@ bool RunMenus(int button)
 				if (BuiltInFiles[CurrentFileIndex].menu != NULL) {
 					MenuStack.peek()->index = MenuStack.peek()->index;
 					MenuStack.push(new MenuInfo);
-					MenuStack.peek()->menu = (MenuItem*)(BuiltInFiles[CurrentFileIndex].menu);
+					MenuStack.peek()->menu = BuiltInFiles[CurrentFileIndex].menu;
 					MenuStack.peek()->index = 0;
 					MenuStack.peek()->offset = 0;
 				}

@@ -164,21 +164,38 @@ enum eDisplayOperation {
     eTerminate,         // must be last in a menu
 };
 
+// we need to have a pointer reference to this in the MenuItem, the full declaration follows later
+struct BuiltInItem;
+
 struct MenuItem {
     enum eDisplayOperation op;
-    bool valid;                 // set to true if displayed for use
-    char* text;                 // text to display
-    void(*function)(MenuItem*); // called on click
-    const void* value;          // associated variable
-    long min;                   // the minimum value, also used for ifequal
-    long max;                   // the maximum value, also size to compare for if
-    int decimals;               // 0 for int, 1 for 0.1
-    char* on;                   // text for boolean true
-    char* off;                  // text for boolean false
+    bool valid;                         // set to true if displayed for use
+    char* text;                         // text to display
+    union {
+        void(*function)(MenuItem*);     // called on click
+        MenuItem* menu;                 // jump to another menu
+        BuiltInItem* builtin;           // builtin items
+    };
+    const void* value;                  // associated variable
+    long min;                           // the minimum value, also used for ifequal
+    long max;                           // the maximum value, also size to compare for if
+    int decimals;                       // 0 for int, 1 for 0.1
+    char* on;                           // text for boolean true
+    char* off;                          // text for boolean false
     // flag is 1 for first time, 0 for changes, and -1 for last call
-	void(*change)(MenuItem*, int flag);   // call for each change, example: brightness change show effect
+	void(*change)(MenuItem*, int flag); // call for each change, example: brightness change show effect
 };
 typedef MenuItem MenuItem;
+
+// builtins
+// built-in "files"
+struct BuiltInItem {
+    char* text;
+    void(*function)();
+    MenuItem* menu;
+};
+typedef BuiltInItem BuiltInItem;
+extern BuiltInItem BuiltInFiles[];
 
 // some menu functions using menus
 void EraseStartFile(MenuItem* menu);
@@ -205,16 +222,6 @@ void SaveMacro(MenuItem* menu);
 void DeleteMacro(MenuItem* menu);
 void LightBar(MenuItem* menu);
 void SelectMacro(MenuItem* menu);
-
-// builtins
-// built-in "files"
-struct BuiltInItem {
-    char* text;
-    void(*function)();
-    MenuItem* menu;
-};
-typedef BuiltInItem BuiltInItem;
-extern BuiltInItem BuiltInFiles[];
 
 // SD details
 #define SDcsPin 5                        // SD card CS pin
@@ -612,7 +619,7 @@ MenuItem StartFileMenu[] = {
     {eText,false,"Save  START.IPC",SaveStartFile},
     {eText,false,"Load  START.IPC",LoadStartFile},
     {eText,false,"Erase START.IPC",EraseStartFile},
-    {eMenu,false,"Associated Files",NULL,AssociatedFileMenu},
+    {eMenu,false,"Associated Files",{.menu = AssociatedFileMenu}},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
@@ -660,7 +667,7 @@ MenuItem MacroSelectMenu[] = {
 MenuItem MacroMenu[] = {
     {eExit,false,"Previous Menu"},
     {eIfEqual,false,"",NULL,&bRecordingMacro,false},
-        {eMenu,false,"Select Macro",NULL,MacroSelectMenu},
+        {eMenu,false,"Select Macro",{.menu = MacroSelectMenu}},
         {eTextInt,false,"Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
         {eText,false,"Run: #%d",RunMacro,&nCurrentMacro},
         {eTextInt,false,"Repeat Count: %d",GetIntegerValue,&nRepeatCountMacro,1,100},
@@ -682,17 +689,17 @@ MenuItem MainMenu[] = {
     {eElse},
         {eBool,false,"Switch to Built-ins",ToggleFilesBuiltin,&bShowBuiltInTests,0,0,0,"On","Off"},
     {eEndif},
-    {eMenu,false,"File Image Settings",NULL,ImageMenu},
-    {eMenu,false,"Repeat Settings",NULL,RepeatMenu},
-    {eMenu,false,"LED Strip Settings",NULL,StripMenu},
+    {eMenu,false,"File Image Settings",{.menu = ImageMenu}},
+    {eMenu,false,"Repeat Settings",{.menu = RepeatMenu}},
+	{eMenu,false,"LED Strip Settings",{.menu = StripMenu}},
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,true},
-        {eBuiltinOptions,false,"%s Options",NULL,BuiltInFiles},
+		{eBuiltinOptions,false,"%s Options",{.builtin = BuiltInFiles}},
     {eElse},
-        {eMenu,false,"IPC File Operations",NULL,StartFileMenu},
+        {eMenu,false,"IPC File Operations",{.menu = StartFileMenu}},
     {eEndif},
-    {eMenu,false,"Macros",NULL,MacroMenu},
-    {eMenu,false,"Saved Settings",NULL,EepromMenu},
-    {eMenu,false,"Display Settings",NULL,DisplayMenu},
+    {eMenu,false,"Macros",{.menu = MacroMenu}},
+    {eMenu,false,"Saved Settings",{.menu = EepromMenu}},
+	{eMenu,false,"Display Settings",{.menu = DisplayMenu}},
     {eText,false,"Light Bar",LightBar},
     {eBool,false,"BlueTooth Link: %s",ToggleBool,&bEnableBLE,0,0,0,"On","Off"},
     {eReboot,false,"Reboot"},
