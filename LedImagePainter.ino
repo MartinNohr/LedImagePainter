@@ -633,17 +633,20 @@ bool RunMenus(int button)
 			case eTextInt:
 			case eTextCurrentFile:
 			case eBool:
+				bMenuChanged = true;
+				if (MenuStack.peek()->menu[ix].function) {
+					(*MenuStack.peek()->menu[ix].function)(&MenuStack.peek()->menu[ix]);
+				}
+				break;
 			case eList:
 				bMenuChanged = true;
 				if (MenuStack.peek()->menu[ix].function) {
 					(*MenuStack.peek()->menu[ix].function)(&MenuStack.peek()->menu[ix]);
 				}
-				if (MenuStack.peek()->menu[ix].op == eList) {
-					bExit = true;
-					// if there is a value, set the min value in it
-					if (MenuStack.peek()->menu[ix].value) {
-						*(int*)MenuStack.peek()->menu[ix].value = MenuStack.peek()->menu[ix].min;
-					}
+				bExit = true;
+				// if there is a value, set the min value in it
+				if (MenuStack.peek()->menu[ix].value) {
+					*(int*)MenuStack.peek()->menu[ix].value = MenuStack.peek()->menu[ix].min;
 				}
 				break;
 			case eMenu:
@@ -655,6 +658,15 @@ bool RunMenus(int button)
 					MenuStack.peek()->index = 0;
 					MenuStack.peek()->offset = 0;
 					//Serial.println("change menu");
+					// check if the new menu is an eList and if it has a value, if it does, set the index to it
+					if (MenuStack.peek()->menu->op == eList && MenuStack.peek()->menu->value) {
+						int ix = *(int*)MenuStack.peek()->menu->value;
+						MenuStack.peek()->index = ix;
+						// adjust offset if necessary
+						if (ix > 4) {
+							MenuStack.peek()->offset = ix - 4;
+						}
+					}
 				}
 				break;
 			case eBuiltinOptions: // find it in builtins
@@ -760,13 +772,6 @@ void ShowMenu(struct MenuItem* menu)
 					//Serial.println("menu text3: " + String(line));
 				}
 			}
-			// if no function, add '-' to front
-			if (menu->function == NULL) {
-				char tmp[100];
-				strcpy(tmp, line);
-				strcpy(line, "-");
-				strcat(line, tmp);
-			}
 			// next line
 			++y;
 			break;
@@ -814,7 +819,10 @@ void ShowMenu(struct MenuItem* menu)
 			else {
 				strcpy(xtraline, menu->text);
 			}
-			sprintf(line, "%s%s", (menu->op == eReboot) ? "" : "+", xtraline);
+			if (menu->op == eExit)
+				sprintf(line, "%s%s", "-", xtraline);
+			else
+				sprintf(line, "%s%s", (menu->op == eReboot) ? "" : "+", xtraline);
 			++y;
 			//Serial.println("menu text4: " + String(line));
 			break;
