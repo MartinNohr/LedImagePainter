@@ -378,9 +378,9 @@ void setup()
 	OLED->clear();
 	OLED->drawRect(0, 0, width - 1, height - 1);
 	OLED->setFont(ArialMT_Plain_24);
-	OLED->drawString(2, 2, "MN Painter");
+	OLED->drawString(2, 2, "LEDPainter");
 	OLED->setFont(ArialMT_Plain_16);
-	OLED->drawString(4, 30, "Version 2.07");
+	OLED->drawString(4, 30, "Version 2.08");
 	OLED->setFont(ArialMT_Plain_10);
 	OLED->drawString(4, 48, __DATE__);
 	OLED->display();
@@ -633,30 +633,29 @@ bool RunMenus(int button)
 			case eTextInt:
 			case eTextCurrentFile:
 			case eBool:
+			case eList:
+				bMenuChanged = true;
 				if (MenuStack.peek()->menu[ix].function) {
 					(*MenuStack.peek()->menu[ix].function)(&MenuStack.peek()->menu[ix]);
-					bMenuChanged = true;
-					//if (MenuStack.peek()->menu[ix].op == eList)
-					//	bExit = true;
+				}
+				if (MenuStack.peek()->menu[ix].op == eList) {
+					bExit = true;
 					// if there is a value, set the min value in it
-					//if (MenuStack.peek()->menu[ix].value) {
-					//	*(int*)MenuStack.peek()->menu[ix].value = MenuStack.peek()->menu[ix].min;
-					//}
+					if (MenuStack.peek()->menu[ix].value) {
+						*(int*)MenuStack.peek()->menu[ix].value = MenuStack.peek()->menu[ix].min;
+					}
 				}
 				break;
 			case eMenu:
-			case eMacro:
-				oldMenu = MenuStack.peek();
-				// if there is a value, load it from the min value
-				if (oldMenu->menu[ix].value) {
-					*(int*)oldMenu->menu[ix].value = oldMenu->menu[ix].min;
+				if (MenuStack.peek()->menu) {
+					oldMenu = MenuStack.peek();
+					MenuStack.push(new MenuInfo);
+					MenuStack.peek()->menu = oldMenu->menu[ix].menu;
+					bMenuChanged = true;
+					MenuStack.peek()->index = 0;
+					MenuStack.peek()->offset = 0;
+					//Serial.println("change menu");
 				}
-				MenuStack.push(new MenuInfo);
-				MenuStack.peek()->menu = oldMenu->menu[ix].menu;
-				bMenuChanged = true;
-				MenuStack.peek()->index = 0;
-				MenuStack.peek()->offset = 0;
-				//Serial.println("change menu");
 				break;
 			case eBuiltinOptions: // find it in builtins
 				if (BuiltInFiles[CurrentFileIndex].menu != NULL) {
@@ -682,7 +681,7 @@ bool RunMenus(int button)
 		}
 		++menuix;
 	}
-	// if no match, and we are in a submenu, go back one level, or is bExit is et
+	// if no match, and we are in a submenu, go back one level, or if bExit is set
 	if (bExit || (!bMenuChanged && MenuStack.count() > 1)) {
 		bMenuChanged = true;
 		menuPtr = MenuStack.pop();
@@ -761,20 +760,24 @@ void ShowMenu(struct MenuItem* menu)
 					//Serial.println("menu text3: " + String(line));
 				}
 			}
+			// if no function, add '-' to front
+			if (menu->function == NULL) {
+				char tmp[100];
+				strcpy(tmp, line);
+				strcpy(line, "-");
+				strcat(line, tmp);
+			}
 			// next line
 			++y;
 			break;
-		case eMacro:
+		case eList:
 			menu->valid = true;
 			// the list of macro files
 			// min holds the macro number
 			val = menu->min;
 			// see if the macro is there and append the text
 			exists = SD.exists("/" + String(val) + ".ipc");
-			if (nRecordingMacro == val)
-				sprintf(line, menu->text, val, "Recording");
-			else
-				sprintf(line, menu->text, val, exists ? menu->on : menu->off);
+			sprintf(line, menu->text, val, exists ? menu->on : menu->off);
 			// next line
 			++y;
 			break;
@@ -876,19 +879,6 @@ void ToggleBool(MenuItem* menu)
 {
 	bool* pb = (bool*)menu->value;
 	*pb = !*pb;
-}
-
-// toggle the macro recording
-void ToggleMacroRecording(MenuItem* menu)
-{
-	ToggleBool(menu);
-	bool rec = (bool*)menu->value;
-	if (rec) {
-		nRecordingMacro = nCurrentMacro;
-	}
-	else {
-		nRecordingMacro = -1;
-	}
 }
 
 // get integer values
@@ -3283,10 +3273,4 @@ void IRAM_ATTR SetPixel(int ix, CRGB pixel)
 			leds[ix] = pixel;
 		}
 	}
-}
-
-// set the current macro
-void SelectMacro(MenuItem* menu)
-{
-	nCurrentMacro = menu->min;
 }
