@@ -121,7 +121,8 @@ bool bCancelRun = false;                  // set to cancel a running job
 bool bCancelMacro = false;                // set to cancel a running macro
 bool bAllowMenuWrap = false;              // allows menus to wrap around from end and start instead of pinning
 bool bShowNextFiles = true;               // show the next files in the main display
-int nCurrentMacro = 0;                    // the number of the macro to record or run
+int nCurrentMacro = 0;                    // the number of the macro to select or run
+int nRecordingMacro = -1;                 // set when bRecordingMacro is true, -1 means none
 bool bRecordingMacro = false;             // set while recording
 bool bRunningMacro = false;               // set while running
 int nRepeatWaitMacro = 0;                 // time between macro repeats, in 1/10 seconds
@@ -160,7 +161,7 @@ enum eDisplayOperation {
     eEndif,             // ends an if block
     eBuiltinOptions,    // use an internal settings menu if available, see the internal name,function list below (BuiltInFiles[])
     eReboot,            // reboot the system
-    eList,              // used to make a selection from multiple choices
+    eMacro,             // used to make a selection from multiple choices
     eTerminate,         // must be last in a menu
 };
 
@@ -209,6 +210,7 @@ void LoadEepromSettings(MenuItem* menu);
 void ShowWhiteBalance(MenuItem* menu);
 void GetIntegerValue(MenuItem*);
 void ToggleBool(MenuItem*);
+void ToggleMacroRecording(MenuItem*);
 void ToggleFilesBuiltin(MenuItem* menu);
 void UpdateOledBrightness(MenuItem* menu, int flag);
 void UpdateStripBrightness(MenuItem* menu, int flag);
@@ -648,36 +650,40 @@ MenuItem EepromMenu[] = {
     // make sure this one is last
     {eTerminate}
 };
+MenuItem MacroOpsMenu[] = {
+    {eExit,false,"Previous Menu"},
+    {eText,false,"Run: #%d",RunMacro,&nCurrentMacro},
+    {eBool,false,"Record: %s",ToggleMacroRecording,&bRecordingMacro,0,0,0,"On","Off"},
+    {eText,false,"Load: #%d",LoadMacro,&nCurrentMacro},
+    {eText,false,"Save: #%d",SaveMacro,&nCurrentMacro},
+    {eText,false,"Delete: #%d",DeleteMacro,&nCurrentMacro},
+    {eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
 MenuItem MacroSelectMenu[] = {
-    //{eExit,false,"Previous Menu"},
-    {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,0,0,0,"Used","Empty"},
-    {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,1,0,0,"Used","Empty"},
-    {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,2,0,0,"Used","Empty"},
-    {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,3,0,0,"Used","Empty"},
-    {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,4,0,0,"Used","Empty"},
-    {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,5,0,0,"Used","Empty"},
-    {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,6,0,0,"Used","Empty"},
-    {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,7,0,0,"Used","Empty"},
-    {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,8,0,0,"Used","Empty"},
-    {eList,false,"Macro: #%d %s",SelectMacro,&nCurrentMacro,9,0,0,"Used","Empty"},
-    //{eExit,false,"Previous Menu"},
+    {eExit,false,"Previous Menu"},
+    {eMacro,false,"Macro: #%d %s",{.menu = MacroOpsMenu},&nCurrentMacro,0,0,0,"Used","Empty"},
+    {eMacro,false,"Macro: #%d %s",{.menu = MacroOpsMenu},&nCurrentMacro,1,0,0,"Used","Empty"},
+    {eMacro,false,"Macro: #%d %s",{.menu = MacroOpsMenu},&nCurrentMacro,2,0,0,"Used","Empty"},
+    {eMacro,false,"Macro: #%d %s",{.menu = MacroOpsMenu},&nCurrentMacro,3,0,0,"Used","Empty"},
+    {eMacro,false,"Macro: #%d %s",{.menu = MacroOpsMenu},&nCurrentMacro,4,0,0,"Used","Empty"},
+    {eMacro,false,"Macro: #%d %s",{.menu = MacroOpsMenu},&nCurrentMacro,5,0,0,"Used","Empty"},
+    {eMacro,false,"Macro: #%d %s",{.menu = MacroOpsMenu},&nCurrentMacro,6,0,0,"Used","Empty"},
+    {eMacro,false,"Macro: #%d %s",{.menu = MacroOpsMenu},&nCurrentMacro,7,0,0,"Used","Empty"},
+    {eMacro,false,"Macro: #%d %s",{.menu = MacroOpsMenu},&nCurrentMacro,8,0,0,"Used","Empty"},
+    {eMacro,false,"Macro: #%d %s",{.menu = MacroOpsMenu},&nCurrentMacro,9,0,0,"Used","Empty"},
+    {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
 };
 MenuItem MacroMenu[] = {
     {eExit,false,"Previous Menu"},
+    {eMenu,false,"Choose Macro",{.menu = MacroSelectMenu}},
     {eIfEqual,false,"",NULL,&bRecordingMacro,false},
-        {eMenu,false,"Select Macro: %d",{.menu = MacroSelectMenu},&nCurrentMacro},
         //{eTextInt,false,"Macro #: %d",GetIntegerValue,&nCurrentMacro,0,9},
-        {eText,false,"Run: #%d",RunMacro,&nCurrentMacro},
         {eTextInt,false,"Repeat Count: %d",GetIntegerValue,&nRepeatCountMacro,1,100},
         {eTextInt,false,"Repeat Delay (S): %d.%d",GetIntegerValue,&nRepeatWaitMacro,0,100,1},
-    {eEndif},
-    {eBool,false,"Recording: %s",ToggleFilesBuiltin,&bRecordingMacro,0,0,0,"On","Off"},
-    {eIfEqual,false,"",NULL,&bRecordingMacro,false},
-        {eText,false,"Load: #%d",LoadMacro,&nCurrentMacro},
-        {eText,false,"Save: #%d",SaveMacro,&nCurrentMacro},
-        {eText,false,"Delete: #%d",DeleteMacro,&nCurrentMacro},
     {eEndif},
     {eExit,false,"Previous Menu"},
     // make sure this one is last

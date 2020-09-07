@@ -633,16 +633,24 @@ bool RunMenus(int button)
 			case eTextInt:
 			case eTextCurrentFile:
 			case eBool:
-			case eList:
 				if (MenuStack.peek()->menu[ix].function) {
 					(*MenuStack.peek()->menu[ix].function)(&MenuStack.peek()->menu[ix]);
 					bMenuChanged = true;
-					if (MenuStack.peek()->menu[ix].op == eList)
-						bExit = true;
+					//if (MenuStack.peek()->menu[ix].op == eList)
+					//	bExit = true;
+					// if there is a value, set the min value in it
+					//if (MenuStack.peek()->menu[ix].value) {
+					//	*(int*)MenuStack.peek()->menu[ix].value = MenuStack.peek()->menu[ix].min;
+					//}
 				}
 				break;
 			case eMenu:
+			case eMacro:
 				oldMenu = MenuStack.peek();
+				// if there is a value, load it from the min value
+				if (oldMenu->menu[ix].value) {
+					*(int*)oldMenu->menu[ix].value = oldMenu->menu[ix].min;
+				}
 				MenuStack.push(new MenuInfo);
 				MenuStack.peek()->menu = oldMenu->menu[ix].menu;
 				bMenuChanged = true;
@@ -756,21 +764,17 @@ void ShowMenu(struct MenuItem* menu)
 			// next line
 			++y;
 			break;
-		case eList:
+		case eMacro:
 			menu->valid = true;
 			// the list of macro files
+			// min holds the macro number
 			val = menu->min;
 			// see if the macro is there and append the text
 			exists = SD.exists("/" + String(val) + ".ipc");
-			sprintf(line, menu->text, val, exists ? menu->on : menu->off);
-			//// set the index if the int matches
-			//if (menu->value) {
-			//	Serial.println(String(*(int*)menu->value) + ":" + String(y) + ":" + String(nCurrentMacro));
-			//	if (*(int*)menu->value == y) {
-			//		Serial.println("==" + String(y) + ":" + MenuStack.peek()->index);
-			//		MenuStack.peek()->index = y;
-			//	}
-			//}
+			if (nRecordingMacro == val)
+				sprintf(line, menu->text, val, "Recording");
+			else
+				sprintf(line, menu->text, val, exists ? menu->on : menu->off);
 			// next line
 			++y;
 			break;
@@ -872,6 +876,19 @@ void ToggleBool(MenuItem* menu)
 {
 	bool* pb = (bool*)menu->value;
 	*pb = !*pb;
+}
+
+// toggle the macro recording
+void ToggleMacroRecording(MenuItem* menu)
+{
+	ToggleBool(menu);
+	bool rec = (bool*)menu->value;
+	if (rec) {
+		nRecordingMacro = nCurrentMacro;
+	}
+	else {
+		nRecordingMacro = -1;
+	}
 }
 
 // get integer values
