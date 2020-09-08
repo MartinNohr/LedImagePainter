@@ -3197,7 +3197,7 @@ void RunMacro(MenuItem* menu)
 				nMacroRepeatsLeft = 0;
 				break;
 			}
-			DisplayLine(4, String("Macro Wait: ") + String(wait) + " Repeat: " + String(nMacroRepeatsLeft - 1));
+			DisplayLine(4, "#" + String(nCurrentMacro) + String(" Wait: ") + String(wait / 10) + "." + String(wait % 10) + " Repeat: " + String(nMacroRepeatsLeft - 1));
 			delay(100);
 		}
 	}
