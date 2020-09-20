@@ -57,11 +57,12 @@ int ReadButton();
 bool CheckCancel();
 
 // eeprom values
-char signature[]{ "MIP21" };              // set to make sure saved values are valid, change when savevalues is changed
+char signature[]{ "MIP22" };              // set to make sure saved values are valid, change when savevalues is changed
 bool bAutoLoadSettings = false;           // set to automatically load saved settings from eeprom
 
 // settings
 int displayBrightness = 100;            // this is in %
+bool bReverseDial = false;              // change the dial direction
 bool bSdCardValid = false;              // set to true when card is found
 // strip leds
 #define DATA_PIN1 17
@@ -320,6 +321,8 @@ const saveValues saveValueList[] = {
     {&bAllowMenuWrap,sizeof(bAllowMenuWrap)},
     {&bShowNextFiles,sizeof(bShowNextFiles)},
     {&bEnableBLE,sizeof(bEnableBLE)},
+    {&bReverseDial,sizeof(bReverseDial)},
+    {&displayBrightness,sizeof(displayBrightness)},
     // the built-in values
     // display all color
     {&bDisplayAllRGB,sizeof(bDisplayAllRGB)},
@@ -566,6 +569,7 @@ MenuItem DisplayMenu[] = {
     {eBool,false,"Show More Files: %s",ToggleBool,&bShowNextFiles,0,0,0,"Yes","No"},
 	{eBool,false,"Show Folder: %s",ToggleBool,&bShowFolder,0,0,0,"Yes","No"},
     {eBool,false,"Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
+    {eBool,false,"Dial: %s",ToggleBool,&bReverseDial,0,0,0,"Reverse","Normal"},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
@@ -776,4 +780,5 @@ struct SETTINGVAR SettingsVarList[] = {
     {"GAMMA CORRECTION",&bGammaCorrection,vtBool},
     {"SELECT BUILTINS",&bShowBuiltInTests,vtBuiltIn},       // this must be before the SHOW FILE command
     {"SHOW FILE",&FileToShow,vtShowFile},
+    {"REVERSE DIAL",&bReverseDial,vtBool},
 };

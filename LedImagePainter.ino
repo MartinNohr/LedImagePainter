@@ -86,7 +86,7 @@ void IRAM_ATTR IntBtnA()
 			pendingBtn = BTN_NONE;
 		}
 		else if (lastValA && !valA) {
-			int btn = valB ? BTN_RIGHT : BTN_LEFT;
+			int btn = (bReverseDial ? !valB : valB) ? BTN_RIGHT : BTN_LEFT;
 			if (btn == BTN_RIGHT) {
 				pendingBtn = btn;
 			}
@@ -886,7 +886,13 @@ void ToggleFilesBuiltin(MenuItem* menu)
 void ToggleBool(MenuItem* menu)
 {
 	bool* pb = (bool*)menu->value;
+	//int i;
+	//i = *pb;
+	//Serial.println("i:" + String(i));
 	*pb = !*pb;
+	//*pb = *pb ? false : true;
+	//i = *pb;
+	//Serial.println("i:" + String(i));
 }
 
 // get integer values
