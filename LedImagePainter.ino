@@ -35,34 +35,54 @@ enum BUTTONS { BTN_NONE = 1, BTN_RIGHT, BTN_LEFT, BTN_SELECT, BTN_LONG };
 // for debugging missed buttons
 volatile int nButtonDowns;
 volatile int nButtonUps;
-volatile bool bButtonTimerRunning;
-volatile bool bButtonArmed = true;	// must be reset after reading a long press, it stops the noise on button release
+//volatile bool bButtonTimerRunning;
+//volatile bool bButtonArmed = true;	// must be reset after reading a long press, it stops the noise on button release
 
 //std::queue<int> buttonQueue;
 
 // interrupt handlers
 void IRAM_ATTR IntBtnCenter()
 {
+	noInterrupts();
 	// went low, if timer not started, start it
-	if (!bButtonTimerRunning && bButtonArmed) {
-		esp_timer_stop(oneshot_LONGPRESS_timer);	// just in case
-		esp_timer_start_once(oneshot_LONGPRESS_timer, 400 * 1000);
-		bButtonTimerRunning = true;
+	if (nLongPressCounter == 0) {
+		nLongPressCounter = nLongPressCounterValue;
+		esp_timer_stop(periodic_LONGPRESS_timer);	// just in case
+		esp_timer_start_periodic(periodic_LONGPRESS_timer, 10 * 1000);
 	}
+	interrupts();
 }
 
-void IRAM_ATTR oneshot_LONGPRESS_timer_callback(void* arg)
+// called for every button close
+void IRAM_ATTR periodic_LONGPRESS_timer_callback(void* arg)
 {
+	noInterrupts();
 	int btn;
-	// if the button is down, it must be a long press
-	btn = gpio_get_level(BTNPUSH) ? BTN_SELECT : BTN_LONG;
-	if (bButtonArmed) {
+	int level = gpio_get_level(BTNPUSH);
+	//Serial.println("count:" + String(nLongPressCounter) + ":" + String(level));
+	--nLongPressCounter;
+	// if the timer counter has finished, it must be a long press
+	if (nLongPressCounter == 0) {
+		btn = BTN_LONG;
 		btnBuf.add(btn);
-		if (btn == BTN_LONG) {
-			bButtonArmed = false;
+		// set it so we ignore the button interrupt for one more timer time
+		nLongPressCounter = -1;
+		//Serial.println("long");
+	}
+	// if the button is up and the timer hasn't finished counting, it must be a short press
+	else if (level) {
+		if (nLongPressCounter > 0 && nLongPressCounter < nLongPressCounterValue - 1) {
+			btn = BTN_SELECT;
+			btnBuf.add(btn);
+			nLongPressCounter = -1;
+			//Serial.println("select");
+		}
+		else if (nLongPressCounter < -1) {
+			esp_timer_stop(periodic_LONGPRESS_timer);
+			nLongPressCounter = 0;
 		}
 	}
-	bButtonTimerRunning = false;
+	interrupts();
 }
 
 // interrupt routines for the A and B rotary switches
@@ -359,14 +379,14 @@ void setup()
 	//};
 	//esp_timer_create(&oneshot_BTN_timer_args, &oneshot_BTN_timer);
 	// the long press timer
-	oneshot_LONGPRESS_timer_args = {
-			oneshot_LONGPRESS_timer_callback,
+	periodic_LONGPRESS_timer_args = {
+			periodic_LONGPRESS_timer_callback,
 			/* argument specified here will be passed to timer callback function */
 			(void*)TID_LONGPRESS,
 			ESP_TIMER_TASK,
 			"one-shotLONGPRESS"
 	};
-	esp_timer_create(&oneshot_LONGPRESS_timer_args, &oneshot_LONGPRESS_timer);
+	esp_timer_create(&periodic_LONGPRESS_timer_args, &periodic_LONGPRESS_timer);
 
 	attachInterrupt(BTNPUSH, IntBtnCenter, FALLING);
 	attachInterrupt(BTNA, IntBtnA, CHANGE);
@@ -1168,7 +1188,6 @@ bool HandleRunMode()
 // check buttons and return if one pressed
 int ReadButton()
 {
-	static int nSawLongPress = 0;
 	int retValue = BTN_NONE;
 	// see if we got any BLE commands
 	if (!sBLECommand.empty()) {
@@ -1188,22 +1207,6 @@ int ReadButton()
 	}
 	// pull leaves retValue alone if queue is empty
 	btnBuf.pull(&retValue);
-	static unsigned long sawTime;
-	if (nSawLongPress == 0 && retValue == BTN_LONG) {
-		nSawLongPress = 1;
-		//Serial.println("saw long press");
-	}
-	if (nSawLongPress == 1 && digitalRead(BTNPUSH)) {
-		sawTime = millis();
-		//Serial.println("start long timer");
-		nSawLongPress = 2;
-	}
-	// rearm if button high again and timer over
-	if (nSawLongPress == 2 && (millis() > sawTime + 100) && digitalRead(BTNPUSH)) {
-		//Serial.println("rearm");
-		bButtonArmed = true;
-		nSawLongPress = 0;
-	}
 	//if (retValue != BTN_NONE)
 	//	Serial.println("button:" + String(retValue));
 	return retValue;

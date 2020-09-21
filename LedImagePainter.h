@@ -64,6 +64,8 @@ bool bAutoLoadSettings = false;           // set to automatically load saved set
 int displayBrightness = 100;            // this is in %
 bool bReverseDial = false;              // change the dial direction
 bool bSdCardValid = false;              // set to true when card is found
+int nLongPressCounterValue = 40;        // multiplier for long press compared to normal press
+volatile int nLongPressCounter = 0;     // counter during press
 // strip leds
 #define DATA_PIN1 17
 #define DATA_PIN2 25
@@ -140,8 +142,8 @@ volatile bool bButtonWait = false;
 //esp_timer_handle_t oneshot_BTN_timer;
 //esp_timer_create_args_t oneshot_BTN_timer_args;
 // long press time
-esp_timer_handle_t oneshot_LONGPRESS_timer;
-esp_timer_create_args_t oneshot_LONGPRESS_timer_args;
+esp_timer_handle_t periodic_LONGPRESS_timer;
+esp_timer_create_args_t periodic_LONGPRESS_timer_args;
 
 SDFile dataFile;
 // system state, idle or running
@@ -322,6 +324,7 @@ const saveValues saveValueList[] = {
     {&bShowNextFiles,sizeof(bShowNextFiles)},
     {&bEnableBLE,sizeof(bEnableBLE)},
     {&bReverseDial,sizeof(bReverseDial)},
+    {&nLongPressCounterValue,sizeof(nLongPressCounterValue)},
     {&displayBrightness,sizeof(displayBrightness)},
     // the built-in values
     // display all color
@@ -562,7 +565,7 @@ MenuItem RandomBarsMenu[] = {
     // make sure this one is last
     {eTerminate}
 };
-MenuItem DisplayMenu[] = {
+MenuItem SystemMenu[] = {
     {eExit,false,"Previous Menu"},
     {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100,0,NULL,NULL,UpdateOledBrightness},
     {eBool,false,"Menu Wrap: %s",ToggleBool,&bAllowMenuWrap,0,0,0,"Yes","No"},
@@ -570,6 +573,8 @@ MenuItem DisplayMenu[] = {
 	{eBool,false,"Show Folder: %s",ToggleBool,&bShowFolder,0,0,0,"Yes","No"},
     {eBool,false,"Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
     {eBool,false,"Dial: %s",ToggleBool,&bReverseDial,0,0,0,"Reverse","Normal"},
+    {eTextInt,false,"Long Press counter: %d",GetIntegerValue,&nLongPressCounterValue,2,200,0,NULL,NULL},
+    {eBool,false,"BlueTooth Link: %s",ToggleBool,&bEnableBLE,0,0,0,"On","Off"},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
@@ -704,9 +709,8 @@ MenuItem MainMenu[] = {
     {eEndif},
 	{eMenu,false,"Macros: #%d",{.menu = MacroMenu},&nCurrentMacro},
     {eMenu,false,"Saved Settings",{.menu = EepromMenu}},
-	{eMenu,false,"Display Settings",{.menu = DisplayMenu}},
+	{eMenu,false,"System Settings",{.menu = SystemMenu}},
     {eText,false,"Light Bar",LightBar},
-    {eBool,false,"BlueTooth Link: %s",ToggleBool,&bEnableBLE,0,0,0,"On","Off"},
     {eReboot,false,"Reboot"},
     // make sure this one is last
     {eTerminate}
