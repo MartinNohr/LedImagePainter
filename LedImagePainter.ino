@@ -2470,12 +2470,12 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 	unsigned minLoopTime = 0; // the minimum time it takes to process a line
 	bool bLoopTimed = false;
 	// note that y is 0 based and x is 0 based in the following code, the original code had y 1 based
-	for (int y = bReverseImage ? 0 : imgHeight - 1; bReverseImage ? y < imgHeight : y >= 0; bReverseImage ? ++y : --y) {
+	for (int y = bReverseImage ? imgHeight - 1 : 0; bReverseImage ? y >= 0 : y < imgHeight; bReverseImage ? --y : ++y) {
 		// approximate time left
 		if (bReverseImage)
-			secondsLeft = ((long)(imgHeight - y) * (frameHold + minLoopTime) / 1000L) + 1;
-		else
 			secondsLeft = ((long)y * (frameHold + minLoopTime) / 1000L) + 1;
+		else
+			secondsLeft = ((long)(imgHeight - y) * (frameHold + minLoopTime) / 1000L) + 1;
 		// mark the time for timing the loop
 		if (!bLoopTimed)
 			minLoopTime = millis();
@@ -2491,7 +2491,7 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 			sprintf(num, "File Seconds: %d", secondsLeft);
 			DisplayLine(1, num);
 		}
-		percent = map(bReverseImage ? y : imgHeight - y, 0, imgHeight, 0, 100);
+		percent = map(bReverseImage ? imgHeight - y : y, 0, imgHeight, 0, 100);
 		if (bMirrorPlayImage) {
 			percent /= 2;
 			if (!doingFirstHalf) {
@@ -2537,37 +2537,44 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 		// check keys
 		if (CheckCancel())
 			break;
-		// check if frame advance button requested
-		if (nFramePulseCount) {
-			for (int ix = nFramePulseCount; ix; --ix) {
-				// wait for press
-				while (digitalRead(FRAMEBUTTON)) {
-					if (CheckCancel())
-						break;
-					delay(10);
-				}
-				// wait for release
-				while (!digitalRead(FRAMEBUTTON)) {
-					if (CheckCancel())
-						break;
-					delay(10);
+		if (bManualFrameAdvance) {
+			// check if frame advance button requested
+			if (nFramePulseCount) {
+				for (int ix = nFramePulseCount; ix; --ix) {
+					// wait for press
+					while (digitalRead(FRAMEBUTTON)) {
+						if (CheckCancel())
+							break;
+						delay(10);
+					}
+					// wait for release
+					while (!digitalRead(FRAMEBUTTON)) {
+						if (CheckCancel())
+							break;
+						delay(10);
+					}
 				}
 			}
-		}
-		if (bManualFrameAdvance) {
-			int btn;
-			bool done = false;
-			while (!done) {
-				btn = ReadButton();
-				if (btn == BTN_NONE)
-					continue;
-				else if (btn == BTN_LONG)
-					btnBuf.add(btn);
-				else
-					break;
-				if (CheckCancel())
-					break;
-				delay(10);
+			else {
+				// by button click or rotate
+				int btn;
+				bool done = false;
+				while (!done) {
+					btn = ReadButton();
+					if (btn == BTN_NONE)
+						continue;
+					else if (btn == BTN_LONG)
+						btnBuf.add(btn);
+					//else if (btn == BTN_LEFT) {
+					//	// TODO: this needs to check for forward or reverse max values
+					//	y += 2;
+					//}
+					else
+						break;
+					if (CheckCancel())
+						break;
+					delay(10);
+				}
 			}
 		}
 		if (bCancelRun)
