@@ -61,7 +61,8 @@ char signature[]{ "MIP22" };              // set to make sure saved values are v
 bool bAutoLoadSettings = false;           // set to automatically load saved settings from eeprom
 
 // settings
-int displayBrightness = 100;            // this is in %
+int nDisplayBrightness = 100;           // this is in %
+bool bDisplayInvert = false;            // set to reverse display
 bool bReverseDial = false;              // change the dial direction
 bool bSdCardValid = false;              // set to true when card is found
 int nLongPressCounterValue = 40;        // multiplier for long press compared to normal press
@@ -214,6 +215,7 @@ void GetIntegerValue(MenuItem*);
 void ToggleBool(MenuItem*);
 void ToggleFilesBuiltin(MenuItem* menu);
 void UpdateOledBrightness(MenuItem* menu, int flag);
+void UpdateOledInvert(MenuItem* manu, int flag);
 void UpdateStripBrightness(MenuItem* menu, int flag);
 void UpdateStripWhiteBalanceR(MenuItem* menu, int flag);
 void UpdateStripWhiteBalanceG(MenuItem* menu, int flag);
@@ -325,7 +327,8 @@ const saveValues saveValueList[] = {
     {&bEnableBLE,sizeof(bEnableBLE)},
     {&bReverseDial,sizeof(bReverseDial)},
     {&nLongPressCounterValue,sizeof(nLongPressCounterValue)},
-    {&displayBrightness,sizeof(displayBrightness)},
+    {&nDisplayBrightness,sizeof(nDisplayBrightness)},
+    {&bDisplayInvert,sizeof(bDisplayInvert)},
     // the built-in values
     // display all color
     {&bDisplayAllRGB,sizeof(bDisplayAllRGB)},
@@ -567,7 +570,8 @@ MenuItem RandomBarsMenu[] = {
 };
 MenuItem SystemMenu[] = {
     {eExit,false,"Previous Menu"},
-    {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&displayBrightness,1,100,0,NULL,NULL,UpdateOledBrightness},
+    {eTextInt,false,"Display Brightness: %d",GetIntegerValue,&nDisplayBrightness,1,100,0,NULL,NULL,UpdateOledBrightness},
+    {eBool,false,"Display: %s",ToggleBool,&bDisplayInvert,0,0,0,"Reverse","Normal",UpdateOledInvert},
     {eBool,false,"Menu Wrap: %s",ToggleBool,&bAllowMenuWrap,0,0,0,"Yes","No"},
     {eBool,false,"Show More Files: %s",ToggleBool,&bShowNextFiles,0,0,0,"Yes","No"},
 	{eBool,false,"Show Folder: %s",ToggleBool,&bShowFolder,0,0,0,"Yes","No"},
@@ -780,7 +784,8 @@ struct SETTINGVAR SettingsVarList[] = {
     {"CHAIN REPEATS",&nChainRepeats,vtInt},
     {"CHAIN DELAY",&nChainDelay,vtInt},
     {"WHITE BALANCE",&whiteBalance,vtRGB},
-    {"DISPLAY BRIGHTNESS",&displayBrightness,vtInt,0,100},
+    {"DISPLAY BRIGHTNESS",&nDisplayBrightness,vtInt,0,100},
+    {"DISPLAY INVERT",&bDisplayInvert,vtBool},
     {"GAMMA CORRECTION",&bGammaCorrection,vtBool},
     {"SELECT BUILTINS",&bShowBuiltInTests,vtBuiltIn},       // this must be before the SHOW FILE command
     {"SHOW FILE",&FileToShow,vtShowFile},

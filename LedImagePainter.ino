@@ -906,13 +906,10 @@ void ToggleFilesBuiltin(MenuItem* menu)
 void ToggleBool(MenuItem* menu)
 {
 	bool* pb = (bool*)menu->value;
-	//int i;
-	//i = *pb;
-	//Serial.println("i:" + String(i));
 	*pb = !*pb;
-	//*pb = *pb ? false : true;
-	//i = *pb;
-	//Serial.println("i:" + String(i));
+	if (menu->change != NULL) {
+		(*menu->change)(menu, -1);
+	}
 }
 
 // get integer values
@@ -1072,6 +1069,12 @@ void UpdateStripWhiteBalanceB(MenuItem* menu, int flag)
 void UpdateOledBrightness(MenuItem* menu, int flag)
 {
 	OLED->setBrightness(map(*(int*)menu->value, 0, 100, 0, 255));
+	bDisplayInvert ? OLED->invertDisplay() : OLED->normalDisplay();
+}
+
+void UpdateOledInvert(MenuItem* menu, int flag)
+{
+	*(bool*)menu->value ? OLED->invertDisplay() : OLED->normalDisplay();
 }
 
 // handle the menus
