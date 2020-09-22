@@ -400,7 +400,7 @@ void setup()
 	OLED->setFont(ArialMT_Plain_24);
 	OLED->drawString(2, 2, "LEDPainter");
 	OLED->setFont(ArialMT_Plain_16);
-	OLED->drawString(4, 30, "Version 2.08");
+	OLED->drawString(4, 30, "Version 2.09");
 	OLED->setFont(ArialMT_Plain_10);
 	OLED->drawString(4, 48, __DATE__);
 	OLED->display();
@@ -2261,7 +2261,7 @@ void ProcessFileOrTest()
 				if (repeatCount > 1) {
 					line = "Repeats: " + String(nRepeatsLeft)+" ";
 				}
-				if (nChainRepeats > 1) {
+				if (!bShowBuiltInTests && nChainRepeats > 1) {
 					line += "Chains: " + String(chainRepeatCount + 1);
 				}
 				DisplayLine(2, line);
