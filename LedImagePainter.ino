@@ -350,6 +350,7 @@ void setup()
 {
 	Serial.begin(115200);
 	delay(100);
+	setupSDcard();
 	//vector<int> vi;
 	//queue<int> qu;
 	gpio_set_direction((gpio_num_t)LED, GPIO_MODE_OUTPUT);
@@ -406,7 +407,6 @@ void setup()
 	OLED->display();
 	//OLED->setFont(ArialMT_Plain_10);
 	charHeight = 13;
-	setupSDcard();
 
 	EEPROM.begin(1024);
 	// load the saved settings if flag is true and the button isn't pushed
@@ -497,11 +497,6 @@ void setup()
 	delayMicroseconds(50);
 	delay(100);
 	OLED->clear();
-	if (!bSdCardValid) {
-		DisplayCurrentFile();
-		delay(2000);
-		ToggleFilesBuiltin(NULL);
-	}
 	
 	if (bEnableBLE) {
 		EnableBLE();
@@ -516,6 +511,11 @@ void setup()
 	int btn;
 	while (btnBuf.pull(&btn))
 		;
+	if (!bSdCardValid) {
+		DisplayCurrentFile();
+		delay(2000);
+		ToggleFilesBuiltin(NULL);
+	}
 	DisplayCurrentFile();
 }
 
@@ -1378,9 +1378,12 @@ bool CheckCancel()
 void setupSDcard()
 {
 	bSdCardValid = false;
-	pinMode(SDcsPin, OUTPUT);
+	gpio_set_direction((gpio_num_t)SDcsPin, GPIO_MODE_OUTPUT);
+	//pinMode(SDcsPin, OUTPUT);
+	delay(50);
 	SPIClass(1);
 	spiSDCard.begin(18, 19, 23, SDcsPin);	// SCK,MISO,MOSI,CS
+	delay(20);
 
 	if (!SD.begin(SDcsPin, spiSDCard)) {
 		//Serial.println("Card Mount Failed");
