@@ -2506,6 +2506,7 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 		//dataFile.seekSet(offset);
 		CRGB pixel;
 		// get to start of pixel data, moved this out of the loop below to speed things up
+		//Serial.println("y=" + String(y));
 		FileSeekBuf((uint32_t)MYBMP_BF_OFF_BITS + (y * lineLength));
 		for (int x = 0; x < displayWidth; x++) {
 			//FileSeekBuf((uint32_t)MYBMP_BF_OFF_BITS + ((y * lineLength) + (x * 3)));
@@ -2558,17 +2559,26 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 			else {
 				// by button click or rotate
 				int btn;
-				bool done = false;
-				while (!done) {
+				for(;;) {
 					btn = ReadButton();
 					if (btn == BTN_NONE)
 						continue;
 					else if (btn == BTN_LONG)
 						btnBuf.add(btn);
-					//else if (btn == BTN_LEFT) {
-					//	// TODO: this needs to check for forward or reverse max values
-					//	y += 2;
-					//}
+					else if (btn == BTN_LEFT) {
+						// backup a line, use 2 because the for loop does one when we're done here
+						if (bReverseImage) {
+							y += 2;
+							if (y > imgHeight)
+								y = imgHeight;
+						}
+						else {
+							y -= 2;
+							if (y < -1)
+								y = -1;
+						}
+						break;
+					}
 					else
 						break;
 					if (CheckCancel())
