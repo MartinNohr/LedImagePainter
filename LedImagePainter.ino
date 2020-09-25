@@ -2380,6 +2380,10 @@ void SendFile(String Filename) {
 			ReadAndDisplayFile(cnt == 0);
 			bReverseImage = !bReverseImage; // note this will be restored by SettingsSaveRestore
 			dataFile.seek(0);
+			int wait = nMirrorDelay;
+			while (wait-- > 0) {
+				delay(100);
+			}
 			if (CheckCancel())
 				break;
 		}
@@ -3288,29 +3292,40 @@ void ShowWhiteBalance(MenuItem* menu)
 	FastLED.clear(true);
 }
 
-// the bottom strip is reversed
-// the top strip is normal
-void IRAM_ATTR SetPixel(int ix, CRGB pixel)
+// reverse the strip index order for the lower strip, the upper strip is normal
+// also check to make sure it isn't out of range
+int AdjustStripIndex(int ix)
 {
 	if (ix < NUM_LEDS) {
 		ix = (NUM_LEDS - 1 - ix);
 	}
+	ix = max(0, ix);
+	ix = min(NUM_LEDS - 1, ix);
+	return ix;
+}
+
+// write a pixel to the correct location
+// pixel doubling is handled here
+// e.g. pixel 0 will be 0 and 1, 1 will be 2 and 3, etc
+// if upside down n will be n and n-1, n-1 will be n-1 and n-2
+void IRAM_ATTR SetPixel(int ix, CRGB pixel)
+{
 	if (bUpsideDown) {
 		if (bDoublePixels) {
-			leds[STRIPLENGTH - 1 - 2 * ix] = pixel;
-			leds[STRIPLENGTH - 2 - 2 * ix] = pixel;
+			leds[AdjustStripIndex(STRIPLENGTH - 1 - 2 * ix)] = pixel;
+			leds[AdjustStripIndex(STRIPLENGTH - 2 - 2 * ix)] = pixel;
 		}
 		else {
-			leds[STRIPLENGTH - 1 - ix] = pixel;
+			leds[AdjustStripIndex(STRIPLENGTH - 1 - ix)] = pixel;
 		}
 	}
 	else {
 		if (bDoublePixels) {
-			leds[2 * ix] = pixel;
-			leds[2 * ix + 1] = pixel;
+			leds[AdjustStripIndex(2 * ix)] = pixel;
+			leds[AdjustStripIndex(2 * ix + 1)] = pixel;
 		}
 		else {
-			leds[ix] = pixel;
+			leds[AdjustStripIndex(ix)] = pixel;
 		}
 	}
 }

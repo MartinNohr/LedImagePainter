@@ -75,6 +75,7 @@ volatile int nLongPressCounter = 0;     // counter during press
 CRGB leds[NUM_LEDS * 2];
 bool bSecondStrip = false;                // set true when two strips installed
 #define STRIPLENGTH (NUM_LEDS*(1+(bSecondStrip?1:0)))
+void tAdjustStripIndex(int& ix);
 // get the real LED strip index from the desired index
 void SetPixel(int ix, CRGB pixel);
 //#define LEDIX(ix) (((ix)<NUM_LEDS)?(NUM_LEDS-1-(ix)):(ix))
@@ -115,6 +116,7 @@ bool bReverseImage = false;               // read the file lines in reverse
 bool bUpsideDown = false;                 // play the image upside down
 bool bDoublePixels = false;               // double the image line, to go from 144 to 288
 bool bMirrorPlayImage = false;            // play the file twice, 2nd time reversed
+int nMirrorDelay = 0;                     // pause between the two halves of the image
 bool bChainFiles = false;                 // set to run all the files from current to the last one in the current folder
 int nChainRepeats = 1;                    // how many times to repeat the chain
 int nChainDelay = 0;                      // number of 1/10 seconds to delay between chained files
@@ -315,6 +317,7 @@ const saveValues saveValueList[] = {
     {&bChainFiles,sizeof(bChainFiles)},
     {&bReverseImage,sizeof(bReverseImage)},
     {&bMirrorPlayImage,sizeof(bMirrorPlayImage)},
+    {&nMirrorDelay,sizeof(nMirrorDelay)},
     {&bUpsideDown,sizeof(bUpsideDown)},
     {&bDoublePixels,sizeof(bDoublePixels)},
     {&nChainRepeats,sizeof(nChainRepeats)},
@@ -591,6 +594,9 @@ MenuItem ImageMenu[] = {
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,false},
         {eBool,false,"Direction: %s",ToggleBool,&bReverseImage,0,0,0,"Right-Left","Left-Right"},
         {eBool,false,"Play Mirror Image: %s",ToggleBool,&bMirrorPlayImage,0,0,0,"Yes","No"},
+        {eIfEqual,false,"",NULL,&bMirrorPlayImage,true},
+            {eTextInt,false,"Mirror Delay (S): %d.%d",GetIntegerValue,&nMirrorDelay,0,10,1},
+        {eEndif},
         {eBool,false,"Scale Height to Fit: %s",ToggleBool,&bScaleHeight,0,0,0,"On","Off"},
     {eEndif},
     {eIfEqual,false,"",NULL,&bSecondStrip,true},
@@ -782,6 +788,7 @@ struct SETTINGVAR SettingsVarList[] = {
     {"REVERSE IMAGE",&bReverseImage,vtBool},
     {"UPSIDE DOWN IMAGE",&bUpsideDown,vtBool},
     {"MIRROR PLAY IMAGE",&bMirrorPlayImage,vtBool},
+    {"MIRROR PLAY DELAY",&nMirrorDelay,vtInt},
     {"CHAIN FILES",&bChainFiles,vtBool},
     {"CHAIN REPEATS",&nChainRepeats,vtInt},
     {"CHAIN DELAY",&nChainDelay,vtInt},
