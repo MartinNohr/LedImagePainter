@@ -2380,6 +2380,7 @@ void SendFile(String Filename) {
 			ReadAndDisplayFile(cnt == 0);
 			bReverseImage = !bReverseImage; // note this will be restored by SettingsSaveRestore
 			dataFile.seek(0);
+			FastLED.clear(true);
 			int wait = nMirrorDelay;
 			while (wait-- > 0) {
 				delay(100);
