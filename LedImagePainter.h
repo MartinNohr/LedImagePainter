@@ -239,6 +239,8 @@ uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 int nBouncingBallsCount = 4;
 int nBouncingBallsDecay = 1000;
 int nBouncingBallsRuntime = 30; // in seconds
+int nBouncingBallsFirstColor = 0;   // first color, wraps to get all 32
+int nBouncingBallsChangeColors = 0; // how many 100 count cycles to wait for change
 // cylon eye
 int nCylonEyeSize = 10;
 int nCylonEyeRed = 255;
@@ -345,6 +347,8 @@ const saveValues saveValueList[] = {
     {&nBouncingBallsCount,sizeof(nBouncingBallsCount)},
     {&nBouncingBallsDecay,sizeof(nBouncingBallsDecay)},
     {&nBouncingBallsRuntime,sizeof(nBouncingBallsRuntime)},
+    {&nBouncingBallsFirstColor,sizeof(nBouncingBallsFirstColor)},
+    {&nBouncingBallsChangeColors,sizeof(nBouncingBallsChangeColors)},
     // cylon eye
     {&nCylonEyeSize,sizeof(nCylonEyeSize)},
     {&nCylonEyeRed,sizeof(nCylonEyeRed)},
@@ -456,6 +460,8 @@ MenuItem BouncingBallsMenu[] = {
     {eTextInt,false,"Ball Count: %d",GetIntegerValue,&nBouncingBallsCount,1,32},
     {eTextInt,false,"Decay (500-10000): %d",GetIntegerValue,&nBouncingBallsDecay,500,10000},
     {eTextInt,false,"Runtime (seconds): %d",GetIntegerValue,&nBouncingBallsRuntime,1,120},
+    {eTextInt,false,"First Color: %d",GetIntegerValue,&nBouncingBallsFirstColor,0,31},
+    {eTextInt,false,"Change Color Rate: %d",GetIntegerValue,&nBouncingBallsChangeColors,0,10,0},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}

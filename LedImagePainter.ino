@@ -1443,10 +1443,10 @@ void fixRGBwithGamma(byte* rp, byte* gp, byte* bp) {
 // up to 32 bouncing balls
 void TestBouncingBalls() {
 	CRGB colors[] = {
-		CRGB::Red,
 		CRGB::White,
-		CRGB::Blue,
+		CRGB::Red,
 		CRGB::Green,
+		CRGB::Blue,
 		CRGB::Yellow,
 		CRGB::Cyan,
 		CRGB::Magenta,
@@ -1509,6 +1509,7 @@ void BouncingColoredBalls(int balls, CRGB colors[]) {
 	//nTimerSeconds = nBouncingBallsRuntime;
 	//int lastSeconds = 0;
 	//EventTimers.every(1000L, SecondsTimer);
+	int colorChangeCounter = 0;
 	while (millis() < start + ((long)nBouncingBallsRuntime * 1000)) {
 		ShowProgressBar((time(NULL) - startsec) * 100 / nBouncingBallsRuntime);
 		//if (nTimerSeconds != lastSeconds) {
@@ -1543,13 +1544,20 @@ void BouncingColoredBalls(int balls, CRGB colors[]) {
 		}
 
 		for (int i = 0; i < balls; i++) {
+			int ix;
 			if (CheckCancel())
 				return;
-			SetPixel(Position[i], colors[i]);
+			ix = (i + nBouncingBallsFirstColor) % 32;
+			SetPixel(Position[i], colors[ix]);
+		}
+		if (nBouncingBallsChangeColors && colorChangeCounter++ > (nBouncingBallsChangeColors * 100)) {
+			++nBouncingBallsFirstColor;
+			colorChangeCounter = 0;
 		}
 		FastLED.show();
 		delayMicroseconds(50);
 		FastLED.clear();
+		// increment the starting color if they want it
 	}
 	free(Height);
 	free(ImpactVelocity);
