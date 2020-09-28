@@ -12,6 +12,7 @@
 
 #include <ArduinoJson.hpp>
 #include <ArduinoJson.h>
+//using namespace ArduinoJson
 //using namespace ARDUINOJSON_NAMESPACE;
 #include <BLEDevice.h>
 #include <BLEUtils.h>
@@ -159,7 +160,7 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
 		BLEUUID uuid = pCharacteristic->getUUID();
 		//Serial.println("UUID:" + String(uuid.toString().c_str()));
 		std::string value = pCharacteristic->getValue();
-		String stmp = value.c_str();
+		//String stmp = value.c_str();
 
 		if (value.length() > 0) {
 			//Serial.println("*********");
@@ -175,7 +176,7 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
 			}
 			else if (uuid.equals(BLEUUID(CHARACTERISTIC_UUID_WANDSETTINGS))) {
 				//Serial.println(value.c_str());
-				StaticJsonDocument<200> doc;
+				ARDUINOJSON_NAMESPACE::StaticJsonDocument<200> doc;
 				const char* json = value.c_str();
 
 				// Deserialize the JSON document
@@ -2166,6 +2167,29 @@ void TestRainbow()
 	}
 	FadeInOut(nRainbowFadeTime * 100, false);
 	FastLED.setBrightness(nStripBrightness);
+}
+
+// create a user defined stripe set
+// it consists of a list of stripes, each of which have a width and color
+// there can be up to 10 of these
+#define NUM_STRIPES 10
+struct {
+	int start;
+	int length;
+	CHSV color;
+}Stripes[NUM_STRIPES];
+
+void TestStripes()
+{
+	int pix = 0;	// pixel address
+	FastLED.clear(true);
+	for (int ix = 0; ix < NUM_STRIPES; ++ix) {
+		// fill in each block of pixels
+		for (int len = 0; len < Stripes[ix].length; ++len) {
+			SetPixel(pix++, CRGB(Stripes[ix].color));
+		}
+	}
+	FastLED.show();
 }
 
 // time is in mSec
