@@ -9,11 +9,9 @@
 /*
 	BLE code based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleServer.cpp
 */
-
-#include <ArduinoJson.hpp>
+//#define ARDUINOJSON_ENABLE_STD_STREAM 0
+//#define ARDUINOJSON_ENABLE_STD_STRING 0
 #include <ArduinoJson.h>
-//using namespace ArduinoJson
-//using namespace ARDUINOJSON_NAMESPACE;
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
@@ -218,7 +216,7 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
 				// change framehold
 				jv = doc.getMember("framehold");
 				if (!jv.isNull()) {
-					frameHold = jv.as<int>();
+					nFrameHold = jv.as<int>();
 				}
 				// change builtin setting
 				jv = doc.getMember("builtin");
@@ -597,7 +595,7 @@ void UpdateBLE(bool bProgressOnly)
 			DynamicJsonDocument wsdoc(1024);
 			wsdoc["secondstrip"] = bSecondStrip;
 			wsdoc["bright"] = nStripBrightness;
-			wsdoc["framehold"] = frameHold;
+			wsdoc["framehold"] = nFrameHold;
 			wsdoc["framebutton"] = nFramePulseCount;
 			wsdoc["startdelay"] = startDelay;
 			wsdoc["repeatdelay"] = repeatDelay;
@@ -1608,7 +1606,7 @@ CRGB:CRGB red, white, blue;
 			}
 		}
 		FastLED.show();
-		delay(frameHold);
+		delay(nFrameHold);
 	}
 	ShowProgressBar(100);
 }
@@ -1631,7 +1629,7 @@ void CheckerBoard()
 		ShowProgressBar((time(NULL) - start) * 100 /nCheckerBoardRuntime);
 		int count = nCheckerboardHoldframes;
 		while (count-- > 0) {
-			delay(frameHold);
+			delay(nFrameHold);
 			if (CheckCancel()) {
 				esp_timer_stop(oneshot_LED_timer);
 				bStripWaiting = false;
@@ -1679,7 +1677,7 @@ void ShowRandomBars(bool blacks, int runtime)
 		}
 		int count = nRandomBarsHoldframes;
 		while (count-- > 0) {
-			delay(frameHold);
+			delay(nFrameHold);
 			if (CheckCancel()) {
 				esp_timer_stop(oneshot_LED_timer);
 				bStripWaiting = false;
@@ -1732,7 +1730,7 @@ void RunningDot()
 			}
 			SetPixel(ix, CRGB(r, g, b));
 			FastLED.show();
-			delay(frameHold);
+			delay(nFrameHold);
 		}
 		// remember the last one, turn it off
 		SetPixel(STRIPLENGTH - 1, CRGB::Black);
@@ -1780,7 +1778,7 @@ void OppositeRunningDots()
 			SetPixel(STRIPLENGTH - ix, CRGB(r, g, b));
 			SetPixel(ix, CRGB(r, g, b));
 			FastLED.show();
-			delay(frameHold);
+			delay(nFrameHold);
 		}
 	}
 }
@@ -1925,7 +1923,7 @@ void DisplayAllColor()
 }
 
 void TestTwinkle() {
-	TwinkleRandom(nTwinkleRuntime, frameHold, bTwinkleOnlyOne);
+	TwinkleRandom(nTwinkleRuntime, nFrameHold, bTwinkleOnlyOne);
 }
 void TwinkleRandom(int Runtime, int SpeedDelay, boolean OnlyOne) {
 	time_t start = time(NULL);
@@ -1948,7 +1946,7 @@ void TwinkleRandom(int Runtime, int SpeedDelay, boolean OnlyOne) {
 
 void TestCylon()
 {
-	CylonBounce(nCylonEyeRed, nCylonEyeGreen, nCylonEyeBlue, nCylonEyeSize, frameHold, 50);
+	CylonBounce(nCylonEyeRed, nCylonEyeGreen, nCylonEyeBlue, nCylonEyeSize, nFrameHold, 50);
 }
 void CylonBounce(byte red, byte green, byte blue, int EyeSize, int SpeedDelay, int ReturnDelay)
 {
@@ -2027,7 +2025,7 @@ void TestConfetti()
 	bStripWaiting = true;
 	esp_timer_start_once(oneshot_LED_timer, nConfettiRuntime * 1000000);
 	while (bStripWaiting) {
-		EVERY_N_MILLISECONDS(frameHold) {
+		EVERY_N_MILLISECONDS(nFrameHold) {
 			if (bConfettiCycleHue)
 				++gHue;
 			confetti();
@@ -2057,7 +2055,7 @@ void TestJuggle()
 	bStripWaiting = true;
 	esp_timer_start_once(oneshot_LED_timer, nJuggleRuntime * 1000000);
 	while (bStripWaiting) {
-		EVERY_N_MILLISECONDS(frameHold) {
+		EVERY_N_MILLISECONDS(nFrameHold) {
 			juggle();
 			FastLED.show();
 			ShowProgressBar((time(NULL) - start) * 100 / nJuggleRuntime);
@@ -2087,7 +2085,7 @@ void TestSine()
 	bStripWaiting = true;
 	esp_timer_start_once(oneshot_LED_timer, nSineRuntime * 1000000);
 	while (bStripWaiting) {
-		EVERY_N_MILLISECONDS(frameHold) {
+		EVERY_N_MILLISECONDS(nFrameHold) {
 			sinelon();
 			FastLED.show();
 			ShowProgressBar((time(NULL) - start) * 100 / nSineRuntime);
@@ -2115,7 +2113,7 @@ void TestBpm()
 	bStripWaiting = true;
 	esp_timer_start_once(oneshot_LED_timer, nBpmRuntime * 1000000);
 	while (bStripWaiting) {
-		EVERY_N_MILLISECONDS(frameHold) {
+		EVERY_N_MILLISECONDS(nFrameHold) {
 			bpm();
 			FastLED.show();
 			ShowProgressBar((time(NULL) - start) * 100 / nBpmRuntime);
@@ -2149,7 +2147,7 @@ void TestRainbow()
 	FadeInOut(nRainbowFadeTime * 100, true);
 	esp_timer_start_once(oneshot_LED_timer, nRainbowRuntime * 1000000);
 	while (bStripWaiting) {
-		EVERY_N_MILLISECONDS(frameHold) {
+		EVERY_N_MILLISECONDS(nFrameHold) {
 			if (bRainbowCycleHue)
 				++gHue;
 			fill_rainbow(leds, STRIPLENGTH, gHue, nRainbowHueDelta);
@@ -2506,13 +2504,20 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 	int percent;
 	unsigned minLoopTime = 0; // the minimum time it takes to process a line
 	bool bLoopTimed = false;
+	int nOriginalFrameHold = nFrameHold;
+	// if fixed time then we need to calculate the framehold value
+	if (bFixedTime) {
+		// divide the time by the number of frames
+		nFrameHold = 1000 * nFixedImageTime / imgHeight;
+	}
 	// note that y is 0 based and x is 0 based in the following code, the original code had y 1 based
+	// also remember that height and width are effectively reversed since we rotated the BMP image for ease of reading and displaying here
 	for (int y = bReverseImage ? imgHeight - 1 : 0; bReverseImage ? y >= 0 : y < imgHeight; bReverseImage ? --y : ++y) {
 		// approximate time left
 		if (bReverseImage)
-			secondsLeft = ((long)y * (frameHold + minLoopTime) / 1000L) + 1;
+			secondsLeft = ((long)y * (nFrameHold + minLoopTime) / 1000L) + 1;
 		else
-			secondsLeft = ((long)(imgHeight - y) * (frameHold + minLoopTime) / 1000L) + 1;
+			secondsLeft = ((long)(imgHeight - y) * (nFrameHold + minLoopTime) / 1000L) + 1;
 		// mark the time for timing the loop
 		if (!bLoopTimed)
 			minLoopTime = millis();
@@ -2571,7 +2576,7 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 		FastLED.show();
 		// set a timer while we go ahead and load the next frame
 		bStripWaiting = true;
-		esp_timer_start_once(oneshot_LED_timer, frameHold * 1000);
+		esp_timer_start_once(oneshot_LED_timer, nFrameHold * 1000);
 		// check keys
 		if (CheckCancel())
 			break;
@@ -2627,6 +2632,8 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 		if (bCancelRun)
 			break;
 	}
+	// restore framehold in case we changed it
+	nFrameHold = nOriginalFrameHold;
 	// all done
 	readByte(true);
 }

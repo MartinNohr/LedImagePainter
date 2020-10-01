@@ -57,7 +57,7 @@ int ReadButton();
 bool CheckCancel();
 
 // eeprom values
-char signature[]{ "MIP22" };              // set to make sure saved values are valid, change when savevalues is changed
+char signature[]{ "MIP23" };              // set to make sure saved values are valid, change when savevalues is changed
 bool bAutoLoadSettings = false;           // set to automatically load saved settings from eeprom
 
 // settings
@@ -107,7 +107,9 @@ int NumberOfFiles = 0;
 #define MAX_FILES 40
 String FileNames[MAX_FILES];
 bool bSettingsMode = false;               // set true when settings are displayed
-int frameHold = 10;                       // default for the frame delay
+int nFrameHold = 10;                      // default for the frame delay
+bool bFixedTime = false;                  // set to use imagetime instead of framehold, the frame will be calculated
+int nFixedImageTime = 5;                  // time to display image when fixedtime is used
 int nFramePulseCount = 0;                 // advance frame when button pressed this many times, 0 means ignore
 bool bManualFrameAdvance = false;         // advance frame by clicking or rotating button
 bool bGammaCorrection = true;             // set to use the gamma table
@@ -302,7 +304,9 @@ struct saveValues {
 const saveValues saveValueList[] = {
     {&signature, sizeof(signature)},                // this must be first
     {&nStripBrightness, sizeof(nStripBrightness)},
-    {&frameHold, sizeof(frameHold)},
+    {&nFrameHold, sizeof(nFrameHold)},
+    {&bFixedTime,sizeof(bFixedTime)},
+    {&nFixedImageTime,sizeof(nFixedImageTime)},
     {&nFramePulseCount, sizeof(nFramePulseCount)},
     {&bManualFrameAdvance, sizeof(bManualFrameAdvance)},
     {&startDelay, sizeof(startDelay)},
@@ -594,7 +598,12 @@ MenuItem SystemMenu[] = {
 };
 MenuItem ImageMenu[] = {
     {eExit,false,"Previous Menu"},
-    {eTextInt,false,"Frame Hold (mS): %d",GetIntegerValue,&frameHold,0,1000},
+    {eBool,false,"Fixed/Frame Time: %s",ToggleBool,&bFixedTime,0,0,0,"Fixed","Frame"},
+    {eIfEqual,false,"",NULL,&bFixedTime,false},
+        {eTextInt,false,"Frame Hold (mS): %d",GetIntegerValue,&nFrameHold,0,1000},
+    {eElse},
+        {eTextInt,false,"Fixed Time (S): %d",GetIntegerValue,&nFixedImageTime,1,120},
+    {eEndif},
     {eTextInt,false,"Start Delay (S): %d.%d",GetIntegerValue,&startDelay,0,100,1},
     {eBool,false,"Upside Down Image: %s",ToggleBool,&bUpsideDown,0,0,0,"Yes","No"},
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,false},
@@ -789,7 +798,9 @@ struct SETTINGVAR SettingsVarList[] = {
     {"STRIP BRIGHTNESS",&nStripBrightness,vtInt,1,255},
     {"REPEAT COUNT",&repeatCount,vtInt},
     {"REPEAT DELAY",&repeatDelay,vtInt},
-    {"FRAME TIME",&frameHold,vtInt},
+    {"FRAME TIME",&nFrameHold,vtInt},
+    {"USE FIXED TIME",&bFixedTime,vtBool},
+    {"FIXED IMAGE TIME",&nFixedImageTime,vtInt},
     {"START DELAY",&startDelay,vtInt},
     {"REVERSE IMAGE",&bReverseImage,vtBool},
     {"UPSIDE DOWN IMAGE",&bUpsideDown,vtBool},
