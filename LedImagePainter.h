@@ -57,8 +57,10 @@ int ReadButton();
 bool CheckCancel();
 
 // eeprom values
-char signature[]{ "MIP23" };              // set to make sure saved values are valid, change when savevalues is changed
-bool bAutoLoadSettings = false;           // set to automatically load saved settings from eeprom
+// the signature is saved first in eeprom, followed by the autoload flag, all other values follow
+char signature[] = { "LIP0210" };   // set to make sure saved values are valid, change when savevalues is changed
+bool bAutoLoadSettings = false;     // set to automatically load saved settings from eeprom
+bool SaveSettings(bool save, bool bOnlySignature = false, bool bAutoloadFlag = false);
 
 // settings
 int nDisplayBrightness = 100;           // this is in %
@@ -75,7 +77,7 @@ volatile int nLongPressCounter = 0;     // counter during press
 CRGB leds[NUM_LEDS * 2];
 bool bSecondStrip = false;                // set true when two strips installed
 #define STRIPLENGTH (NUM_LEDS*(1+(bSecondStrip?1:0)))
-void tAdjustStripIndex(int& ix);
+int AdjustStripIndex(int ix);
 // get the real LED strip index from the desired index
 void SetPixel(int ix, CRGB pixel);
 //#define LEDIX(ix) (((ix)<NUM_LEDS)?(NUM_LEDS-1-(ix)):(ix))
@@ -301,8 +303,10 @@ struct saveValues {
     void* val;
     int size;
 };
+// these values are saved in eeprom, the signature is first
 const saveValues saveValueList[] = {
-    {&signature, sizeof(signature)},                // this must be first
+    {signature,sizeof(signature)},                      // first
+    {&bAutoLoadSettings, sizeof(bAutoLoadSettings)},    // this must be second
     {&nStripBrightness, sizeof(nStripBrightness)},
     {&nFrameHold, sizeof(nFrameHold)},
     {&bFixedTime,sizeof(bFixedTime)},

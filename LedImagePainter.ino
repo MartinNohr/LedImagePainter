@@ -23,9 +23,16 @@
 //#include <queue>
 
 // rotary switch
+#define PCB_WITH_DIAL 1
+#ifdef PCB_WITH_DIAL
+#define BTNPUSH GPIO_NUM_12
+#define BTNA GPIO_NUM_14
+#define BTNB GPIO_NUM_27
+#else
 #define BTNPUSH GPIO_NUM_27
 #define BTNA GPIO_NUM_12
 #define BTNB GPIO_NUM_14
+#endif
 #define FRAMEBUTTON GPIO_NUM_26
 
 #define MAX_KEY_BUF 10
@@ -400,7 +407,7 @@ void setup()
 	OLED->setFont(ArialMT_Plain_24);
 	OLED->drawString(2, 2, "LEDPainter");
 	OLED->setFont(ArialMT_Plain_16);
-	OLED->drawString(4, 30, "Version 2.09");
+	OLED->drawString(4, 30, "Version 2.10");
 	OLED->setFont(ArialMT_Plain_10);
 	OLED->drawString(4, 48, __DATE__);
 	OLED->display();
@@ -408,11 +415,16 @@ void setup()
 	charHeight = 13;
 
 	EEPROM.begin(1024);
+	// this will fix the signature if necessary
+	if (SaveSettings(false, true)) {
+		// get the autoload flag
+		SaveSettings(false, false, true);
+	}
 	// load the saved settings if flag is true and the button isn't pushed
-	EEPROM.readBytes(0, &bAutoLoadSettings, sizeof(bAutoLoadSettings));
-	// the &1 is to make sure we just look at bit 0, on first load sometimes more bits are set
-	if ((bAutoLoadSettings & 1) && gpio_get_level(BTNPUSH))
+	if (bAutoLoadSettings && gpio_get_level(BTNPUSH)) {
+		// read all the settings
 		SaveSettings(false);
+	}
 
 	menuPtr = new MenuInfo;
 	MenuStack.push(menuPtr);
@@ -720,10 +732,8 @@ bool RunMenus(int button)
 	}
 	// see if the autoload flag changed
 	if (bAutoLoadSettings != lastAutoLoadFlag) {
-		// make sure only 1 bit
-		bAutoLoadSettings = bAutoLoadSettings ? true : false;
-		EEPROM.writeBytes(0, &bAutoLoadSettings, sizeof(bAutoLoadSettings));
-		EEPROM.commit();
+		// the flag is now true, so we should save the current settings
+		SaveSettings(true, false, true);
 	}
 }
 
@@ -909,6 +919,8 @@ void ToggleBool(MenuItem* menu)
 	if (menu->change != NULL) {
 		(*menu->change)(menu, -1);
 	}
+	Serial.println("autoload: " + String(bAutoLoadSettings));
+	Serial.println("fixed time: " + String(bFixedTime));
 }
 
 // get integer values
@@ -3194,32 +3206,46 @@ bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile)
 
 // save some settings in the eeprom
 // return true if valid, false if failed
-bool SaveSettings(bool save)
+bool SaveSettings(bool save, bool bOnlySignature, bool bAutoloadOnlyFlag)
 {
-	int blockpointer = sizeof(bAutoLoadSettings);	// we start here because the location is the autoload flag
-	for (int ix = 0; ix < (sizeof saveValueList / sizeof * saveValueList); ++ix) {
-		//Serial.println("savesettings ix:" + String(ix));
+	bool retvalue = true;
+	int blockpointer = 0;
+	for (int ix = 0; ix < (sizeof(saveValueList) / sizeof(*saveValueList)); blockpointer += saveValueList[ix++].size) {
 		if (save) {
 			EEPROM.writeBytes(blockpointer, saveValueList[ix].val, saveValueList[ix].size);
+			if (ix == 0 && bOnlySignature) {
+				break;
+			}
+			if (ix == 1 && bAutoloadOnlyFlag) {
+				break;
+			}
 		}
 		else {  // load
 			if (ix == 0) {
 				// check signature
-				char svalue[sizeof signature];
-				EEPROM.readBytes(blockpointer, svalue, sizeof(signature));
-				//Serial.println("svalue:" + String(svalue));
-				if (strncmp(svalue, signature, sizeof signature)) {
-					WriteMessage("bad eeprom signature\nSave Default to fix", true);
-					return false;
+				char svalue[sizeof(signature)];
+				memset(svalue, 0, sizeof(svalue));
+				size_t bytesread = EEPROM.readBytes(0, svalue, sizeof(signature));
+				if (strcmp(svalue, signature)) {
+					WriteMessage("bad eeprom signature\nrepairing...", true);
+					return SaveSettings(true);
+				}
+				if (bOnlySignature) {
+					return true;
 				}
 			}
 			else {
 				EEPROM.readBytes(blockpointer, saveValueList[ix].val, saveValueList[ix].size);
 			}
+			if (ix == 1 && bAutoloadOnlyFlag) {
+				return true;
+			}
 		}
-		blockpointer += saveValueList[ix].size;
 	}
-	if (!save) {
+	if (save) {
+		retvalue = EEPROM.commit();
+	}
+	else {
 		int savedFileIndex = CurrentFileIndex;
 		// we don't know the folder path, so just reset the folder level
 		currentFolder = "/";
@@ -3229,13 +3255,14 @@ bool SaveSettings(bool save)
 		if (CurrentFileIndex >= NumberOfFiles) {
 			CurrentFileIndex = 0;
 		}
+		// set the brightness values since they might have changed
+		OLED->setBrightness(nDisplayBrightness);
+		bDisplayInvert ? OLED->invertDisplay() : OLED->normalDisplay();
+		// don't need to do this here since it is always set right before running
+		//FastLED.setBrightness(nStripBrightness);
 	}
-	if (save) {
-		EEPROM.commit();
-		//Serial.println("eeprom committed");
-	}
-	WriteMessage(String(save ? "Settings Saved" : "Settings Loaded"));
-	return true;
+	WriteMessage(String(save ? (bAutoloadOnlyFlag ? "Autoload Saved" : "Settings Saved") : "Settings Loaded"));
+	return retvalue;
 }
 
 // save the eeprom settings
