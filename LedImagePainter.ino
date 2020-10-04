@@ -2191,6 +2191,12 @@ struct {
 
 void TestStripes()
 {
+	// let's fill in some data
+	for (int ix = 0; ix < NUM_STRIPES; ++ix) {
+		Stripes[ix].start = ix * 10;
+		Stripes[ix].length = ix * 5;
+		Stripes[ix].color = CHSV(25, 200, 200);
+	}
 	int pix = 0;	// pixel address
 	FastLED.clear(true);
 	for (int ix = 0; ix < NUM_STRIPES; ++ix) {
@@ -2200,6 +2206,7 @@ void TestStripes()
 		}
 	}
 	FastLED.show();
+	delay(2000);
 }
 
 // time is in mSec

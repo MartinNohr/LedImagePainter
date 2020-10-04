@@ -52,6 +52,8 @@ void TestSine();
 void TestBpm();
 void TestConfetti();
 void DisplayAllColor();
+void TestStripes();
+
 bool bPauseDisplay = false; // set this so DisplayLine and Progress won't update display
 int ReadButton();
 bool CheckCancel();
@@ -761,6 +763,7 @@ BuiltInItem BuiltInFiles[] = {
     {"Random Bars",RandomBars,RandomBarsMenu},
     {"Sine Trails",TestSine,SineMenu},
     {"Solid Color",DisplayAllColor,DisplayAllColorMenu},
+    {"Stripes",TestStripes},
     {"Twinkle",TestTwinkle,TwinkleMenu},
     {"Two Dots",OppositeRunningDots},
 };
