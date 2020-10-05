@@ -2337,7 +2337,7 @@ void ProcessFileOrTest()
 				}
 				if (!bShowBuiltInTests)
 					ShowProgressBar(0);
-				if (nRepeatsLeft > 1) {
+				if (nRepeatsLeft >= 1) {
 					if (repeatDelay) {
 						FastLED.clear(true);
 						// start timer
