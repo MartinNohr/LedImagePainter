@@ -2523,7 +2523,6 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 	int percent;
 	unsigned minLoopTime = 0; // the minimum time it takes to process a line
 	bool bLoopTimed = false;
-	int nOriginalFrameHold = nFrameHold;
 	// if fixed time then we need to calculate the framehold value
 	if (bFixedTime) {
 		// divide the time by the number of frames
@@ -2651,8 +2650,6 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 		if (bCancelRun)
 			break;
 	}
-	// restore framehold in case we changed it
-	nFrameHold = nOriginalFrameHold;
 	// all done
 	readByte(true);
 }
