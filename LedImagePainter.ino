@@ -2337,7 +2337,7 @@ void ProcessFileOrTest()
 				}
 				if (!bShowBuiltInTests)
 					ShowProgressBar(0);
-				if (nRepeatsLeft >= 1) {
+				if (nRepeatsLeft > 1) {
 					if (repeatDelay) {
 						FastLED.clear(true);
 						// start timer
@@ -2386,7 +2386,7 @@ void ProcessFileOrTest()
 		// start again
 		CurrentFileIndex = lastFileIndex;
 		chainCount = bChainFiles ? FileCountOnly() - CurrentFileIndex : 1;
-		if (repeatDelay) {
+		if (repeatDelay && (nRepeatsLeft > 1) || chainRepeatCount >= 1) {
 			FastLED.clear(true);
 			// start timer
 			nTimerSeconds = repeatDelay;
