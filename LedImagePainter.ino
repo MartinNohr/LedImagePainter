@@ -39,10 +39,8 @@
 RingBufCPP<int, MAX_KEY_BUF> btnBuf;
 enum BUTTONS { BTN_NONE = 1, BTN_RIGHT, BTN_LEFT, BTN_SELECT, BTN_LONG };
 // for debugging missed buttons
-volatile int nButtonDowns;
-volatile int nButtonUps;
-//volatile bool bButtonTimerRunning;
-//volatile bool bButtonArmed = true;	// must be reset after reading a long press, it stops the noise on button release
+//volatile int nButtonDowns;
+//volatile int nButtonUps;
 
 //std::queue<int> buttonQueue;
 
