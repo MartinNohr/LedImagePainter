@@ -2523,11 +2523,6 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 	int percent;
 	unsigned minLoopTime = 0; // the minimum time it takes to process a line
 	bool bLoopTimed = false;
-	// if fixed time then we need to calculate the framehold value
-	if (bFixedTime) {
-		// divide the time by the number of frames
-		nFrameHold = 1000 * nFixedImageTime / imgHeight;
-	}
 	// note that y is 0 based and x is 0 based in the following code, the original code had y 1 based
 	// also remember that height and width are effectively reversed since we rotated the BMP image for ease of reading and displaying here
 	for (int y = bReverseImage ? imgHeight - 1 : 0; bReverseImage ? y >= 0 : y < imgHeight; bReverseImage ? --y : ++y) {
@@ -2537,8 +2532,9 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 		else
 			secondsLeft = ((long)(imgHeight - y) * (nFrameHold + minLoopTime) / 1000L) + 1;
 		// mark the time for timing the loop
-		if (!bLoopTimed)
+		if (!bLoopTimed) {
 			minLoopTime = millis();
+		}
 		if (bMirrorPlayImage) {
 			if (totalSeconds == -1)
 				totalSeconds = secondsLeft;
@@ -2583,6 +2579,13 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 		if (!bLoopTimed) {
 			minLoopTime = millis() - minLoopTime;
 			bLoopTimed = true;
+			// if fixed time then we need to calculate the framehold value
+			if (bFixedTime) {
+				// divide the time by the number of frames
+				nFrameHold = 1000 * nFixedImageTime / imgHeight;
+				nFrameHold -= minLoopTime;
+				nFrameHold = max(nFrameHold, 0);
+			}
 		}
 		//Serial.println("loop: " + String(minLoopTime));
 		// wait for timer to expire before we show the next frame
