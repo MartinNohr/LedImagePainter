@@ -1793,6 +1793,13 @@ void OppositeRunningDots()
 	}
 }
 
+void Sleep(MenuItem* menu)
+{
+	//rtc_gpio_pullup_en(BTNPUSH);
+	esp_sleep_enable_ext0_wakeup(BTNPUSH, LOW);
+	esp_deep_sleep_start();
+}
+
 void LightBar(MenuItem* menu)
 {
 	OLED->clear();
