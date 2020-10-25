@@ -604,11 +604,11 @@ MenuItem SystemMenu[] = {
 };
 MenuItem ImageMenu[] = {
     {eExit,false,"Previous Menu"},
-    {eBool,false,"Frame/Fixed Time: %s",ToggleBool,&bFixedTime,0,0,0,"Fixed","Frame"},
+    {eBool,false,"Timing Type: %s",ToggleBool,&bFixedTime,0,0,0,"Image","Column"},
     {eIfEqual,false,"",NULL,&bFixedTime,false},
-        {eTextInt,false,"Frame Hold (mS): %d",GetIntegerValue,&nFrameHold,0,1000},
+        {eTextInt,false,"Column Time (mS): %d",GetIntegerValue,&nFrameHold,0,1000},
     {eElse},
-        {eTextInt,false,"Fixed Image Time (S): %d",GetIntegerValue,&nFixedImageTime,1,120},
+        {eTextInt,false,"Image Time (S): %d",GetIntegerValue,&nFixedImageTime,1,120},
     {eEndif},
     {eTextInt,false,"Start Delay (S): %d.%d",GetIntegerValue,&startDelay,0,100,1},
     {eBool,false,"Upside Down Image: %s",ToggleBool,&bUpsideDown,0,0,0,"Yes","No"},
