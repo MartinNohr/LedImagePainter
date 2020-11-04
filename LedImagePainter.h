@@ -728,8 +728,6 @@ MenuItem MacroMenu[] = {
     {eTerminate}
 };
 MenuItem MainMenu[] = {
-    {eText,false,"Sleep",Sleep},
-    {eReboot,false,"Reboot"},
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,true},
         {eBool,false,"Switch to SD Card",ToggleFilesBuiltin,&bShowBuiltInTests,0,0,0,"On","Off"},
     {eElse},
@@ -747,6 +745,8 @@ MenuItem MainMenu[] = {
     {eMenu,false,"Saved Settings",{.menu = EepromMenu}},
 	{eMenu,false,"System Settings",{.menu = SystemMenu}},
     {eText,false,"Light Bar",LightBar},
+    //{eText,false,"Sleep",Sleep},
+    {eReboot,false,"Reboot"},
     // make sure this one is last
     {eTerminate}
 };
