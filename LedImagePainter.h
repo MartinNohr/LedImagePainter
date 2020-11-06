@@ -112,7 +112,7 @@ int NumberOfFiles = 0;
 String FileNames[MAX_FILES];
 bool bSettingsMode = false;               // set true when settings are displayed
 int nFrameHold = 10;                      // default for the frame delay
-bool bFixedTime = true;                   // set to use imagetime instead of framehold, the frame will be calculated
+bool bFixedTime = false;                  // set to use imagetime instead of framehold, the frame time will be calculated
 int nFixedImageTime = 5;                  // time to display image when fixedtime is used
 int nFramePulseCount = 0;                 // advance frame when button pressed this many times, 0 means ignore
 bool bManualFrameAdvance = false;         // advance frame by clicking or rotating button
