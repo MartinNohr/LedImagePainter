@@ -301,6 +301,8 @@ int nCheckboardBlackWidth = 12;
 int nCheckboardWhiteWidth = 12;
 bool bCheckerBoardAlternate = true;
 int nCheckerboardAddPixels = 0;
+// stripes
+int nStripesRuntime = 10;
 
 struct saveValues {
     void* val;

@@ -2192,26 +2192,40 @@ struct {
 	int start;
 	int length;
 	CHSV color;
-}Stripes[NUM_STRIPES];
+} Stripes[NUM_STRIPES];
 
 void TestStripes()
 {
+	time_t start = time(NULL);
+	FastLED.setBrightness(nStripBrightness);
 	// let's fill in some data
 	for (int ix = 0; ix < NUM_STRIPES; ++ix) {
-		Stripes[ix].start = ix * 10;
-		Stripes[ix].length = ix * 5;
-		Stripes[ix].color = CHSV(25, 200, 200);
+		Stripes[ix].start = ix * 20;
+		Stripes[ix].length = 12;
+		Stripes[ix].color = CHSV(0, 0, 255);
 	}
 	int pix = 0;	// pixel address
 	FastLED.clear(true);
 	for (int ix = 0; ix < NUM_STRIPES; ++ix) {
+		pix = Stripes[ix].start;
 		// fill in each block of pixels
 		for (int len = 0; len < Stripes[ix].length; ++len) {
 			SetPixel(pix++, CRGB(Stripes[ix].color));
 		}
 	}
+	bStripWaiting = true;
+	ShowProgressBar(0);
 	FastLED.show();
-	delay(2000);
+	esp_timer_start_once(oneshot_LED_timer, nStripesRuntime * 1000000);
+	while (bStripWaiting) {
+		ShowProgressBar((time(NULL) - start) * 100 / nStripesRuntime);
+		if (CheckCancel()) {
+			esp_timer_stop(oneshot_LED_timer);
+			bStripWaiting = false;
+			return;
+		}
+		delay(1000);
+	}
 }
 
 // time is in mSec
