@@ -22,7 +22,7 @@
 //#include <vector>
 //#include <queue>
 
-// SB with rotary switch
+// SB with rotary switch, comment out for original schematic
 #define PCB_WITH_DIAL 1
 #ifdef PCB_WITH_DIAL
 #define BTNPUSH GPIO_NUM_12
