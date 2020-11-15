@@ -16,7 +16,7 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <BLE2902.h>
-#include <ringbufcpp.h>
+#include <RingBufCPP.h>
 #include "LedImagePainter.h"
 
 //#include <vector>
@@ -34,6 +34,13 @@
 #define BTNB GPIO_NUM_14
 #endif
 #define FRAMEBUTTON GPIO_NUM_26
+
+// some forward references that Arduino IDE needs
+int IRAM_ATTR readByte(bool clear);
+void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf);
+uint16_t IRAM_ATTR readInt();
+uint32_t IRAM_ATTR readLong();
+void IRAM_ATTR FileSeekBuf(uint32_t place);
 
 #define MAX_KEY_BUF 10
 RingBufCPP<int, MAX_KEY_BUF> btnBuf;

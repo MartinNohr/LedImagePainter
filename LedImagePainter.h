@@ -6,7 +6,7 @@
 #include "SPI.h"
 #include <FastLED.h>
 #include "morefonts.h"
-#include <eeprom.h>
+#include <EEPROM.h>
 
 #define OLED Heltec.display
 //#include "SSD1306Wire.h" // legacy include: `#include "SSD1306.h"`
@@ -182,7 +182,7 @@ struct BuiltInItem;
 struct MenuItem {
     enum eDisplayOperation op;
     bool valid;                         // set to true if displayed for use
-    char* text;                         // text to display
+    const char* text;                   // text to display
     union {
         void(*function)(MenuItem*);     // called on click
         MenuItem* menu;                 // jump to another menu
@@ -772,7 +772,7 @@ BuiltInItem BuiltInFiles[] = {
     {"Two Dots",OppositeRunningDots},
 };
 
-#include <stackarray.h>
+#include <StackArray.h>
 // a stack to hold the file indexes as we navigate folders
 StackArray<int> FileIndexStack;
 
