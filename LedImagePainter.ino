@@ -412,7 +412,7 @@ void setup()
 	OLED->setFont(ArialMT_Plain_24);
 	OLED->drawString(2, 2, "LEDPainter");
 	OLED->setFont(ArialMT_Plain_16);
-	OLED->drawString(4, 30, "Version 2.11");
+	OLED->drawString(4, 30, "Version 2.12");
 	OLED->setFont(ArialMT_Plain_10);
 	OLED->drawString(4, 48, __DATE__);
 	OLED->display();
@@ -2234,6 +2234,40 @@ void TestStripes()
 			return;
 		}
 		delay(1000);
+	}
+}
+
+// alternating white and black lines
+void TestLines()
+{
+	time_t start = time(NULL);
+	FastLED.setBrightness(nStripBrightness);
+	FastLED.clear(true);
+	bool bWhite = true;
+	for (int pix = 0; pix < STRIPLENGTH; ++pix) {
+		// fill in each block of pixels
+		for (int len = 0; len < (bWhite ? nLinesWhite : nLinesBlack); ++len) {
+			SetPixel(pix++, bWhite ? CRGB::White : CRGB::Black);
+		}
+		bWhite = !bWhite;
+	}
+	bStripWaiting = true;
+	ShowProgressBar(0);
+	FastLED.show();
+	esp_timer_start_once(oneshot_LED_timer, nLinesRuntime * 1000000);
+	while (bStripWaiting) {
+		ShowProgressBar((time(NULL) - start) * 100 / nStripesRuntime);
+		if (CheckCancel()) {
+			esp_timer_stop(oneshot_LED_timer);
+			bStripWaiting = false;
+			return;
+		}
+		delay(1000);
+		// might make this work to toggle blacks and whites eventually
+		//for (int ix = 0; ix < STRIPLENGTH; ++ix) {
+		//	leds[ix] = (leds[ix] == CRGB::White) ? CRGB::Black : CRGB::White;
+		//}
+		FastLED.show();
 	}
 }
 
