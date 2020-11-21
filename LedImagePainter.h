@@ -304,11 +304,11 @@ RTC_DATA_ATTR int nCheckboardWhiteWidth = 12;
 RTC_DATA_ATTR bool bCheckerBoardAlternate = true;
 RTC_DATA_ATTR int nCheckerboardAddPixels = 0;
 // stripes
-int nStripesRuntime = 10;
+RTC_DATA_ATTR int nStripesRuntime = 10;
 // black and white lines
-int nLinesWhite = 5;
-int nLinesBlack = 5;
-int nLinesRuntime = 10;
+RTC_DATA_ATTR int nLinesWhite = 5;
+RTC_DATA_ATTR int nLinesBlack = 5;
+RTC_DATA_ATTR int nLinesRuntime = 10;
 
 struct saveValues {
     void* val;
