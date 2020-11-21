@@ -16,13 +16,14 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <BLE2902.h>
-#include <RingBufCPP.h>
 #include "LedImagePainter.h"
 
 RTC_DATA_ATTR int nBootCount = 0;
 
 //#include <vector>
-//#include <queue>
+#include <queue>
+//#include <stack>
+//std::stack<int> menuStack;
 
 // SB with rotary switch, comment out for original schematic
 #define PCB_WITH_DIAL 1
@@ -44,8 +45,7 @@ uint16_t IRAM_ATTR readInt();
 uint32_t IRAM_ATTR readLong();
 void IRAM_ATTR FileSeekBuf(uint32_t place);
 
-#define MAX_KEY_BUF 10
-RingBufCPP<int, MAX_KEY_BUF> btnBuf;
+std::queue<int> btnBuf;
 enum BUTTONS { BTN_NONE = 1, BTN_RIGHT, BTN_LEFT, BTN_SELECT, BTN_LONG };
 // for debugging missed buttons
 //volatile int nButtonDowns;
@@ -77,7 +77,7 @@ void IRAM_ATTR periodic_LONGPRESS_timer_callback(void* arg)
 	// if the timer counter has finished, it must be a long press
 	if (nLongPressCounter == 0) {
 		btn = BTN_LONG;
-		btnBuf.add(btn);
+		btnBuf.push(btn);
 		// set it so we ignore the button interrupt for one more timer time
 		nLongPressCounter = -1;
 		//Serial.println("long");
@@ -86,7 +86,7 @@ void IRAM_ATTR periodic_LONGPRESS_timer_callback(void* arg)
 	else if (level) {
 		if (nLongPressCounter > 0 && nLongPressCounter < nLongPressCounterValue - 1) {
 			btn = BTN_SELECT;
-			btnBuf.add(btn);
+			btnBuf.push(btn);
 			nLongPressCounter = -1;
 			//Serial.println("select");
 		}
@@ -115,7 +115,7 @@ void IRAM_ATTR IntBtnA()
 	if (lastValA != valA && millis() > lastTime + 2) {
 		lastTime = millis();
 		if (pendingBtn != BTN_NONE) {
-			btnBuf.add(pendingBtn);
+			btnBuf.push(pendingBtn);
 			pendingBtn = BTN_NONE;
 		}
 		else if (lastValA && !valA) {
@@ -124,7 +124,7 @@ void IRAM_ATTR IntBtnA()
 				pendingBtn = btn;
 			}
 			else {
-				btnBuf.add(btn);
+				btnBuf.push(btn);
 			}
 		}
 		lastValA = valA;
@@ -530,9 +530,8 @@ void setup()
 	while (!digitalRead(BTNPUSH))
 		;
 	// clear the button buffer
-	int btn;
-	while (btnBuf.pull(&btn))
-		;
+	while (!btnBuf.empty())
+		btnBuf.pop();
 	if (!bSdCardValid) {
 		DisplayCurrentFile();
 		delay(2000);
@@ -1248,8 +1247,11 @@ int ReadButton()
 			return BTN_LEFT;
 		}
 	}
-	// pull leaves retValue alone if queue is empty
-	btnBuf.pull(&retValue);
+	// if there is a button, get the front of the queue, then remove it
+	if (btnBuf.size()) {
+		retValue = btnBuf.front();
+		btnBuf.pop();
+	}
 	//if (retValue != BTN_NONE)
 	//	Serial.println("button:" + String(retValue));
 	return retValue;
@@ -1947,7 +1949,7 @@ void DisplayAllColor()
 			break;
 		case BTN_LONG:
 			// put it back, we don't want it
-			btnBuf.add(btn);
+			btnBuf.push(btn);
 			break;
 		}
 		if (CheckCancel())
@@ -2260,6 +2262,40 @@ void TestStripes()
 	}
 }
 
+// alternating white and black lines
+void TestLines()
+{
+	time_t start = time(NULL);
+	FastLED.setBrightness(nStripBrightness);
+	FastLED.clear(true);
+	bool bWhite = true;
+	for (int pix = 0; pix < STRIPLENGTH; ++pix) {
+		// fill in each block of pixels
+		for (int len = 0; len < (bWhite ? nLinesWhite : nLinesBlack); ++len) {
+			SetPixel(pix++, bWhite ? CRGB::White : CRGB::Black);
+		}
+		bWhite = !bWhite;
+	}
+	bStripWaiting = true;
+	ShowProgressBar(0);
+	FastLED.show();
+	esp_timer_start_once(oneshot_LED_timer, nLinesRuntime * 1000000);
+	while (bStripWaiting) {
+		ShowProgressBar((time(NULL) - start) * 100 / nStripesRuntime);
+		if (CheckCancel()) {
+			esp_timer_stop(oneshot_LED_timer);
+			bStripWaiting = false;
+			return;
+		}
+		delay(1000);
+		// might make this work to toggle blacks and whites eventually
+		//for (int ix = 0; ix < STRIPLENGTH; ++ix) {
+		//	leds[ix] = (leds[ix] == CRGB::White) ? CRGB::Black : CRGB::White;
+		//}
+		FastLED.show();
+	}
+}
+
 // time is in mSec
 void FadeInOut(int time, bool in)
 {
@@ -2459,9 +2495,8 @@ void ProcessFileOrTest()
 		DisplayCurrentFile();
 	nProgress = 0;
 	// clear buttons
-	int btn;
-	while (btnBuf.pull(&btn))
-		;
+	while (!btnBuf.empty())
+		btnBuf.pop();
 }
 
 void SendFile(String Filename) {
@@ -2678,7 +2713,7 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 					if (btn == BTN_NONE)
 						continue;
 					else if (btn == BTN_LONG)
-						btnBuf.add(btn);
+						btnBuf.push(btn);
 					else if (btn == BTN_LEFT) {
 						// backup a line, use 2 because the for loop does one when we're done here
 						if (bReverseImage) {

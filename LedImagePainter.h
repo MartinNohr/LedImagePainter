@@ -53,6 +53,7 @@ void TestBpm();
 void TestConfetti();
 void DisplayAllColor();
 void TestStripes();
+void TestLines();
 
 bool bPauseDisplay = false; // set this so DisplayLine and Progress won't update display
 int ReadButton();
@@ -202,7 +203,7 @@ typedef MenuItem MenuItem;
 // builtins
 // built-in "files"
 struct BuiltInItem {
-    char* text;
+    const char* text;
     void(*function)();
     MenuItem* menu;
 };
@@ -303,7 +304,11 @@ RTC_DATA_ATTR int nCheckboardWhiteWidth = 12;
 RTC_DATA_ATTR bool bCheckerBoardAlternate = true;
 RTC_DATA_ATTR int nCheckerboardAddPixels = 0;
 // stripes
-RTC_DATA_ATTR int nStripesRuntime = 10;
+int nStripesRuntime = 10;
+// black and white lines
+int nLinesWhite = 5;
+int nLinesBlack = 5;
+int nLinesRuntime = 10;
 
 struct saveValues {
     void* val;
@@ -411,6 +416,10 @@ const saveValues saveValueList[] = {
     {&nCurrentMacro,sizeof(nCurrentMacro)},
     {&nRepeatCountMacro,sizeof(nRepeatCountMacro)},
     {&nRepeatWaitMacro,sizeof(nRepeatWaitMacro)},
+    // lines values
+    {&nLinesRuntime,sizeof(nLinesRuntime)},
+    {&nLinesWhite,sizeof(nLinesWhite)},
+    {&nLinesBlack,sizeof(nLinesBlack)},
 };
 
 // Gramma Correction (Defalt Gamma = 2.8)
@@ -542,6 +551,15 @@ MenuItem BpmMenu[] = {
     {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nBpmRuntime,1,120},
     {eTextInt,false,"Beats per minute: %d",GetIntegerValue,&nBpmBeatsPerMinute,1,300},
     {eBool,false,"Cycle Hue: %s",ToggleBool,&bBpmCycleHue,0,0,0,"Yes","No"},
+    {eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem LinesMenu[] = {
+    {eExit,false,"Previous Menu"},
+    {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nLinesRuntime,1,120},
+    {eTextInt,false,"White Pixels: %d",GetIntegerValue,&nLinesWhite,0,NUM_LEDS},
+    {eTextInt,false,"Black Pixels: %d",GetIntegerValue,&nLinesBlack,0,NUM_LEDS},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
@@ -763,6 +781,7 @@ BuiltInItem BuiltInFiles[] = {
     {"Confetti",TestConfetti,ConfettiMenu},
     {"Cylon Eye",TestCylon,CylonEyeMenu},
     {"Juggle",TestJuggle,JuggleMenu},
+    {"Lines",TestLines,LinesMenu},
     {"Meteor",TestMeteor,MeteorMenu},
     {"One Dot",RunningDot},
     {"Rainbow",TestRainbow,RainbowMenu},
