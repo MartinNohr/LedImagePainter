@@ -61,12 +61,12 @@ bool CheckCancel();
 // eeprom values
 // the signature is saved first in eeprom, followed by the autoload flag, all other values follow
 char signature[] = { "LIP0210" };   // set to make sure saved values are valid, change when savevalues is changed
-bool bAutoLoadSettings = false;     // set to automatically load saved settings from eeprom
+RTC_DATA_ATTR bool bAutoLoadSettings = false;     // set to automatically load saved settings from eeprom
 bool SaveSettings(bool save, bool bOnlySignature = false, bool bAutoloadFlag = false);
 
 // settings
-int nDisplayBrightness = 100;           // this is in %
-bool bDisplayInvert = false;            // set to reverse display
+RTC_DATA_ATTR int nDisplayBrightness = 100;           // this is in %
+RTC_DATA_ATTR bool bDisplayInvert = false;            // set to reverse display
 bool bReverseDial = false;              // change the dial direction
 bool bSdCardValid = false;              // set to true when card is found
 int nLongPressCounterValue = 40;        // multiplier for long press compared to normal press
@@ -77,17 +77,17 @@ volatile int nLongPressCounter = 0;     // counter during press
 #define NUM_LEDS 144
 // Define the array of leds, up to 288
 CRGB leds[NUM_LEDS * 2];
-bool bSecondStrip = false;                // set true when two strips installed
+RTC_DATA_ATTR bool bSecondStrip = false;                // set true when two strips installed
 #define STRIPLENGTH (NUM_LEDS*(1+(bSecondStrip?1:0)))
 int AdjustStripIndex(int ix);
 // get the real LED strip index from the desired index
 void SetPixel(int ix, CRGB pixel);
 //#define LEDIX(ix) (((ix)<NUM_LEDS)?(NUM_LEDS-1-(ix)):(ix))
-int nStripBrightness = 25;                // Variable and default for the Brightness of the strip, from 1 to 255
-int startDelay = 0;                       // Variable for delay between button press and start of light sequence, in seconds
+RTC_DATA_ATTR int nStripBrightness = 25;                // Variable and default for the Brightness of the strip, from 1 to 255
+RTC_DATA_ATTR int startDelay = 0;                       // Variable for delay between button press and start of light sequence, in seconds
 //bool bRepeatForever = false;                           // Variable to select auto repeat (until select button is pressed again)
-int repeatDelay = 0;                      // Variable for delay between repeats, 0.1 seconds
-int repeatCount = 1;                      // Variable to keep track of number of repeats
+RTC_DATA_ATTR int repeatDelay = 0;                      // Variable for delay between repeats, 0.1 seconds
+RTC_DATA_ATTR int repeatCount = 1;                      // Variable to keep track of number of repeats
 int nRepeatsLeft;                         // countdown while repeating, used for BLE also
 int g = 0;                                // Variable for the Green Value
 int b = 0;                                // Variable for the Blue Value
@@ -100,44 +100,44 @@ struct {
     int b;
 } whiteBalance = { 255,255,255 };
 // strip settings
-int charHeight = 19;
+RTC_DATA_ATTR int charHeight = 19;
 #define NEXT_FOLDER_CHAR '~'
 #define PREVIOUS_FOLDER_CHAR '^'
 String currentFolder = "/";
-int CurrentFileIndex = 0;
+RTC_DATA_ATTR int CurrentFileIndex = 0;
 int lastFileIndex = 0;                  // save between switching of internal and SD
 String lastFolder = "/";
 int NumberOfFiles = 0;
 #define MAX_FILES 40
 String FileNames[MAX_FILES];
 bool bSettingsMode = false;               // set true when settings are displayed
-int nFrameHold = 10;                      // default for the frame delay
-bool bFixedTime = false;                  // set to use imagetime instead of framehold, the frame time will be calculated
-int nFixedImageTime = 5;                  // time to display image when fixedtime is used
-int nFramePulseCount = 0;                 // advance frame when button pressed this many times, 0 means ignore
-bool bManualFrameAdvance = false;         // advance frame by clicking or rotating button
-bool bGammaCorrection = true;             // set to use the gamma table
-bool bShowBuiltInTests = false;           // list the internal file instead of the SD card
-bool bReverseImage = false;               // read the file lines in reverse
-bool bUpsideDown = false;                 // play the image upside down
-bool bDoublePixels = false;               // double the image line, to go from 144 to 288
-bool bMirrorPlayImage = false;            // play the file twice, 2nd time reversed
-int nMirrorDelay = 0;                     // pause between the two halves of the image
-bool bChainFiles = false;                 // set to run all the files from current to the last one in the current folder
-int nChainRepeats = 1;                    // how many times to repeat the chain
-int nChainDelay = 0;                      // number of 1/10 seconds to delay between chained files
-bool bShowProgress = true;                // show the progress bar
-bool bShowFolder = true;                  // show the path in front of the file
-bool bScaleHeight = false;                // scale the Y values to fit the number of pixels
+RTC_DATA_ATTR int nFrameHold = 10;                      // default for the frame delay
+RTC_DATA_ATTR bool bFixedTime = false;                  // set to use imagetime instead of framehold, the frame time will be calculated
+RTC_DATA_ATTR int nFixedImageTime = 5;                  // time to display image when fixedtime is used
+RTC_DATA_ATTR int nFramePulseCount = 0;                 // advance frame when button pressed this many times, 0 means ignore
+RTC_DATA_ATTR bool bManualFrameAdvance = false;         // advance frame by clicking or rotating button
+RTC_DATA_ATTR bool bGammaCorrection = true;             // set to use the gamma table
+RTC_DATA_ATTR bool bShowBuiltInTests = false;           // list the internal file instead of the SD card
+RTC_DATA_ATTR bool bReverseImage = false;               // read the file lines in reverse
+RTC_DATA_ATTR bool bUpsideDown = false;                 // play the image upside down
+RTC_DATA_ATTR bool bDoublePixels = false;               // double the image line, to go from 144 to 288
+RTC_DATA_ATTR bool bMirrorPlayImage = false;            // play the file twice, 2nd time reversed
+RTC_DATA_ATTR int nMirrorDelay = 0;                     // pause between the two halves of the image
+RTC_DATA_ATTR bool bChainFiles = false;                 // set to run all the files from current to the last one in the current folder
+RTC_DATA_ATTR int nChainRepeats = 1;                    // how many times to repeat the chain
+RTC_DATA_ATTR int nChainDelay = 0;                      // number of 1/10 seconds to delay between chained files
+RTC_DATA_ATTR bool bShowProgress = true;                // show the progress bar
+RTC_DATA_ATTR bool bShowFolder = true;                  // show the path in front of the file
+RTC_DATA_ATTR bool bScaleHeight = false;                // scale the Y values to fit the number of pixels
 bool bCancelRun = false;                  // set to cancel a running job
 bool bCancelMacro = false;                // set to cancel a running macro
-bool bAllowMenuWrap = false;              // allows menus to wrap around from end and start instead of pinning
-bool bShowNextFiles = true;               // show the next files in the main display
-int nCurrentMacro = 0;                    // the number of the macro to select or run
+RTC_DATA_ATTR bool bAllowMenuWrap = false;              // allows menus to wrap around from end and start instead of pinning
+RTC_DATA_ATTR bool bShowNextFiles = true;               // show the next files in the main display
+RTC_DATA_ATTR int nCurrentMacro = 0;                    // the number of the macro to select or run
 bool bRecordingMacro = false;             // set while recording
 bool bRunningMacro = false;               // set while running
-int nRepeatWaitMacro = 0;                 // time between macro repeats, in 1/10 seconds
-int nRepeatCountMacro = 1;                // repeat count for macros
+RTC_DATA_ATTR int nRepeatWaitMacro = 0;                 // time between macro repeats, in 1/10 seconds
+RTC_DATA_ATTR int nRepeatCountMacro = 1;                // repeat count for macros
 int nMacroRepeatsLeft = 1;                // set during macro running
 // timer argument vale
 enum TIMER_ID { TID_LED, TID_BTN, TID_LONGPRESS };
@@ -235,74 +235,75 @@ void SaveMacro(MenuItem* menu);
 void DeleteMacro(MenuItem* menu);
 void LightBar(MenuItem* menu);
 void Sleep(MenuItem* menu);
+void ReadBattery(MenuItem* menu);
 
 // SD details
 #define SDcsPin 5                        // SD card CS pin
 SPIClass spiSDCard;
 
 // adjustment values for builtins
-uint8_t gHue = 0; // rotating "base color" used by many of the patterns
+RTC_DATA_ATTR uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 // bouncing balls
-int nBouncingBallsCount = 4;
-int nBouncingBallsDecay = 1000;
-int nBouncingBallsRuntime = 30; // in seconds
-int nBouncingBallsFirstColor = 0;   // first color, wraps to get all 32
-int nBouncingBallsChangeColors = 0; // how many 100 count cycles to wait for change
+RTC_DATA_ATTR int nBouncingBallsCount = 4;
+RTC_DATA_ATTR int nBouncingBallsDecay = 1000;
+RTC_DATA_ATTR int nBouncingBallsRuntime = 30; // in seconds
+RTC_DATA_ATTR int nBouncingBallsFirstColor = 0;   // first color, wraps to get all 32
+RTC_DATA_ATTR int nBouncingBallsChangeColors = 0; // how many 100 count cycles to wait for change
 // cylon eye
-int nCylonEyeSize = 10;
-int nCylonEyeRed = 255;
-int nCylonEyeGreen = 0;
-int nCylonEyeBlue = 0;
+RTC_DATA_ATTR int nCylonEyeSize = 10;
+RTC_DATA_ATTR int nCylonEyeRed = 255;
+RTC_DATA_ATTR int nCylonEyeGreen = 0;
+RTC_DATA_ATTR int nCylonEyeBlue = 0;
 // random bars
-bool bRandomBarsBlacks = true;
-int nRandomBarsRuntime = 20;
-int nRandomBarsHoldframes = 10;
+RTC_DATA_ATTR bool bRandomBarsBlacks = true;
+RTC_DATA_ATTR int nRandomBarsRuntime = 20;
+RTC_DATA_ATTR int nRandomBarsHoldframes = 10;
 // meteor
-int nMeteorSize = 10;
-int nMeteorRed = 255;
-int nMeteorGreen = 255;
-int nMeteorBlue = 255;
+RTC_DATA_ATTR int nMeteorSize = 10;
+RTC_DATA_ATTR int nMeteorRed = 255;
+RTC_DATA_ATTR int nMeteorGreen = 255;
+RTC_DATA_ATTR int nMeteorBlue = 255;
 // display all color
-bool bDisplayAllRGB = false;    // true for RGB, else HSV
-int nDisplayAllRed = 255;
-int nDisplayAllGreen = 255;
-int nDisplayAllBlue = 255;
-int nDisplayAllHue = 0;
-int nDisplayAllSaturation = 255;
-int nDisplayAllBrightness = 255;
+RTC_DATA_ATTR bool bDisplayAllRGB = false;    // true for RGB, else HSV
+RTC_DATA_ATTR int nDisplayAllRed = 255;
+RTC_DATA_ATTR int nDisplayAllGreen = 255;
+RTC_DATA_ATTR int nDisplayAllBlue = 255;
+RTC_DATA_ATTR int nDisplayAllHue = 0;
+RTC_DATA_ATTR int nDisplayAllSaturation = 255;
+RTC_DATA_ATTR int nDisplayAllBrightness = 255;
 // rainbow
-int nRainbowHueDelta = 4;
-int nRainbowRuntime = 20;
-int nRainbowInitialHue = 0;
-int nRainbowFadeTime = 10;       // fade in out 0.1 Sec
-bool bRainbowAddGlitter = false;
-bool bRainbowCycleHue = false;
+RTC_DATA_ATTR int nRainbowHueDelta = 4;
+RTC_DATA_ATTR int nRainbowRuntime = 20;
+RTC_DATA_ATTR int nRainbowInitialHue = 0;
+RTC_DATA_ATTR int nRainbowFadeTime = 10;       // fade in out 0.1 Sec
+RTC_DATA_ATTR bool bRainbowAddGlitter = false;
+RTC_DATA_ATTR bool bRainbowCycleHue = false;
 // twinkle
-int nTwinkleRuntime = 20;
-bool bTwinkleOnlyOne = false;
+RTC_DATA_ATTR int nTwinkleRuntime = 20;
+RTC_DATA_ATTR bool bTwinkleOnlyOne = false;
 // confetti
-int nConfettiRuntime = 20;
-bool bConfettiCycleHue = false;
+RTC_DATA_ATTR int nConfettiRuntime = 20;
+RTC_DATA_ATTR bool bConfettiCycleHue = false;
 // juggle
-int nJuggleRuntime = 20;
+RTC_DATA_ATTR int nJuggleRuntime = 20;
 // sine
-int nSineRuntime = 20;
-int nSineStartingHue = 0;
-bool bSineCycleHue = false;
-int nSineSpeed = 13;
+RTC_DATA_ATTR int nSineRuntime = 20;
+RTC_DATA_ATTR int nSineStartingHue = 0;
+RTC_DATA_ATTR bool bSineCycleHue = false;
+RTC_DATA_ATTR int nSineSpeed = 13;
 // bpm
-int nBpmRuntime = 20;
-int nBpmBeatsPerMinute = 62;
-bool bBpmCycleHue = false;
+RTC_DATA_ATTR int nBpmRuntime = 20;
+RTC_DATA_ATTR int nBpmBeatsPerMinute = 62;
+RTC_DATA_ATTR bool bBpmCycleHue = false;
 // checkerboard/bars
-int nCheckerBoardRuntime = 20;
-int nCheckerboardHoldframes = 10;
-int nCheckboardBlackWidth = 12;
-int nCheckboardWhiteWidth = 12;
-bool bCheckerBoardAlternate = true;
-int nCheckerboardAddPixels = 0;
+RTC_DATA_ATTR int nCheckerBoardRuntime = 20;
+RTC_DATA_ATTR int nCheckerboardHoldframes = 10;
+RTC_DATA_ATTR int nCheckboardBlackWidth = 12;
+RTC_DATA_ATTR int nCheckboardWhiteWidth = 12;
+RTC_DATA_ATTR bool bCheckerBoardAlternate = true;
+RTC_DATA_ATTR int nCheckerboardAddPixels = 0;
 // stripes
-int nStripesRuntime = 10;
+RTC_DATA_ATTR int nStripesRuntime = 10;
 
 struct saveValues {
     void* val;
@@ -747,6 +748,7 @@ MenuItem MainMenu[] = {
     {eMenu,false,"Saved Settings",{.menu = EepromMenu}},
 	{eMenu,false,"System Settings",{.menu = SystemMenu}},
     {eText,false,"Light Bar",LightBar},
+    //{eText,false,"Battery",ReadBattery},
     //{eText,false,"Sleep",Sleep},
     {eReboot,false,"Reboot"},
     // make sure this one is last

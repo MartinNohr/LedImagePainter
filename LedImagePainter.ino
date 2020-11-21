@@ -19,6 +19,8 @@
 #include <RingBufCPP.h>
 #include "LedImagePainter.h"
 
+RTC_DATA_ATTR int nBootCount = 0;
+
 //#include <vector>
 //#include <queue>
 
@@ -361,6 +363,7 @@ void setup()
 {
 	Serial.begin(115200);
 	delay(100);
+	Serial.println("boot: " + String(nBootCount));
 	setupSDcard();
 	//vector<int> vi;
 	//queue<int> qu;
@@ -408,14 +411,16 @@ void setup()
 	int width = OLED->width();
 	int height = OLED->height();
 	OLED->clear();
-	OLED->drawRect(0, 0, width - 1, height - 1);
-	OLED->setFont(ArialMT_Plain_24);
-	OLED->drawString(2, 2, "LEDPainter");
-	OLED->setFont(ArialMT_Plain_16);
-	OLED->drawString(4, 30, "Version 2.11");
-	OLED->setFont(ArialMT_Plain_10);
-	OLED->drawString(4, 48, __DATE__);
-	OLED->display();
+	if (nBootCount == 0) {
+		OLED->drawRect(0, 0, width - 1, height - 1);
+		OLED->setFont(ArialMT_Plain_24);
+		OLED->drawString(2, 2, "LEDPainter");
+		OLED->setFont(ArialMT_Plain_16);
+		OLED->drawString(4, 30, "Version 2.12");
+		OLED->setFont(ArialMT_Plain_10);
+		OLED->drawString(4, 48, __DATE__);
+		OLED->display();
+	}
 	//OLED->setFont(ArialMT_Plain_10);
 	charHeight = 13;
 
@@ -426,7 +431,7 @@ void setup()
 		SaveSettings(false, false, true);
 	}
 	// load the saved settings if flag is true and the button isn't pushed
-	if (bAutoLoadSettings && gpio_get_level(BTNPUSH)) {
+	if ((nBootCount == 0) && bAutoLoadSettings && gpio_get_level(BTNPUSH)) {
 		// read all the settings
 		SaveSettings(false);
 	}
@@ -451,66 +456,67 @@ void setup()
 	//FastLED.setTemperature(whiteBalance);
 	FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, whiteBalance.b));
 	FastLED.setBrightness(nStripBrightness);
-	// Turn the LED on, then pause
-	SetPixel(0, CRGB::Red);
-	SetPixel(1, CRGB::Red);
-	SetPixel(4, CRGB::Green);
-	SetPixel(5, CRGB::Green);
-	SetPixel(8, CRGB::Blue);
-	SetPixel(9, CRGB::Blue);
-	SetPixel(12, CRGB::White);
-	SetPixel(13, CRGB::White);
-	SetPixel(NUM_LEDS - 0, CRGB::Red);
-	SetPixel(NUM_LEDS - 1, CRGB::Red);
-	SetPixel(NUM_LEDS - 4, CRGB::Green);
-	SetPixel(NUM_LEDS - 5, CRGB::Green);
-	SetPixel(NUM_LEDS - 8, CRGB::Blue);
-	SetPixel(NUM_LEDS - 9, CRGB::Blue);
-	SetPixel(NUM_LEDS - 12, CRGB::White);
-	SetPixel(NUM_LEDS - 13, CRGB::White);
-	SetPixel(0 + NUM_LEDS, CRGB::Red);
-	SetPixel(1 + NUM_LEDS, CRGB::Red);
-	SetPixel(4 + NUM_LEDS, CRGB::Green);
-	SetPixel(5 + NUM_LEDS, CRGB::Green);
-	SetPixel(8 + NUM_LEDS, CRGB::Blue);
-	SetPixel(9 + NUM_LEDS, CRGB::Blue);
-	SetPixel(12 + NUM_LEDS, CRGB::White);
-	SetPixel(13 + NUM_LEDS, CRGB::White);
-	for (int ix = 0; ix < 255; ix += 5) {
-		FastLED.setBrightness(ix);
-		FastLED.show();
+	if (nBootCount == 0) {
+		// Turn the LED on, then pause
+		SetPixel(0, CRGB::Red);
+		SetPixel(1, CRGB::Red);
+		SetPixel(4, CRGB::Green);
+		SetPixel(5, CRGB::Green);
+		SetPixel(8, CRGB::Blue);
+		SetPixel(9, CRGB::Blue);
+		SetPixel(12, CRGB::White);
+		SetPixel(13, CRGB::White);
+		SetPixel(NUM_LEDS - 0, CRGB::Red);
+		SetPixel(NUM_LEDS - 1, CRGB::Red);
+		SetPixel(NUM_LEDS - 4, CRGB::Green);
+		SetPixel(NUM_LEDS - 5, CRGB::Green);
+		SetPixel(NUM_LEDS - 8, CRGB::Blue);
+		SetPixel(NUM_LEDS - 9, CRGB::Blue);
+		SetPixel(NUM_LEDS - 12, CRGB::White);
+		SetPixel(NUM_LEDS - 13, CRGB::White);
+		SetPixel(0 + NUM_LEDS, CRGB::Red);
+		SetPixel(1 + NUM_LEDS, CRGB::Red);
+		SetPixel(4 + NUM_LEDS, CRGB::Green);
+		SetPixel(5 + NUM_LEDS, CRGB::Green);
+		SetPixel(8 + NUM_LEDS, CRGB::Blue);
+		SetPixel(9 + NUM_LEDS, CRGB::Blue);
+		SetPixel(12 + NUM_LEDS, CRGB::White);
+		SetPixel(13 + NUM_LEDS, CRGB::White);
+		for (int ix = 0; ix < 255; ix += 5) {
+			FastLED.setBrightness(ix);
+			FastLED.show();
+			delayMicroseconds(50);
+		}
+		for (int ix = 255; ix >= 0; ix -= 5) {
+			FastLED.setBrightness(ix);
+			FastLED.show();
+			delayMicroseconds(50);
+		}
 		delayMicroseconds(50);
-	}
-	for (int ix = 255; ix >= 0; ix -= 5) {
-		FastLED.setBrightness(ix);
-		FastLED.show();
+		FastLED.clear(true);
 		delayMicroseconds(50);
+		FastLED.setBrightness(nStripBrightness);
+		delay(50);
+		// Now turn the LED off
+		FastLED.clear(true);
+		delayMicroseconds(50);
+		// run a white dot up the display and back
+		for (int ix = 0; ix < STRIPLENGTH; ++ix) {
+			SetPixel(ix, CRGB::White);
+			if (ix)
+				SetPixel(ix - 1, CRGB::Black);
+			FastLED.show();
+			delayMicroseconds(50);
+		}
+		for (int ix = STRIPLENGTH - 1; ix >= 0; --ix) {
+			SetPixel(ix, CRGB::White);
+			if (ix)
+				SetPixel(ix + 1, CRGB::Black);
+			FastLED.show();
+			delayMicroseconds(50);
+		}
 	}
-	delayMicroseconds(50);
 	FastLED.clear(true);
-	delayMicroseconds(50);
-	FastLED.setBrightness(nStripBrightness);
-	delay(50);
-	// Now turn the LED off
-	FastLED.clear(true);
-	delayMicroseconds(50);
-	// run a white dot up the display and back
-	for (int ix = 0; ix < STRIPLENGTH; ++ix) {
-		SetPixel(ix, CRGB::White);
-		if (ix)
-			SetPixel(ix - 1, CRGB::Black);
-		FastLED.show();
-		delayMicroseconds(50);
-	}
-	for (int ix = STRIPLENGTH - 1; ix >= 0; --ix) {
-		SetPixel(ix, CRGB::White);
-		if (ix)
-			SetPixel(ix + 1, CRGB::Black);
-		FastLED.show();
-		delayMicroseconds(50);
-	}
-	FastLED.clear(true);
-	delayMicroseconds(50);
 	delay(100);
 	OLED->clear();
 	
@@ -533,6 +539,24 @@ void setup()
 		ToggleFilesBuiltin(NULL);
 	}
 	DisplayCurrentFile();
+
+	analogSetCycles(8);                   // Set number of cycles per sample, default is 8 and provides an optimal result, range is 1 - 255
+	analogSetSamples(1);                  // Set number of samples in the range, default is 1, it has an effect on sensitivity has been multiplied
+	analogSetClockDiv(1);                 // Set the divider for the ADC clock, default is 1, range is 1 - 255
+	analogSetAttenuation(ADC_11db);       // Sets the input attenuation for ALL ADC inputs, default is ADC_11db, range is ADC_0db, ADC_2_5db, ADC_6db, ADC_11db
+	//analogSetPinAttenuation(36, ADC_11db); // Sets the input attenuation, default is ADC_11db, range is ADC_0db, ADC_2_5db, ADC_6db, ADC_11db
+	analogSetPinAttenuation(37, ADC_11db);
+	// ADC_0db provides no attenuation so IN/OUT = 1 / 1 an input of 3 volts remains at 3 volts before ADC measurement
+	// ADC_2_5db provides an attenuation so that IN/OUT = 1 / 1.34 an input of 3 volts is reduced to 2.238 volts before ADC measurement
+	// ADC_6db provides an attenuation so that IN/OUT = 1 / 2 an input of 3 volts is reduced to 1.500 volts before ADC measurement
+	// ADC_11db provides an attenuation so that IN/OUT = 1 / 3.6 an input of 3 volts is reduced to 0.833 volts before ADC measurement
+//   adcAttachPin(VP);                     // Attach a pin to ADC (also clears any other analog mode that could be on), returns TRUE/FALSE result 
+//   adcStart(VP);                         // Starts an ADC conversion on attached pin's bus
+//   adcBusy(VP);                          // Check if conversion on the pin's ADC bus is currently running, returns TRUE/FALSE result 
+//   adcEnd(VP);
+
+	//adcAttachPin(36);
+	adcAttachPin(37);
 }
 
 void loop()
@@ -1802,6 +1826,7 @@ void OppositeRunningDots()
 
 void Sleep(MenuItem* menu)
 {
+	++nBootCount;
 	//rtc_gpio_pullup_en(BTNPUSH);
 	esp_sleep_enable_ext0_wakeup(BTNPUSH, LOW);
 	esp_deep_sleep_start();
@@ -2998,7 +3023,8 @@ bool GetFileNamesFromSD(String dir) {
 	for (int ix = 0; ix < NumberOfFiles; ++ix) {
 		FileNames[ix] = "";
 	}
-	CurrentFileIndex = 0;
+	if (nBootCount == 0)
+		CurrentFileIndex = 0;
 	if (bShowBuiltInTests) {
 		for (NumberOfFiles = 0; NumberOfFiles < (sizeof(BuiltInFiles) / sizeof(*BuiltInFiles)); ++NumberOfFiles) {
 			FileNames[NumberOfFiles] = BuiltInFiles[NumberOfFiles].text;
@@ -3428,4 +3454,65 @@ void IRAM_ATTR SetPixel(int ix, CRGB pixel)
 			leds[AdjustStripIndex(ix)] = pixel;
 		}
 	}
+}
+
+#define Fbattery    3700  //The default battery is 3700mv when the battery is fully charged.
+
+float XS = 0.00225;      //The returned reading is multiplied by this XS to get the battery voltage.
+uint16_t MUL = 1000;
+uint16_t MMUL = 100;
+// read and display the battery voltage
+void ReadBattery(MenuItem* menu)
+{
+	OLED->clear();
+	//uint16_t c = analogRead(13) * XS * MUL;
+	////uint16_t d  =  (analogRead(13)*XS*MUL*MMUL)/Fbattery;
+	//Serial.println(analogRead(13));
+	////Serial.println((String)d);
+ //  // Serial.printf("%x",analogRead(13));
+	//Heltec.display->drawString(0, 0, "Remaining battery still has:");
+	//Heltec.display->drawString(0, 10, "VBAT:");
+	//Heltec.display->drawString(35, 10, (String)c);
+	//Heltec.display->drawString(60, 10, "(mV)");
+	//// Heltec.display->drawString(90, 10, (String)d);
+	//// Heltec.display->drawString(98, 10, ".";
+	//// Heltec.display->drawString(107, 10, "%");
+	//Heltec.display->display();
+	//delay(2000);
+	//Heltec.display->clear();
+ //Battery voltage read pin changed from GPIO13 to GPI37
+	adcStart(37);
+	while (adcBusy(37))
+		;
+	Serial.printf("Battery power in GPIO 37: ");
+	Serial.println(analogRead(37));
+	uint16_t c1 = analogRead(37) * XS * MUL;
+	adcEnd(37);
+	Serial.println("Vbat: " + String(c1));
+
+	delay(100);
+
+	//adcStart(36);
+	//while (adcBusy(36));
+	//Serial.printf("voltage input on GPIO 36: ");
+	//Serial.println(analogRead(36));
+	//uint16_t c2 = analogRead(36) * 0.769 + 150;
+	//adcEnd(36);
+	//Serial.println("-------------");
+	// uint16_t c  =  analogRead(13)*XS*MUL;
+	// Serial.println(analogRead(13));
+	Heltec.display->drawString(0, 0, "Vbat = ");
+	Heltec.display->drawString(33, 0, (String)c1);
+	Heltec.display->drawString(60, 0, "(mV)");
+
+	//Heltec.display->drawString(0, 10, "Vin   = ");
+	//Heltec.display->drawString(33, 10, (String)c2);
+	//Heltec.display->drawString(60, 10, "(mV)");
+
+	// Heltec.display->drawString(0, 0, "Remaining battery still has:");
+	// Heltec.display->drawString(0, 10, "VBAT:");
+	// Heltec.display->drawString(35, 10, (String)c);
+	// Heltec.display->drawString(60, 10, "(mV)");
+	Heltec.display->display();
+	delay(2000);
 }
