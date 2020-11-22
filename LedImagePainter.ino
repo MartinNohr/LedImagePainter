@@ -3571,6 +3571,9 @@ void RainbowPulse()
 			FastLED.show();
 			highest_element = max(highest_element, element);
 		}
+		if (CheckCancel()) {
+			return;
+		}
 		delayMicroseconds(nRainbowPulsePause * 10);
 		if (element < last_element) {
 			// cleanup the highest one
