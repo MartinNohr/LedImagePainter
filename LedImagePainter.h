@@ -54,6 +54,7 @@ void TestConfetti();
 void DisplayAllColor();
 void TestStripes();
 void TestLines();
+void RainbowPulse();
 
 bool bPauseDisplay = false; // set this so DisplayLine and Progress won't update display
 int ReadButton();
@@ -309,6 +310,11 @@ RTC_DATA_ATTR int nStripesRuntime = 10;
 RTC_DATA_ATTR int nLinesWhite = 5;
 RTC_DATA_ATTR int nLinesBlack = 5;
 RTC_DATA_ATTR int nLinesRuntime = 10;
+// rainbow pulse settings
+RTC_DATA_ATTR int nRainbowPulseColorScale = 10;
+RTC_DATA_ATTR int nRainbowPulsePause = 5;
+RTC_DATA_ATTR int nRainbowPulseSaturation = 255;
+RTC_DATA_ATTR int nRainbowPulseStartColor = 0;
 
 struct saveValues {
     void* val;
@@ -509,6 +515,16 @@ MenuItem RainbowMenu[] = {
     {eBool,false,"Cycle Hue: %s",ToggleBool,&bRainbowCycleHue,0,0,0,"Yes","No"},
     {eTextInt,false,"Hue Delta Size: %d",GetIntegerValue,&nRainbowHueDelta,1,255},
     {eBool,false,"Add Glitter: %s",ToggleBool,&bRainbowAddGlitter,0,0,0,"Yes","No"},
+    {eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem RainbowPulseMenu[] = {
+    {eExit,false,"Previous Menu"},
+    {eTextInt,false,"Step Pause: %d",GetIntegerValue,&nRainbowPulsePause,0,1000},
+    {eTextInt,false,"Color Rate Scale: %d",GetIntegerValue,&nRainbowPulseColorScale,0,256},
+    {eTextInt,false,"Start Color: %d",GetIntegerValue,&nRainbowPulseStartColor,0,255},
+    {eTextInt,false,"Color Saturation: %d",GetIntegerValue,&nRainbowPulseSaturation,0,255},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
@@ -785,6 +801,7 @@ BuiltInItem BuiltInFiles[] = {
     {"Meteor",TestMeteor,MeteorMenu},
     {"One Dot",RunningDot},
     {"Rainbow",TestRainbow,RainbowMenu},
+    {"Rainbow Pulse",RainbowPulse,RainbowPulseMenu},
     {"Random Bars",RandomBars,RandomBarsMenu},
     {"Sine Trails",TestSine,SineMenu},
     {"Solid Color",DisplayAllColor,DisplayAllColorMenu},

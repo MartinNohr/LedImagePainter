@@ -416,7 +416,7 @@ void setup()
 		OLED->setFont(ArialMT_Plain_24);
 		OLED->drawString(2, 2, "LEDPainter");
 		OLED->setFont(ArialMT_Plain_16);
-		OLED->drawString(4, 30, "Version 2.12");
+		OLED->drawString(4, 30, "Version 2.13");
 		OLED->setFont(ArialMT_Plain_10);
 		OLED->drawString(4, 48, __DATE__);
 		OLED->display();
@@ -457,7 +457,7 @@ void setup()
 	FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, whiteBalance.b));
 	FastLED.setBrightness(nStripBrightness);
 	if (nBootCount == 0) {
-		LightUp();
+		RainbowPulse();
 		//// Turn the LED on, then pause
 		//SetPixel(0, CRGB::Red);
 		//SetPixel(1, CRGB::Red);
@@ -3556,26 +3556,23 @@ void ReadBattery(MenuItem* menu)
 	////delay(2000);
 }
 
-#define PISCALE 1
-#define TWO_HUNDRED_PI (628*PISCALE)
-void LightUp()
+// grow and shrink a rainbow type pattern
+#define PI_SCALE 1
+#define TWO_HUNDRED_PI (628*PI_SCALE)
+void RainbowPulse()
 {
 	int element = 0;
 	int last_element = 0;
 	int highest_element = 0;
 	for (int i = 0; i < TWO_HUNDRED_PI; i++) {
-		element = round((NUM_LEDS - 1) / 2 * (-cos(i / (PISCALE * 100.0)) + 1));
-		//Serial.println(" element: " + String(element));
+		element = round((NUM_LEDS - 1) / 2 * (-cos(i / (PI_SCALE * 100.0)) + 1));
 		if (element > last_element) {
-			Serial.println("e: " + String(element) + " last: " + String(last_element));
-			SetPixel(element, CHSV(element * 10, 255, 128));
+			SetPixel(element, CHSV(element * nRainbowPulseColorScale + nRainbowPulseStartColor, nRainbowPulseSaturation, 255));
 			FastLED.show();
 			highest_element = max(highest_element, element);
 		}
-		//delay(1);
-		delayMicroseconds(50);
+		delayMicroseconds(nRainbowPulsePause * 10);
 		if (element < last_element) {
-			Serial.println("element: " + String(element) + " last: " + String(last_element));
 			// cleanup the highest one
 			SetPixel(highest_element, CRGB::Black);
 			SetPixel(element, CRGB::Black);
