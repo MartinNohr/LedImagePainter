@@ -457,64 +457,65 @@ void setup()
 	FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, whiteBalance.b));
 	FastLED.setBrightness(nStripBrightness);
 	if (nBootCount == 0) {
-		// Turn the LED on, then pause
-		SetPixel(0, CRGB::Red);
-		SetPixel(1, CRGB::Red);
-		SetPixel(4, CRGB::Green);
-		SetPixel(5, CRGB::Green);
-		SetPixel(8, CRGB::Blue);
-		SetPixel(9, CRGB::Blue);
-		SetPixel(12, CRGB::White);
-		SetPixel(13, CRGB::White);
-		SetPixel(NUM_LEDS - 0, CRGB::Red);
-		SetPixel(NUM_LEDS - 1, CRGB::Red);
-		SetPixel(NUM_LEDS - 4, CRGB::Green);
-		SetPixel(NUM_LEDS - 5, CRGB::Green);
-		SetPixel(NUM_LEDS - 8, CRGB::Blue);
-		SetPixel(NUM_LEDS - 9, CRGB::Blue);
-		SetPixel(NUM_LEDS - 12, CRGB::White);
-		SetPixel(NUM_LEDS - 13, CRGB::White);
-		SetPixel(0 + NUM_LEDS, CRGB::Red);
-		SetPixel(1 + NUM_LEDS, CRGB::Red);
-		SetPixel(4 + NUM_LEDS, CRGB::Green);
-		SetPixel(5 + NUM_LEDS, CRGB::Green);
-		SetPixel(8 + NUM_LEDS, CRGB::Blue);
-		SetPixel(9 + NUM_LEDS, CRGB::Blue);
-		SetPixel(12 + NUM_LEDS, CRGB::White);
-		SetPixel(13 + NUM_LEDS, CRGB::White);
-		for (int ix = 0; ix < 255; ix += 5) {
-			FastLED.setBrightness(ix);
-			FastLED.show();
-			delayMicroseconds(50);
-		}
-		for (int ix = 255; ix >= 0; ix -= 5) {
-			FastLED.setBrightness(ix);
-			FastLED.show();
-			delayMicroseconds(50);
-		}
-		delayMicroseconds(50);
-		FastLED.clear(true);
-		delayMicroseconds(50);
-		FastLED.setBrightness(nStripBrightness);
-		delay(50);
-		// Now turn the LED off
-		FastLED.clear(true);
-		delayMicroseconds(50);
-		// run a white dot up the display and back
-		for (int ix = 0; ix < STRIPLENGTH; ++ix) {
-			SetPixel(ix, CRGB::White);
-			if (ix)
-				SetPixel(ix - 1, CRGB::Black);
-			FastLED.show();
-			delayMicroseconds(50);
-		}
-		for (int ix = STRIPLENGTH - 1; ix >= 0; --ix) {
-			SetPixel(ix, CRGB::White);
-			if (ix)
-				SetPixel(ix + 1, CRGB::Black);
-			FastLED.show();
-			delayMicroseconds(50);
-		}
+		LightUp();
+		//// Turn the LED on, then pause
+		//SetPixel(0, CRGB::Red);
+		//SetPixel(1, CRGB::Red);
+		//SetPixel(4, CRGB::Green);
+		//SetPixel(5, CRGB::Green);
+		//SetPixel(8, CRGB::Blue);
+		//SetPixel(9, CRGB::Blue);
+		//SetPixel(12, CRGB::White);
+		//SetPixel(13, CRGB::White);
+		//SetPixel(NUM_LEDS - 0, CRGB::Red);
+		//SetPixel(NUM_LEDS - 1, CRGB::Red);
+		//SetPixel(NUM_LEDS - 4, CRGB::Green);
+		//SetPixel(NUM_LEDS - 5, CRGB::Green);
+		//SetPixel(NUM_LEDS - 8, CRGB::Blue);
+		//SetPixel(NUM_LEDS - 9, CRGB::Blue);
+		//SetPixel(NUM_LEDS - 12, CRGB::White);
+		//SetPixel(NUM_LEDS - 13, CRGB::White);
+		//SetPixel(0 + NUM_LEDS, CRGB::Red);
+		//SetPixel(1 + NUM_LEDS, CRGB::Red);
+		//SetPixel(4 + NUM_LEDS, CRGB::Green);
+		//SetPixel(5 + NUM_LEDS, CRGB::Green);
+		//SetPixel(8 + NUM_LEDS, CRGB::Blue);
+		//SetPixel(9 + NUM_LEDS, CRGB::Blue);
+		//SetPixel(12 + NUM_LEDS, CRGB::White);
+		//SetPixel(13 + NUM_LEDS, CRGB::White);
+		//for (int ix = 0; ix < 255; ix += 5) {
+		//	FastLED.setBrightness(ix);
+		//	FastLED.show();
+		//	delayMicroseconds(50);
+		//}
+		//for (int ix = 255; ix >= 0; ix -= 5) {
+		//	FastLED.setBrightness(ix);
+		//	FastLED.show();
+		//	delayMicroseconds(50);
+		//}
+		//delayMicroseconds(50);
+		//FastLED.clear(true);
+		//delayMicroseconds(50);
+		//FastLED.setBrightness(nStripBrightness);
+		//delay(50);
+		//// Now turn the LED off
+		//FastLED.clear(true);
+		//delayMicroseconds(50);
+		//// run a white dot up the display and back
+		//for (int ix = 0; ix < STRIPLENGTH; ++ix) {
+		//	SetPixel(ix, CRGB::White);
+		//	if (ix)
+		//		SetPixel(ix - 1, CRGB::Black);
+		//	FastLED.show();
+		//	delayMicroseconds(50);
+		//}
+		//for (int ix = STRIPLENGTH - 1; ix >= 0; --ix) {
+		//	SetPixel(ix, CRGB::White);
+		//	if (ix)
+		//		SetPixel(ix + 1, CRGB::Black);
+		//	FastLED.show();
+		//	delayMicroseconds(50);
+		//}
 	}
 	FastLED.clear(true);
 	delay(100);
@@ -3499,7 +3500,10 @@ uint16_t MMUL = 100;
 // read and display the battery voltage
 void ReadBattery(MenuItem* menu)
 {
-	OLED->clear();
+	//OLED->clear();
+	uint16_t bat = analogRead(A4);
+	Serial.println("bat: " + String(bat));
+	delay(100);
 	//uint16_t c = analogRead(13) * XS * MUL;
 	////uint16_t d  =  (analogRead(13)*XS*MUL*MMUL)/Fbattery;
 	//Serial.println(analogRead(13));
@@ -3516,16 +3520,16 @@ void ReadBattery(MenuItem* menu)
 	//delay(2000);
 	//Heltec.display->clear();
  //Battery voltage read pin changed from GPIO13 to GPI37
-	adcStart(37);
-	while (adcBusy(37))
-		;
-	Serial.printf("Battery power in GPIO 37: ");
-	Serial.println(analogRead(37));
-	uint16_t c1 = analogRead(37) * XS * MUL;
-	adcEnd(37);
-	Serial.println("Vbat: " + String(c1));
+	////adcStart(37);
+	////while (adcBusy(37))
+	////	;
+	////Serial.printf("Battery power in GPIO 37: ");
+	////Serial.println(analogRead(37));
+	////uint16_t c1 = analogRead(37) * XS * MUL;
+	////adcEnd(37);
+	////Serial.println("Vbat: " + String(c1));
 
-	delay(100);
+	////delay(100);
 
 	//adcStart(36);
 	//while (adcBusy(36));
@@ -3536,9 +3540,9 @@ void ReadBattery(MenuItem* menu)
 	//Serial.println("-------------");
 	// uint16_t c  =  analogRead(13)*XS*MUL;
 	// Serial.println(analogRead(13));
-	Heltec.display->drawString(0, 0, "Vbat = ");
-	Heltec.display->drawString(33, 0, (String)c1);
-	Heltec.display->drawString(60, 0, "(mV)");
+	////Heltec.display->drawString(0, 0, "Vbat = ");
+	////Heltec.display->drawString(33, 0, (String)c1);
+	////Heltec.display->drawString(60, 0, "(mV)");
 
 	//Heltec.display->drawString(0, 10, "Vin   = ");
 	//Heltec.display->drawString(33, 10, (String)c2);
@@ -3548,6 +3552,35 @@ void ReadBattery(MenuItem* menu)
 	// Heltec.display->drawString(0, 10, "VBAT:");
 	// Heltec.display->drawString(35, 10, (String)c);
 	// Heltec.display->drawString(60, 10, "(mV)");
-	Heltec.display->display();
-	delay(2000);
+	////Heltec.display->display();
+	////delay(2000);
+}
+
+#define PISCALE 1
+#define TWO_HUNDRED_PI (628*PISCALE)
+void LightUp()
+{
+	int element = 0;
+	int last_element = 0;
+	int highest_element = 0;
+	for (int i = 0; i < TWO_HUNDRED_PI; i++) {
+		element = round((NUM_LEDS - 1) / 2 * (-cos(i / (PISCALE * 100.0)) + 1));
+		//Serial.println(" element: " + String(element));
+		if (element > last_element) {
+			Serial.println("e: " + String(element) + " last: " + String(last_element));
+			SetPixel(element, CHSV(element * 10, 255, 128));
+			FastLED.show();
+			highest_element = max(highest_element, element);
+		}
+		//delay(1);
+		delayMicroseconds(50);
+		if (element < last_element) {
+			Serial.println("element: " + String(element) + " last: " + String(last_element));
+			// cleanup the highest one
+			SetPixel(highest_element, CRGB::Black);
+			SetPixel(element, CRGB::Black);
+			FastLED.show();
+		}
+		last_element = element;
+	}
 }

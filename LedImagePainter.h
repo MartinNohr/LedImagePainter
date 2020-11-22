@@ -68,7 +68,7 @@ bool SaveSettings(bool save, bool bOnlySignature = false, bool bAutoloadFlag = f
 // settings
 RTC_DATA_ATTR int nDisplayBrightness = 100;           // this is in %
 RTC_DATA_ATTR bool bDisplayInvert = false;            // set to reverse display
-bool bReverseDial = false;              // change the dial direction
+RTC_DATA_ATTR bool bReverseDial = false;              // change the dial direction
 bool bSdCardValid = false;              // set to true when card is found
 int nLongPressCounterValue = 40;        // multiplier for long press compared to normal press
 volatile int nLongPressCounter = 0;     // counter during press
