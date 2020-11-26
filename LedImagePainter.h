@@ -783,7 +783,7 @@ MenuItem MainMenu[] = {
 	{eMenu,false,"System Settings",{.menu = SystemMenu}},
     {eText,false,"Light Bar",LightBar},
     //{eText,false,"Battery",ReadBattery},
-    //{eText,false,"Sleep",Sleep},
+    {eText,false,"Sleep",Sleep},
     {eReboot,false,"Reboot"},
     // make sure this one is last
     {eTerminate}

@@ -3503,7 +3503,8 @@ void ReadBattery(MenuItem* menu)
 	//OLED->clear();
 	uint16_t bat = analogRead(A4);
 	Serial.println("bat: " + String(bat));
-	delay(100);
+	DisplayLine(0, "Battery: " + String(bat));
+	delay(1000);
 	//uint16_t c = analogRead(13) * XS * MUL;
 	////uint16_t d  =  (analogRead(13)*XS*MUL*MMUL)/Fbattery;
 	//Serial.println(analogRead(13));
