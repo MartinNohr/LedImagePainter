@@ -457,7 +457,10 @@ void setup()
 	FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, whiteBalance.b));
 	FastLED.setBrightness(nStripBrightness);
 	if (nBootCount == 0) {
+		bool oldSecond = bSecondStrip;
+		bSecondStrip = true;
 		RainbowPulse();
+		bSecondStrip = oldSecond;
 		//// Turn the LED on, then pause
 		//SetPixel(0, CRGB::Red);
 		//SetPixel(1, CRGB::Red);
@@ -3462,7 +3465,7 @@ int AdjustStripIndex(int ix)
 		ix = (NUM_LEDS - 1 - ix);
 	}
 	ix = max(0, ix);
-	ix = min(NUM_LEDS - 1, ix);
+	ix = min(STRIPLENGTH - 1, ix);
 	return ix;
 }
 
@@ -3558,16 +3561,19 @@ void ReadBattery(MenuItem* menu)
 }
 
 // grow and shrink a rainbow type pattern
-#define PI_SCALE 1
+#define PI_SCALE 2
 #define TWO_HUNDRED_PI (628*PI_SCALE)
 void RainbowPulse()
 {
 	int element = 0;
 	int last_element = 0;
 	int highest_element = 0;
+	//Serial.println("second: " + String(bSecondStrip));
+	//Serial.println("Len: " + String(STRIPLENGTH));
 	for (int i = 0; i < TWO_HUNDRED_PI; i++) {
-		element = round((NUM_LEDS - 1) / 2 * (-cos(i / (PI_SCALE * 100.0)) + 1));
+		element = round((STRIPLENGTH - 1) / 2 * (-cos(i / (PI_SCALE * 100.0)) + 1));
 		if (element > last_element) {
+			//Serial.println("el: " + String(element));
 			SetPixel(element, CHSV(element * nRainbowPulseColorScale + nRainbowPulseStartColor, nRainbowPulseSaturation, 255));
 			FastLED.show();
 			highest_element = max(highest_element, element);
