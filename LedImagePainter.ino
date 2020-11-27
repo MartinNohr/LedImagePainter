@@ -2302,6 +2302,7 @@ void TestLines()
 		//}
 		FastLED.show();
 	}
+	FastLED.clear(true);
 }
 
 // time is in mSec
