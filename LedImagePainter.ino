@@ -2127,8 +2127,12 @@ void juggle()
 	// eight colored dots, weaving in and out of sync with each other
 	fadeToBlackBy(leds, STRIPLENGTH, 20);
 	byte dothue = 0;
+	uint16_t index;
 	for (int i = 0; i < 8; i++) {
-		leds[beatsin16(i + 7, 0, STRIPLENGTH)] |= CHSV(dothue, 200, 255);
+		index = beatsin16(i + 7, 0, STRIPLENGTH);
+		// use AdjustStripIndex to get the right one
+		SetPixel(index, leds[AdjustStripIndex(index)] | CHSV(dothue, 255, 255));
+		//leds[beatsin16(i + 7, 0, STRIPLENGTH)] |= CHSV(dothue, 255, 255);
 		dothue += 32;
 	}
 }
@@ -2156,7 +2160,7 @@ void sinelon()
 	// a colored dot sweeping back and forth, with fading trails
 	fadeToBlackBy(leds, STRIPLENGTH, 20);
 	int pos = beatsin16(nSineSpeed, 0, STRIPLENGTH);
-	leds[pos] += CHSV(gHue, 255, 192);
+	leds[AdjustStripIndex(pos)] += CHSV(gHue, 255, 192);
 	if (bSineCycleHue)
 		++gHue;
 }
@@ -2225,7 +2229,7 @@ void TestRainbow()
 // create a user defined stripe set
 // it consists of a list of stripes, each of which have a width and color
 // there can be up to 10 of these
-#define NUM_STRIPES 10
+#define NUM_STRIPES 20
 struct {
 	int start;
 	int length;

@@ -100,6 +100,10 @@ typedef long pthread_cond_t;
 
 #define ESP_LOGI(tag, ...)
 
+// Read Value from Register
+#define READ_PERI_REG(addr)
+// Write Value to Register
+#define WRITE_PERI_REG(addr,val)
 #include "LedImagePainter.ino"
 #endif
 #endif
