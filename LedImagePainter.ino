@@ -416,7 +416,7 @@ void setup()
 		OLED->setFont(ArialMT_Plain_24);
 		OLED->drawString(2, 2, "LEDPainter");
 		OLED->setFont(ArialMT_Plain_16);
-		OLED->drawString(4, 30, "Version 2.13");
+		OLED->drawString(4, 30, "Version 2.14");
 		OLED->setFont(ArialMT_Plain_10);
 		OLED->drawString(4, 48, __DATE__);
 		OLED->display();
