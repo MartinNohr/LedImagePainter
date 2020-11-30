@@ -9,13 +9,6 @@
 /*
 	BLE code based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleServer.cpp
 */
-//#define ARDUINOJSON_ENABLE_STD_STREAM 0
-//#define ARDUINOJSON_ENABLE_STD_STRING 0
-#include <ArduinoJson.h>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
-#include <BLE2902.h>
 #include "LedImagePainter.h"
 
 RTC_DATA_ATTR int nBootCount = 0;
@@ -457,10 +450,10 @@ void setup()
 	FastLED.setTemperature(CRGB(whiteBalance.r, whiteBalance.g, whiteBalance.b));
 	FastLED.setBrightness(nStripBrightness);
 	if (nBootCount == 0) {
-		bool oldSecond = bSecondStrip;
-		bSecondStrip = true;
+		//bool oldSecond = bSecondStrip;
+		//bSecondStrip = true;
 		RainbowPulse();
-		bSecondStrip = oldSecond;
+		//bSecondStrip = oldSecond;
 		//// Turn the LED on, then pause
 		//SetPixel(0, CRGB::Red);
 		//SetPixel(1, CRGB::Red);
@@ -3609,6 +3602,33 @@ void RainbowPulse()
 		}
 		last_element = element;
 	}
+}
+
+/*
+	Write a wedge in time, from the middle out
+*/
+void TestWedge()
+{
+	int midPoint = STRIPLENGTH / 2 - 1;
+	//Serial.println("mid: " + String(midPoint));
+	for (int ix = 0; ix < STRIPLENGTH / 2; ++ix) {
+		//Serial.println("ix: " + String(ix));
+		SetPixel(midPoint + ix, CRGB::White);
+		SetPixel(midPoint - ix, CRGB::White);
+		if (ix > 1) {
+			SetPixel(midPoint + ix - 1, CRGB::Black);
+			SetPixel(midPoint - ix + 1, CRGB::Black);
+		}
+		else {
+			SetPixel(midPoint, CRGB::Black);
+		}
+		FastLED.show();
+		delay(nFrameHold);
+		if (CheckCancel()) {
+			return;
+		}
+	}
+	FastLED.clear(true);
 }
 
 //#define NUM_LEDS 22

@@ -1,4 +1,9 @@
 #pragma once
+#include <ArduinoJson.h>
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
+#include <BLE2902.h>
 #include "heltec.h"
 #include <time.h>
 #include "FS.h"
@@ -55,6 +60,7 @@ void DisplayAllColor();
 void TestStripes();
 void TestLines();
 void RainbowPulse();
+void TestWedge();
 
 bool bPauseDisplay = false; // set this so DisplayLine and Progress won't update display
 int ReadButton();
@@ -315,6 +321,7 @@ RTC_DATA_ATTR int nRainbowPulseColorScale = 10;
 RTC_DATA_ATTR int nRainbowPulsePause = 5;
 RTC_DATA_ATTR int nRainbowPulseSaturation = 255;
 RTC_DATA_ATTR int nRainbowPulseStartColor = 0;
+// wedge data
 
 struct saveValues {
     void* val;
@@ -808,6 +815,7 @@ BuiltInItem BuiltInFiles[] = {
     {"Stripes",TestStripes},
     {"Twinkle",TestTwinkle,TwinkleMenu},
     {"Two Dots",OppositeRunningDots},
+    {"Wedge",TestWedge},
 };
 
 #include <StackArray.h>
