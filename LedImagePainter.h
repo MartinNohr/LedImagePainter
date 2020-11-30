@@ -434,6 +434,13 @@ const saveValues saveValueList[] = {
     {&nLinesRuntime,sizeof(nLinesRuntime)},
     {&nLinesWhite,sizeof(nLinesWhite)},
     {&nLinesBlack,sizeof(nLinesBlack)},
+    // rainbow pulse
+    {&nRainbowPulseColorScale,sizeof(nRainbowPulseColorScale)},
+    {&nRainbowPulsePause,sizeof(nRainbowPulsePause)},
+    {&nRainbowPulseSaturation,sizeof(nRainbowPulseSaturation)},
+    {&nRainbowPulseStartColor,sizeof(nRainbowPulseStartColor)},
+    // wedge
+    {&bFillWedge,sizeof(bFillWedge)},
 };
 
 // Gramma Correction (Defalt Gamma = 2.8)
