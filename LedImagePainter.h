@@ -68,7 +68,7 @@ bool CheckCancel();
 
 // eeprom values
 // the signature is saved first in eeprom, followed by the autoload flag, all other values follow
-char signature[] = { "LIP0210" };   // set to make sure saved values are valid, change when savevalues is changed
+char signature[] = { "LIP0215" };   // set to make sure saved values are valid, change when savevalues is changed
 RTC_DATA_ATTR bool bAutoLoadSettings = false;     // set to automatically load saved settings from eeprom
 bool SaveSettings(bool save, bool bOnlySignature = false, bool bAutoloadFlag = false);
 
@@ -322,7 +322,10 @@ RTC_DATA_ATTR int nRainbowPulsePause = 5;
 RTC_DATA_ATTR int nRainbowPulseSaturation = 255;
 RTC_DATA_ATTR int nRainbowPulseStartColor = 0;
 // wedge data
-RTC_DATA_ATTR bool bFillWedge = false;
+RTC_DATA_ATTR bool bWedgeFill = false;
+RTC_DATA_ATTR int nWedgeRed = 255;
+RTC_DATA_ATTR int nWedgeGreen = 255;
+RTC_DATA_ATTR int nWedgeBlue = 255;
 
 struct saveValues {
     void* val;
@@ -440,7 +443,10 @@ const saveValues saveValueList[] = {
     {&nRainbowPulseSaturation,sizeof(nRainbowPulseSaturation)},
     {&nRainbowPulseStartColor,sizeof(nRainbowPulseStartColor)},
     // wedge
-    {&bFillWedge,sizeof(bFillWedge)},
+    {&bWedgeFill,sizeof(bWedgeFill)},
+    {&nWedgeBlue,sizeof(nWedgeBlue)},
+    {&nWedgeRed,sizeof(nWedgeRed)},
+    {&nWedgeGreen,sizeof(nWedgeGreen)},
 };
 
 // Gramma Correction (Defalt Gamma = 2.8)
@@ -569,7 +575,10 @@ MenuItem TwinkleMenu[] = {
 };
 MenuItem WedgeMenu[] = {
     {eExit,false,"Previous Menu"},
-    {eBool,false,"Fill Wedge: %s",ToggleBool,&bFillWedge,0,0,0,"Solid","<"},
+    {eBool,false,"Fill Wedge: %s",ToggleBool,&bWedgeFill,0,0,0,"Solid","<"},
+    {eTextInt,false,"Red: %d",GetIntegerValue,&nWedgeRed,0,255},
+    {eTextInt,false,"Green: %d",GetIntegerValue,&nWedgeGreen,0,255},
+    {eTextInt,false,"Blue: %d",GetIntegerValue,&nWedgeBlue,0,255},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}

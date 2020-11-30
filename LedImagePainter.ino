@@ -409,7 +409,7 @@ void setup()
 		OLED->setFont(ArialMT_Plain_24);
 		OLED->drawString(2, 2, "LEDPainter");
 		OLED->setFont(ArialMT_Plain_16);
-		OLED->drawString(4, 30, "Version 2.14");
+		OLED->drawString(4, 30, "Version 2.15");
 		OLED->setFont(ArialMT_Plain_10);
 		OLED->drawString(4, 48, __DATE__);
 		OLED->display();
@@ -3610,12 +3610,10 @@ void RainbowPulse()
 void TestWedge()
 {
 	int midPoint = STRIPLENGTH / 2 - 1;
-	//Serial.println("mid: " + String(midPoint));
 	for (int ix = 0; ix < STRIPLENGTH / 2; ++ix) {
-		//Serial.println("ix: " + String(ix));
-		SetPixel(midPoint + ix, CRGB::White);
-		SetPixel(midPoint - ix, CRGB::White);
-		if (!bFillWedge) {
+		SetPixel(midPoint + ix, CRGB(nWedgeRed, nWedgeGreen, nWedgeBlue));
+		SetPixel(midPoint - ix, CRGB(nWedgeRed, nWedgeGreen, nWedgeBlue));
+		if (!bWedgeFill) {
 			if (ix > 1) {
 				SetPixel(midPoint + ix - 1, CRGB::Black);
 				SetPixel(midPoint - ix + 1, CRGB::Black);
