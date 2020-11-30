@@ -3615,12 +3615,14 @@ void TestWedge()
 		//Serial.println("ix: " + String(ix));
 		SetPixel(midPoint + ix, CRGB::White);
 		SetPixel(midPoint - ix, CRGB::White);
-		if (ix > 1) {
-			SetPixel(midPoint + ix - 1, CRGB::Black);
-			SetPixel(midPoint - ix + 1, CRGB::Black);
-		}
-		else {
-			SetPixel(midPoint, CRGB::Black);
+		if (!bFillWedge) {
+			if (ix > 1) {
+				SetPixel(midPoint + ix - 1, CRGB::Black);
+				SetPixel(midPoint - ix + 1, CRGB::Black);
+			}
+			else {
+				SetPixel(midPoint, CRGB::Black);
+			}
 		}
 		FastLED.show();
 		delay(nFrameHold);

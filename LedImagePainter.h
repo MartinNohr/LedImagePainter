@@ -322,6 +322,7 @@ RTC_DATA_ATTR int nRainbowPulsePause = 5;
 RTC_DATA_ATTR int nRainbowPulseSaturation = 255;
 RTC_DATA_ATTR int nRainbowPulseStartColor = 0;
 // wedge data
+RTC_DATA_ATTR bool bFillWedge = false;
 
 struct saveValues {
     void* val;
@@ -555,6 +556,13 @@ MenuItem TwinkleMenu[] = {
     {eExit,false,"Previous Menu"},
     {eTextInt,false,"Runtime (S): %d",GetIntegerValue,&nTwinkleRuntime,1,120},
     {eBool,false,"One or Many: %s",ToggleBool,&bTwinkleOnlyOne,0,0,0,"One","Many"},
+    {eExit,false,"Previous Menu"},
+    // make sure this one is last
+    {eTerminate}
+};
+MenuItem WedgeMenu[] = {
+    {eExit,false,"Previous Menu"},
+    {eBool,false,"Fill Wedge: %s",ToggleBool,&bFillWedge,0,0,0,"Solid","<"},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
     {eTerminate}
@@ -815,7 +823,7 @@ BuiltInItem BuiltInFiles[] = {
     {"Stripes",TestStripes},
     {"Twinkle",TestTwinkle,TwinkleMenu},
     {"Two Dots",OppositeRunningDots},
-    {"Wedge",TestWedge},
+    {"Wedge",TestWedge,WedgeMenu},
 };
 
 #include <StackArray.h>
