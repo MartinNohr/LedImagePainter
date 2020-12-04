@@ -39,6 +39,8 @@ uint32_t IRAM_ATTR readLong();
 void IRAM_ATTR FileSeekBuf(uint32_t place);
 
 std::queue<int> btnBuf;
+RTC_DATA_ATTR int nDialSensitivity = 1;
+RTC_DATA_ATTR int nDialSpeed = 300;
 enum BUTTONS { BTN_NONE = 1, BTN_RIGHT, BTN_LEFT, BTN_SELECT, BTN_LONG };
 // for debugging missed buttons
 //volatile int nButtonDowns;
@@ -110,7 +112,13 @@ void IRAM_ATTR IntBtnA()
 	int btnToPush = BTN_NONE;
 	// ignore until the time has expired
 	unsigned long millisNow = millis();
-	if (lastValA != valA && millisNow > lastTime + 2) {
+	if (millisNow - lastTime > nDialSpeed) {
+		// been too long, reset the counts
+		countRight = countLeft = 0;
+		// and the pending one
+		pendingBtn = BTN_NONE;
+	}
+	if (lastValA != valA && millisNow > lastTime + 3) {
 		if (pendingBtn != BTN_NONE) {
 			btnToPush = pendingBtn;
 			pendingBtn = BTN_NONE;
@@ -128,15 +136,14 @@ void IRAM_ATTR IntBtnA()
 		// push a button?
 		if (btnToPush != BTN_NONE) {
 			// check sensitivity counts
-			if (millisNow - lastTime > 30) {
-				// been too long, reset the counts
-				countRight = countLeft = 0;
-			}
 			if (btnToPush == BTN_RIGHT)
 				++countRight;
 			else
 				++countLeft;
-			btnBuf.push(btnToPush);
+			if (countRight >= nDialSensitivity || countLeft >= nDialSensitivity) {
+				btnBuf.push(btnToPush);
+				countRight = countLeft = 0;
+			}
 		}
 		// remember when we were here last time
 		lastTime = millisNow;
@@ -428,7 +435,7 @@ void setup()
 		OLED->setFont(ArialMT_Plain_24);
 		OLED->drawString(2, 2, "LEDPainter");
 		OLED->setFont(ArialMT_Plain_16);
-		OLED->drawString(4, 30, "Version 2.15");
+		OLED->drawString(4, 30, "Version 2.16");
 		OLED->setFont(ArialMT_Plain_10);
 		OLED->drawString(4, 48, __DATE__);
 		OLED->display();
