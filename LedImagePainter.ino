@@ -99,16 +99,20 @@ void IRAM_ATTR periodic_LONGPRESS_timer_callback(void* arg)
 void IRAM_ATTR IntBtnA()
 {
 	noInterrupts();
+	// count of buttons for when the sensitivity is reduced from nButtonSensitivity
+	static unsigned int countRight = 0;
+	static unsigned int countLeft = 0;
 	static int pendingBtn = BTN_NONE;
 	static unsigned long lastTime;
 	static bool lastValA = true;
 	bool valA = gpio_get_level(BTNA);
 	bool valB = gpio_get_level(BTNB);
+	int btnToPush = BTN_NONE;
 	// ignore until the time has expired
-	if (lastValA != valA && millis() > lastTime + 2) {
-		lastTime = millis();
+	unsigned long millisNow = millis();
+	if (lastValA != valA && millisNow > lastTime + 2) {
 		if (pendingBtn != BTN_NONE) {
-			btnBuf.push(pendingBtn);
+			btnToPush = pendingBtn;
 			pendingBtn = BTN_NONE;
 		}
 		else if (lastValA && !valA) {
@@ -117,10 +121,25 @@ void IRAM_ATTR IntBtnA()
 				pendingBtn = btn;
 			}
 			else {
-				btnBuf.push(btn);
+				btnToPush = btn;
 			}
 		}
 		lastValA = valA;
+		// push a button?
+		if (btnToPush != BTN_NONE) {
+			// check sensitivity counts
+			if (millisNow - lastTime > 30) {
+				// been too long, reset the counts
+				countRight = countLeft = 0;
+			}
+			if (btnToPush == BTN_RIGHT)
+				++countRight;
+			else
+				++countLeft;
+			btnBuf.push(btnToPush);
+		}
+		// remember when we were here last time
+		lastTime = millisNow;
 	}
 	interrupts();
 }
