@@ -84,11 +84,13 @@ bool CheckCancel();
 
 // eeprom values
 // the signature is saved first in eeprom, followed by the autoload flag, all other values follow
-char signature[] = { "LIP0215" };   // set to make sure saved values are valid, change when savevalues is changed
+char signature[] = { "LIP0216" };   // set to make sure saved values are valid, change when savevalues is changed
 RTC_DATA_ATTR bool bAutoLoadSettings = false;     // set to automatically load saved settings from eeprom
 bool SaveSettings(bool save, bool bOnlySignature = false, bool bAutoloadFlag = false);
 
 // settings
+extern RTC_DATA_ATTR int nDialSensitivity;
+extern RTC_DATA_ATTR int nDialSpeed;
 RTC_DATA_ATTR int nDisplayBrightness = 100;           // this is in %
 RTC_DATA_ATTR bool bDisplayInvert = false;            // set to reverse display
 RTC_DATA_ATTR bool bReverseDial = false;              // change the dial direction
@@ -383,6 +385,8 @@ const saveValues saveValueList[] = {
     {&bShowNextFiles,sizeof(bShowNextFiles)},
     {&bEnableBLE,sizeof(bEnableBLE)},
     {&bReverseDial,sizeof(bReverseDial)},
+    {&nDialSensitivity,sizeof(nDialSensitivity)},
+    {&nDialSpeed,sizeof(nDialSpeed)},
     {&nLongPressCounterValue,sizeof(nLongPressCounterValue)},
     {&nDisplayBrightness,sizeof(nDisplayBrightness)},
     {&bDisplayInvert,sizeof(bDisplayInvert)},
@@ -681,6 +685,8 @@ MenuItem SystemMenu[] = {
 	{eBool,false,"Show Folder: %s",ToggleBool,&bShowFolder,0,0,0,"Yes","No"},
     {eBool,false,"Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
     {eBool,false,"Dial: %s",ToggleBool,&bReverseDial,0,0,0,"Reverse","Normal"},
+    {eTextInt,false,"Dial Sensitivity: %d",GetIntegerValue,&nDialSensitivity,1,5},
+    {eTextInt,false,"Dial Speed: %d",GetIntegerValue,&nDialSpeed,100,1000},
     {eTextInt,false,"Long Press counter: %d",GetIntegerValue,&nLongPressCounterValue,2,200,0,NULL,NULL},
     {eBool,false,"BlueTooth Link: %s",ToggleBool,&bEnableBLE,0,0,0,"On","Off"},
     {eExit,false,"Previous Menu"},
