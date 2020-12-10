@@ -1,4 +1,10 @@
 #pragma once
+
+// ***** Various switchs for options are set here *****
+// SB with rotary switch, comment out for original schematic
+//#define PCB_WITH_DIAL 1
+// *****
+
 #include <ArduinoJson.h>
 #include <BLEDevice.h>
 #include <BLEUtils.h>
@@ -6,12 +12,22 @@
 #include <BLE2902.h>
 #include "heltec.h"
 #include <time.h>
-#include "FS.h"
 #include "SD.h"
 #include "SPI.h"
 #include <FastLED.h>
 #include "morefonts.h"
 #include <EEPROM.h>
+
+#ifdef PCB_WITH_DIAL
+#define BTNPUSH GPIO_NUM_12
+#define BTNA GPIO_NUM_14
+#define BTNB GPIO_NUM_27
+#else
+#define BTNPUSH GPIO_NUM_27
+#define BTNA GPIO_NUM_12
+#define BTNB GPIO_NUM_14
+#endif
+#define FRAMEBUTTON GPIO_NUM_26
 
 #define OLED Heltec.display
 //#include "SSD1306Wire.h" // legacy include: `#include "SSD1306.h"`
