@@ -1278,10 +1278,11 @@ bool CheckCancel()
 void setupSDcard()
 {
 	bSdCardValid = false;
+#if USE_STANDARD_SD
 	gpio_set_direction((gpio_num_t)SDcsPin, GPIO_MODE_OUTPUT);
 	delay(50);
 	SPIClass(1);
-	spiSDCard.begin(18, 19, 23, SDcsPin);	// SCK,MISO,MOSI,CS
+	spiSDCard.begin(SDSckPin, SDMisoPin, SDMosiPin, SDcsPin);	// SCK,MISO,MOSI,CS
 	delay(20);
 
 	if (!SD.begin(SDcsPin, spiSDCard)) {
@@ -1293,7 +1294,22 @@ void setupSDcard()
 	if (cardType == CARD_NONE) {
 		//Serial.println("No SD card attached");
 		return;
+}
+#else
+#define SD_CONFIG SdSpiConfig(SDcsPin, /*DEDICATED_SPI*/SHARED_SPI, SD_SCK_MHZ(10))
+	SPI.begin(SDSckPin, SDMisoPin, SDMosiPin, SDcsPin);	// SCK,MISO,MOSI,CS
+	if (!SD.begin(SD_CONFIG)) {
+		Serial.println("SD initialization failed.");
+		uint8_t err = SD.card()->errorCode();
+		Serial.println("err: " + String(err));
+		return;
 	}
+	//Serial.println("Mounted SD card");
+	//SD.printFatType(&Serial);
+
+	//uint64_t cardSize = (uint64_t)SD.clusterCount() * SD.bytesPerCluster() / (1024 * 1024 * 1024);
+	//Serial.printf("SD Card Size: %llu GB\n", cardSize);
+#endif
 
 	//Serial.print("SD Card Type: ");
 	//if (cardType == CARD_MMC) {
@@ -2824,7 +2840,11 @@ bool ProcessConfigFile(String filename)
 {
 	bool retval = true;
 	String filepath = ((bRunningMacro || bRecordingMacro) ? String("/") : currentFolder) + filename;
+#if USE_STANDARD_SD
 	SDFile rdfile;
+#else
+	FsFile rdfile;
+#endif
 	rdfile = SD.open(filepath);
 	if (rdfile.available()) {
 		String line, command, args;
@@ -2944,18 +2964,24 @@ bool GetFileNamesFromSD(String dir) {
 		String startfile;
 		if (dir.length() > 1)
 			dir = dir.substring(0, dir.length() - 1);
+#if USE_STANDARD_SD
 		File root = SD.open(dir);
+		File file;
+#else
+		FsFile root = SD.open(dir);
+		FsFile file;
+#endif
 		String CurrentFilename = "";
 		if (!root) {
 			//Serial.println("Failed to open directory: " + dir);
 			return false;
 		}
 		if (!root.isDirectory()) {
-			//Serial.println("Not a directoryf: " + dir);
+			//Serial.println("Not a directory: " + dir);
 			return false;
 		}
 
-		File file = root.openNextFile();
+		file = root.openNextFile();
 		if (dir != "/") {
 			// add an arrow to go back
 			String sdir = currentFolder.substring(0, currentFolder.length() - 1);
@@ -2965,7 +2991,13 @@ bool GetFileNamesFromSD(String dir) {
 			FileNames.push_back(String(PREVIOUS_FOLDER_CHAR));
 		}
 		while (file) {
+#if USE_STANDARD_SD
 			CurrentFilename = file.name();
+#else
+			char fname[40];
+			file.getName(fname, sizeof(fname));
+			CurrentFilename = fname;
+#endif
 			// strip path
 			CurrentFilename = CurrentFilename.substring(CurrentFilename.lastIndexOf('/') + 1);
 			//Serial.println("name: " + CurrentFilename);
@@ -3107,7 +3139,11 @@ bool WriteOrDeleteConfigFile(String filename, bool remove, bool startfile)
 	}
 	else {
 		String line;
+#if USE_STANDARD_SD
 		File file = SD.open(filepath.c_str(), bRecordingMacro ? FILE_APPEND : FILE_WRITE);
+#else
+		FsFile file = SD.open(filepath.c_str(), bRecordingMacro ? O_APPEND : (O_WRITE | O_TRUNC));
+#endif
 		if (file) {
 			// loop through the var list
 			for (int ix = 0; ix < sizeof(SettingsVarList) / sizeof(*SettingsVarList); ++ix) {

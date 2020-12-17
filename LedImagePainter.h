@@ -15,11 +15,16 @@
 #include <BLEServer.h>
 #include <BLE2902.h>
 #if USE_HELTEC_SBC
-#include "heltec.h"
+    #include "heltec.h"
+#else
+    #include <TFT_eSPI.h> // Hardware-specific library
 #endif
 #include <time.h>
 #if USE_STANDARD_SD
-#include "SD.h"
+    #include "SD.h"
+#else
+    #include <SdFatConfig.h>
+    #include <sdfat.h>
 #endif
 #include "SPI.h"
 #include <FastLED.h>
@@ -27,7 +32,6 @@
 #include <EEPROM.h>
 #include "RotaryDialButton.h"
 #include <vector>
-#include <queue>
 //#include <stack>
 //std::stack<int> menuStack;
 
@@ -183,8 +187,11 @@ volatile int nTimerSeconds;
 volatile bool bStripWaiting = false;
 esp_timer_handle_t oneshot_LED_timer;
 esp_timer_create_args_t oneshot_LED_timer_args;
-
-SDFile dataFile;
+#if USE_STANDARD_SD
+    SDFile dataFile;
+#else
+    FsFile dataFile;
+#endif
 // system state, idle or running
 bool bIsRunning = false;
 // show percentage
@@ -268,8 +275,24 @@ void Sleep(MenuItem* menu);
 void ReadBattery(MenuItem* menu);
 
 // SD details
-#define SDcsPin 5                        // SD card CS pin
-SPIClass spiSDCard;
+#if USE_HELTEC_SBC
+    #define SDcsPin     5        // SD card CS pin
+    #define SDSckPin    18
+    #define SDMisoPin   19
+    #define SDMosiPin   23
+#else
+    #define SDcsPin    33  // GPIO33
+    #define SDSckPin   25  // GIPO25
+    #define SDMisoPin  27  // GPIO27
+    #define SDMosiPin  26  // GPIO26
+#endif
+
+#if USE_STANDARD_SD
+    SPIClass spiSDCard;
+#else
+    SPIClass spi1(VSPI);
+    SdFs SD; // fat16/32 and exFAT
+#endif
 
 // adjustment values for builtins
 RTC_DATA_ATTR uint8_t gHue = 0; // rotating "base color" used by many of the patterns
