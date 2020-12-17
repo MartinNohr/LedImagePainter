@@ -5,6 +5,8 @@
 #define PCB_WITH_DIAL 0
 // 1 for HELTEC, 0 for TTGO
 #define USE_HELTEC_SBC 1
+// 1 for standard SD library, 0 for the new exFat library
+#define USE_STANDARD_SD 1
 // *****
 
 #include <ArduinoJson.h>
@@ -16,12 +18,19 @@
 #include "heltec.h"
 #endif
 #include <time.h>
+#if USE_STANDARD_SD
 #include "SD.h"
+#endif
 #include "SPI.h"
 #include <FastLED.h>
 #include "morefonts.h"
 #include <EEPROM.h>
 #include "RotaryDialButton.h"
+#include <vector>
+#include <queue>
+//#include <stack>
+//std::stack<int> menuStack;
+
 #define BTN_SELECT  CRotaryDialButton::BTN_CLICK
 #define BTN_NONE    CRotaryDialButton::BTN_NONE
 #define BTN_LEFT    CRotaryDialButton::BTN_LEFT
@@ -137,12 +146,10 @@ RTC_DATA_ATTR int charHeight = 19;
 #define PREVIOUS_FOLDER_CHAR '^'
 String currentFolder = "/";
 RTC_DATA_ATTR int CurrentFileIndex = 0;
-int lastFileIndex = 0;                  // save between switching of internal and SD
+int lastFileIndex = 0;                                  // save between switching of internal and SD
 String lastFolder = "/";
-int NumberOfFiles = 0;
-#define MAX_FILES 50
-String FileNames[MAX_FILES];
-bool bSettingsMode = false;               // set true when settings are displayed
+std::vector<String> FileNames;
+bool bSettingsMode = false;                             // set true when settings are displayed
 RTC_DATA_ATTR int nFrameHold = 10;                      // default for the frame delay
 RTC_DATA_ATTR bool bFixedTime = false;                  // set to use imagetime instead of framehold, the frame time will be calculated
 RTC_DATA_ATTR int nFixedImageTime = 5;                  // time to display image when fixedtime is used

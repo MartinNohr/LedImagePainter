@@ -13,11 +13,6 @@
 
 RTC_DATA_ATTR int nBootCount = 0;
 
-//#include <vector>
-#include <queue>
-//#include <stack>
-//std::stack<int> menuStack;
-
 // some forward references that Arduino IDE needs
 int IRAM_ATTR readByte(bool clear);
 void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf);
@@ -251,7 +246,7 @@ void setup()
 {
 	Serial.begin(115200);
 	delay(100);
-	Serial.println("boot: " + String(nBootCount));
+	//Serial.println("boot: " + String(nBootCount));
 	CRotaryDialButton::getInstance()->begin(BTN_A, BTN_B, BTN_PUSH);
 	setupSDcard();
 	gpio_set_direction((gpio_num_t)LED, GPIO_MODE_OUTPUT);
@@ -520,11 +515,11 @@ void UpdateBLE(bool bProgressOnly)
 			DynamicJsonDocument filelist(512);
 			filelist["builtin"] = bShowBuiltInTests;
 			filelist["path"] = currentFolder.c_str();
-			filelist["count"] = NumberOfFiles;
+			filelist["count"] = FileNames.size();
 			filelist["ix"] = CurrentFileIndex;
 			JsonArray data = filelist.createNestedArray("files");
-			for (int ix = 0; ix < NumberOfFiles; ++ix) {
-				data.add(FileNames[ix].c_str());
+			for (auto st : FileNames) {
+				data.add(st.c_str());
 			}
 			js = "";
 			serializeJson(filelist, js);
@@ -772,7 +767,8 @@ void ShowMenu(struct MenuItem* menu)
 // switch between SD and built-ins
 void ToggleFilesBuiltin(MenuItem* menu)
 {
-	//Serial.println("toggle builtin");
+	// clear filenames list
+	FileNames.clear();
 	bool lastval = bShowBuiltInTests;
 	int oldIndex = CurrentFileIndex;
 	String oldFolder = currentFolder;
@@ -785,10 +781,9 @@ void ToggleFilesBuiltin(MenuItem* menu)
 	if (lastval != bShowBuiltInTests) {
 		if (bShowBuiltInTests) {
 			CurrentFileIndex = 0;
-			NumberOfFiles = 0;
-			for (NumberOfFiles = 0; NumberOfFiles < sizeof(BuiltInFiles) / sizeof(*BuiltInFiles); ++NumberOfFiles) {
+			for (int ix = 0; ix < sizeof(BuiltInFiles) / sizeof(*BuiltInFiles); ++ix) {
 				// add each one
-				FileNames[NumberOfFiles] = String(BuiltInFiles[NumberOfFiles].text);
+				FileNames.push_back(String(BuiltInFiles[ix].text));
 			}
 			currentFolder = "";
 		}
@@ -813,8 +808,8 @@ void ToggleBool(MenuItem* menu)
 	if (menu->change != NULL) {
 		(*menu->change)(menu, -1);
 	}
-	Serial.println("autoload: " + String(bAutoLoadSettings));
-	Serial.println("fixed time: " + String(bFixedTime));
+	//Serial.println("autoload: " + String(bAutoLoadSettings));
+	//Serial.println("fixed time: " + String(bFixedTime));
 }
 
 // get integer values
@@ -1064,9 +1059,9 @@ bool HandleRunMode()
 		ProcessFileOrTest();
 		break;
 	case BTN_RIGHT:
-		if (bAllowMenuWrap || (CurrentFileIndex < NumberOfFiles - 1))
+		if (bAllowMenuWrap || (CurrentFileIndex < FileNames.size() - 1))
 			++CurrentFileIndex;
-		if (CurrentFileIndex >= NumberOfFiles)
+		if (CurrentFileIndex >= FileNames.size())
 			CurrentFileIndex = 0;
 		DisplayCurrentFile();
 		break;
@@ -1074,7 +1069,7 @@ bool HandleRunMode()
 		if (bAllowMenuWrap || (CurrentFileIndex > 0))
 			--CurrentFileIndex;
 		if (CurrentFileIndex < 0)
-			CurrentFileIndex = NumberOfFiles - 1;
+			CurrentFileIndex = FileNames.size() - 1;
 		DisplayCurrentFile();
 		break;
 		//case btnShowFiles:
@@ -1115,8 +1110,8 @@ enum CRotaryDialButton::Button ReadButton()
 	}
 	// read the next button, or NONE it none there
 	retValue = CRotaryDialButton::getInstance()->dequeue();
-	if (retValue != BTN_NONE)
-		Serial.println("button:" + String(retValue));
+	//if (retValue != BTN_NONE)
+	//	Serial.println("button:" + String(retValue));
 	return retValue;
 }
 
@@ -2330,7 +2325,7 @@ void ProcessFileOrTest()
 			// see if we are chaining, if so, get the next file, if a folder we're done
 			if (bChainFiles) {
 				// grab the next file
-				if (CurrentFileIndex < NumberOfFiles - 1)
+				if (CurrentFileIndex < FileNames.size() - 1)
 					++CurrentFileIndex;
 				if (IsFolder(CurrentFileIndex))
 					break;
@@ -2725,7 +2720,7 @@ int FileCountOnly()
 {
 	int count = 0;
 	// ignore folders, at the end
-	for (int files = 0; files < NumberOfFiles; ++files) {
+	for (int files = 0; files < FileNames.size(); ++files) {
 		if (!IsFolder(count))
 			++count;
 	}
@@ -2760,7 +2755,7 @@ void DisplayCurrentFile(bool path)
 	}
 	if (!bIsRunning && bShowNextFiles) {
 		for (int ix = 1; ix < 4; ++ix) {
-			if (ix + CurrentFileIndex >= NumberOfFiles) {
+			if (ix + CurrentFileIndex >= FileNames.size()) {
 				DisplayLine(ix, "");
 			}
 			else {
@@ -2814,10 +2809,12 @@ String MakeIPCFilename(String filename, bool addext)
 // return -1 if not found
 int LookUpFile(String name)
 {
-	for (int ix = 0; ix < NumberOfFiles; ++ix) {
-		if (name.equalsIgnoreCase(FileNames[ix])) {
+	int ix = 0;
+	for (auto nm : FileNames) {
+		if (name.equalsIgnoreCase(nm)) {
 			return ix;
 		}
+		++ix;
 	}
 	return -1;
 }
@@ -2935,18 +2932,15 @@ bool ProcessConfigFile(String filename)
 bool GetFileNamesFromSD(String dir) {
 	// start over
 	// first empty the current file names
-	for (int ix = 0; ix < NumberOfFiles; ++ix) {
-		FileNames[ix] = "";
-	}
+	FileNames.clear();
 	if (nBootCount == 0)
 		CurrentFileIndex = 0;
 	if (bShowBuiltInTests) {
-		for (NumberOfFiles = 0; NumberOfFiles < (sizeof(BuiltInFiles) / sizeof(*BuiltInFiles)); ++NumberOfFiles) {
-			FileNames[NumberOfFiles] = BuiltInFiles[NumberOfFiles].text;
+		for (int ix=0; ix < (sizeof(BuiltInFiles) / sizeof(*BuiltInFiles)); ++ix) {
+			FileNames.push_back(String(BuiltInFiles[ix].text));
 		}
 	}
 	else {
-		NumberOfFiles = 0;
 		String startfile;
 		if (dir.length() > 1)
 			dir = dir.substring(0, dir.length() - 1);
@@ -2968,31 +2962,22 @@ bool GetFileNamesFromSD(String dir) {
 			sdir = sdir.substring(0, sdir.lastIndexOf("/"));
 			if (sdir.length() == 0)
 				sdir = "/";
-			FileNames[NumberOfFiles++] = String(PREVIOUS_FOLDER_CHAR) /*+ sdir*/;
+			FileNames.push_back(String(PREVIOUS_FOLDER_CHAR));
 		}
 		while (file) {
-			if (NumberOfFiles >= MAX_FILES) {
-				String str = "Max " + String(MAX_FILES) + String(" files allowed");
-				WriteMessage(str, true);
-				break;
-			}
 			CurrentFilename = file.name();
 			// strip path
 			CurrentFilename = CurrentFilename.substring(CurrentFilename.lastIndexOf('/') + 1);
 			//Serial.println("name: " + CurrentFilename);
 			if (CurrentFilename != "System Volume Information") {
 				if (file.isDirectory()) {
-					FileNames[NumberOfFiles] = String(NEXT_FOLDER_CHAR) + CurrentFilename;
-					//Serial.println("dir: " + CurrentFilename);
-					NumberOfFiles++;
+					FileNames.push_back(String(NEXT_FOLDER_CHAR) + CurrentFilename);
 				}
 				else {
 					String uppername = CurrentFilename;
 					uppername.toUpperCase();
 					if (uppername.endsWith(".BMP")) { //find files with our extension only
-						FileNames[NumberOfFiles] = CurrentFilename;
-						//Serial.println("file: " + CurrentFilename);
-						NumberOfFiles++;
+						FileNames.push_back(CurrentFilename);
 					}
 					else if (uppername == "START.IPC") {
 						startfile = CurrentFilename;
@@ -3002,8 +2987,7 @@ bool GetFileNamesFromSD(String dir) {
 			file = root.openNextFile();
 		}
 		root.close();
-		delay(500);
-		isort(FileNames, NumberOfFiles);
+		std::sort(FileNames.begin(), FileNames.end(), CompareNames);
 		// see if we need to process the auto start file
 		if (startfile.length())
 			ProcessConfigFile(startfile);
@@ -3011,24 +2995,13 @@ bool GetFileNamesFromSD(String dir) {
 	return true;
 }
 
-// Sort the filenames in alphabetical order
-void isort(String* filenames, int n) {
-	for (int i = 1; i < n; ++i) {
-		String istring = filenames[i];
-		int k;
-		for (k = i - 1; (k >= 0) && (CompareStrings(istring, filenames[k]) < 0); k--) {
-			filenames[k + 1] = filenames[k];
-		}
-		filenames[k + 1] = istring;
-	}
-}
-
-// compare two strings, one-two, case insensitive
-int CompareStrings(String one, String two)
+// compare strings for sort ignoring case
+bool CompareNames(const String& a, const String& b)
 {
-	one.toUpperCase();
-	two.toUpperCase();
-	return one.compareTo(two);
+	String a1 = a, b1 = b;
+	a1.toLowerCase();
+	b1.toLowerCase();
+	return a1.compareTo(b1) < 0;
 }
 
 // save and restore important settings, two sets are available
@@ -3226,7 +3199,7 @@ bool SaveSettings(bool save, bool bOnlySignature, bool bAutoloadOnlyFlag)
 		setupSDcard();
 		CurrentFileIndex = savedFileIndex;
 		// make sure file index isn't too big
-		if (CurrentFileIndex >= NumberOfFiles) {
+		if (CurrentFileIndex >= FileNames.size()) {
 			CurrentFileIndex = 0;
 		}
 		// set the brightness values since they might have changed
