@@ -1,8 +1,10 @@
 #pragma once
 
 // ***** Various switchs for options are set here *****
-// SB with rotary switch, comment out for original schematic
-//#define PCB_WITH_DIAL 1
+// SB with rotary switch, set to 0 for original schematic
+#define PCB_WITH_DIAL 0
+// 1 for HELTEC, 0 for TTGO
+#define USE_HELTEC_SBC 1
 // *****
 
 #include <ArduinoJson.h>
@@ -10,26 +12,38 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <BLE2902.h>
+#if USE_HELTEC_SBC
 #include "heltec.h"
+#endif
 #include <time.h>
 #include "SD.h"
 #include "SPI.h"
 #include <FastLED.h>
 #include "morefonts.h"
 #include <EEPROM.h>
+#include "RotaryDialButton.h"
+#define BTN_SELECT  CRotaryDialButton::BTN_CLICK
+#define BTN_NONE    CRotaryDialButton::BTN_NONE
+#define BTN_LEFT    CRotaryDialButton::BTN_LEFT
+#define BTN_RIGHT   CRotaryDialButton::BTN_RIGHT
+#define BTN_LONG    CRotaryDialButton::BTN_LONGPRESS
 
-#ifdef PCB_WITH_DIAL
-#define BTNPUSH GPIO_NUM_12
-#define BTNA GPIO_NUM_14
-#define BTNB GPIO_NUM_27
+#if PCB_WITH_DIAL
+#define BTN_PUSH GPIO_NUM_12
+#define BTN_A GPIO_NUM_14
+#define BTN_B GPIO_NUM_27
 #else
-#define BTNPUSH GPIO_NUM_27
-#define BTNA GPIO_NUM_12
-#define BTNB GPIO_NUM_14
+#define BTN_PUSH GPIO_NUM_27
+#define BTN_A GPIO_NUM_12
+#define BTN_B GPIO_NUM_14
 #endif
 #define FRAMEBUTTON GPIO_NUM_26
 
+#if USE_HELTEC_SBC
 #define OLED Heltec.display
+#else
+#endif
+
 //#include "SSD1306Wire.h" // legacy include: `#include "SSD1306.h"`
 //#include "OLEDDisplayUi.h"
 
@@ -79,24 +93,19 @@ void RainbowPulse();
 void TestWedge();
 
 bool bPauseDisplay = false; // set this so DisplayLine and Progress won't update display
-int ReadButton();
+CRotaryDialButton::Button ReadButton();
 bool CheckCancel();
 
 // eeprom values
 // the signature is saved first in eeprom, followed by the autoload flag, all other values follow
-char signature[] = { "LIP0216" };   // set to make sure saved values are valid, change when savevalues is changed
+char signature[] = { "LIP0217" };   // set to make sure saved values are valid, change when savevalues is changed
 RTC_DATA_ATTR bool bAutoLoadSettings = false;     // set to automatically load saved settings from eeprom
 bool SaveSettings(bool save, bool bOnlySignature = false, bool bAutoloadFlag = false);
 
 // settings
-extern RTC_DATA_ATTR int nDialSensitivity;
-extern RTC_DATA_ATTR int nDialSpeed;
 RTC_DATA_ATTR int nDisplayBrightness = 100;           // this is in %
 RTC_DATA_ATTR bool bDisplayInvert = false;            // set to reverse display
-RTC_DATA_ATTR bool bReverseDial = false;              // change the dial direction
 bool bSdCardValid = false;              // set to true when card is found
-int nLongPressCounterValue = 40;        // multiplier for long press compared to normal press
-volatile int nLongPressCounter = 0;     // counter during press
 // strip leds
 #define DATA_PIN1 17
 #define DATA_PIN2 25
@@ -125,7 +134,7 @@ struct {
     int g;
     int b;
 } whiteBalance = { 255,255,255 };
-// strip settings
+// settings
 RTC_DATA_ATTR int charHeight = 19;
 #define NEXT_FOLDER_CHAR '~'
 #define PREVIOUS_FOLDER_CHAR '^'
@@ -134,7 +143,7 @@ RTC_DATA_ATTR int CurrentFileIndex = 0;
 int lastFileIndex = 0;                  // save between switching of internal and SD
 String lastFolder = "/";
 int NumberOfFiles = 0;
-#define MAX_FILES 40
+#define MAX_FILES 50
 String FileNames[MAX_FILES];
 bool bSettingsMode = false;               // set true when settings are displayed
 RTC_DATA_ATTR int nFrameHold = 10;                      // default for the frame delay
@@ -165,20 +174,11 @@ bool bRunningMacro = false;               // set while running
 RTC_DATA_ATTR int nRepeatWaitMacro = 0;                 // time between macro repeats, in 1/10 seconds
 RTC_DATA_ATTR int nRepeatCountMacro = 1;                // repeat count for macros
 int nMacroRepeatsLeft = 1;                // set during macro running
-// timer argument vale
-enum TIMER_ID { TID_LED, TID_BTN, TID_LONGPRESS };
 volatile int nTimerSeconds;
 // set this to the delay time while we get the next frame, also used for delay timers
 volatile bool bStripWaiting = false;
 esp_timer_handle_t oneshot_LED_timer;
 esp_timer_create_args_t oneshot_LED_timer_args;
-// timer for button
-volatile bool bButtonWait = false;
-//esp_timer_handle_t oneshot_BTN_timer;
-//esp_timer_create_args_t oneshot_BTN_timer_args;
-// long press time
-esp_timer_handle_t periodic_LONGPRESS_timer;
-esp_timer_create_args_t periodic_LONGPRESS_timer_args;
 
 SDFile dataFile;
 // system state, idle or running
@@ -384,10 +384,10 @@ const saveValues saveValueList[] = {
     {&bAllowMenuWrap,sizeof(bAllowMenuWrap)},
     {&bShowNextFiles,sizeof(bShowNextFiles)},
     {&bEnableBLE,sizeof(bEnableBLE)},
-    {&bReverseDial,sizeof(bReverseDial)},
-    {&nDialSensitivity,sizeof(nDialSensitivity)},
-    {&nDialSpeed,sizeof(nDialSpeed)},
-    {&nLongPressCounterValue,sizeof(nLongPressCounterValue)},
+    {&CRotaryDialButton::m_bReverseDial,sizeof(CRotaryDialButton::m_bReverseDial)},
+    {&CRotaryDialButton::m_nDialSensitivity,sizeof(CRotaryDialButton::m_nDialSensitivity)},
+    {&CRotaryDialButton::m_nDialSpeed,sizeof(CRotaryDialButton::m_nDialSpeed)},
+    {&CRotaryDialButton::m_nLongPressTimerValue,sizeof(CRotaryDialButton::m_nLongPressTimerValue)},
     {&nDisplayBrightness,sizeof(nDisplayBrightness)},
     {&bDisplayInvert,sizeof(bDisplayInvert)},
     // the built-in values
@@ -684,10 +684,10 @@ MenuItem SystemMenu[] = {
     {eBool,false,"Show More Files: %s",ToggleBool,&bShowNextFiles,0,0,0,"Yes","No"},
 	{eBool,false,"Show Folder: %s",ToggleBool,&bShowFolder,0,0,0,"Yes","No"},
     {eBool,false,"Progress Bar: %s",ToggleBool,&bShowProgress,0,0,0,"Yes","No"},
-    {eBool,false,"Dial: %s",ToggleBool,&bReverseDial,0,0,0,"Reverse","Normal"},
-    {eTextInt,false,"Dial Sensitivity: %d",GetIntegerValue,&nDialSensitivity,1,5},
-    {eTextInt,false,"Dial Speed: %d",GetIntegerValue,&nDialSpeed,100,1000},
-    {eTextInt,false,"Long Press counter: %d",GetIntegerValue,&nLongPressCounterValue,2,200,0,NULL,NULL},
+    {eBool,false,"Dial: %s",ToggleBool,&CRotaryDialButton::m_bReverseDial,0,0,0,"Reverse","Normal"},
+    {eTextInt,false,"Dial Sensitivity: %d",GetIntegerValue,&CRotaryDialButton::m_nDialSensitivity,1,5},
+    {eTextInt,false,"Dial Speed: %d",GetIntegerValue,&CRotaryDialButton::m_nDialSpeed,100,1000},
+    {eTextInt,false,"Long Press counter: %d",GetIntegerValue,&CRotaryDialButton::m_nLongPressTimerValue,2,200,0,NULL,NULL},
     {eBool,false,"BlueTooth Link: %s",ToggleBool,&bEnableBLE,0,0,0,"On","Off"},
     {eExit,false,"Previous Menu"},
     // make sure this one is last
@@ -918,5 +918,5 @@ struct SETTINGVAR SettingsVarList[] = {
     {"GAMMA CORRECTION",&bGammaCorrection,vtBool},
     {"SELECT BUILTINS",&bShowBuiltInTests,vtBuiltIn},       // this must be before the SHOW FILE command
     {"SHOW FILE",&FileToShow,vtShowFile},
-    {"REVERSE DIAL",&bReverseDial,vtBool},
+    {"REVERSE DIAL",&CRotaryDialButton::m_bReverseDial,vtBool},
 };

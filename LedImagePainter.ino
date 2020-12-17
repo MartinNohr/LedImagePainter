@@ -25,119 +25,6 @@ uint16_t IRAM_ATTR readInt();
 uint32_t IRAM_ATTR readLong();
 void IRAM_ATTR FileSeekBuf(uint32_t place);
 
-std::queue<int> btnBuf;
-RTC_DATA_ATTR int nDialSensitivity = 1;
-RTC_DATA_ATTR int nDialSpeed = 300;
-enum BUTTONS { BTN_NONE = 1, BTN_RIGHT, BTN_LEFT, BTN_SELECT, BTN_LONG };
-// for debugging missed buttons
-//volatile int nButtonDowns;
-//volatile int nButtonUps;
-
-//std::queue<int> buttonQueue;
-
-// interrupt handlers
-void IRAM_ATTR IntBtnCenter()
-{
-	noInterrupts();
-	// went low, if timer not started, start it
-	if (nLongPressCounter == 0) {
-		nLongPressCounter = nLongPressCounterValue;
-		esp_timer_stop(periodic_LONGPRESS_timer);	// just in case
-		esp_timer_start_periodic(periodic_LONGPRESS_timer, 10 * 1000);
-	}
-	interrupts();
-}
-
-// called for every button close
-void IRAM_ATTR periodic_LONGPRESS_timer_callback(void* arg)
-{
-	noInterrupts();
-	int btn;
-	int level = gpio_get_level(BTNPUSH);
-	//Serial.println("count:" + String(nLongPressCounter) + ":" + String(level));
-	--nLongPressCounter;
-	// if the timer counter has finished, it must be a long press
-	if (nLongPressCounter == 0) {
-		btn = BTN_LONG;
-		btnBuf.push(btn);
-		// set it so we ignore the button interrupt for one more timer time
-		nLongPressCounter = -1;
-		//Serial.println("long");
-	}
-	// if the button is up and the timer hasn't finished counting, it must be a short press
-	else if (level) {
-		if (nLongPressCounter > 0 && nLongPressCounter < nLongPressCounterValue - 1) {
-			btn = BTN_SELECT;
-			btnBuf.push(btn);
-			nLongPressCounter = -1;
-			//Serial.println("select");
-		}
-		else if (nLongPressCounter < -1) {
-			esp_timer_stop(periodic_LONGPRESS_timer);
-			nLongPressCounter = 0;
-		}
-	}
-	interrupts();
-}
-
-// interrupt routines for the A and B rotary switches
-// the pendingBtn is used to hold the right rotation until A goes up, this makes
-// the left and right rotation happen at the same apparent time when rotating the dial,
-// unlike without that where the right rotation was faster, I.E. it moved before the
-// click of the button happened.
-void IRAM_ATTR IntBtnA()
-{
-	noInterrupts();
-	// count of buttons for when the sensitivity is reduced from nButtonSensitivity
-	static unsigned int countRight = 0;
-	static unsigned int countLeft = 0;
-	static int pendingBtn = BTN_NONE;
-	static unsigned long lastTime;
-	static bool lastValA = true;
-	bool valA = gpio_get_level(BTNA);
-	bool valB = gpio_get_level(BTNB);
-	int btnToPush = BTN_NONE;
-	// ignore until the time has expired
-	unsigned long millisNow = millis();
-	if (millisNow - lastTime > nDialSpeed) {
-		// been too long, reset the counts
-		countRight = countLeft = 0;
-		// and the pending one
-		pendingBtn = BTN_NONE;
-	}
-	if (lastValA != valA && millisNow > lastTime + 3) {
-		if (pendingBtn != BTN_NONE) {
-			btnToPush = pendingBtn;
-			pendingBtn = BTN_NONE;
-		}
-		else if (lastValA && !valA) {
-			int btn = (bReverseDial ? !valB : valB) ? BTN_RIGHT : BTN_LEFT;
-			if (btn == BTN_RIGHT) {
-				pendingBtn = btn;
-			}
-			else {
-				btnToPush = btn;
-			}
-		}
-		lastValA = valA;
-		// push a button?
-		if (btnToPush != BTN_NONE) {
-			// check sensitivity counts
-			if (btnToPush == BTN_RIGHT)
-				++countRight;
-			else
-				++countLeft;
-			if (countRight >= nDialSensitivity || countLeft >= nDialSensitivity) {
-				btnBuf.push(btnToPush);
-				countRight = countLeft = 0;
-			}
-		}
-		// remember when we were here last time
-		lastTime = millisNow;
-	}
-	interrupts();
-}
-
 //static const char* TAG = "lightwand";
 //esp_timer_cb_t oneshot_timer_callback(void* arg)
 void IRAM_ATTR oneshot_LED_timer_callback(void* arg)
@@ -146,11 +33,6 @@ void IRAM_ATTR oneshot_LED_timer_callback(void* arg)
 	//int64_t time_since_boot = esp_timer_get_time();
 	//Serial.println("in isr");
 	//ESP_LOGI(TAG, "One-shot timer called, time since boot: %lld us", time_since_boot);
-}
-
-void IRAM_ATTR oneshot_BTN_timer_callback(void* arg)
-{
-	bButtonWait = false;
 }
 
 class MyServerCallbacks : public BLEServerCallbacks {
@@ -370,47 +252,21 @@ void setup()
 	Serial.begin(115200);
 	delay(100);
 	Serial.println("boot: " + String(nBootCount));
+	CRotaryDialButton::getInstance()->begin(BTN_A, BTN_B, BTN_PUSH);
 	setupSDcard();
-	//vector<int> vi;
-	//queue<int> qu;
 	gpio_set_direction((gpio_num_t)LED, GPIO_MODE_OUTPUT);
 	digitalWrite(LED, HIGH);
-	gpio_set_direction(BTNPUSH, GPIO_MODE_INPUT);
-	gpio_set_pull_mode(BTNPUSH, GPIO_PULLUP_ONLY);
-	gpio_set_direction(BTNA, GPIO_MODE_INPUT);
-	gpio_set_pull_mode(BTNA, GPIO_PULLUP_ONLY);
-	gpio_set_direction(BTNB, GPIO_MODE_INPUT);
-	gpio_set_pull_mode(BTNB, GPIO_PULLUP_ONLY);
 	gpio_set_direction(FRAMEBUTTON, GPIO_MODE_INPUT);
 	gpio_set_pull_mode(FRAMEBUTTON, GPIO_PULLUP_ONLY);
 	oneshot_LED_timer_args = {
 				oneshot_LED_timer_callback,
 				/* argument specified here will be passed to timer callback function */
-				(void*)TID_LED,
+				(void*)0,
 				ESP_TIMER_TASK,
 				"one-shotLED"
 	};
 	esp_timer_create(&oneshot_LED_timer_args, &oneshot_LED_timer);
-	//oneshot_BTN_timer_args = {
-	//		oneshot_BTN_timer_callback,
-	//		/* argument specified here will be passed to timer callback function */
-	//		(void*)TID_BTN,
-	//		ESP_TIMER_TASK,
-	//		"one-shotBTN"
-	//};
-	//esp_timer_create(&oneshot_BTN_timer_args, &oneshot_BTN_timer);
-	// the long press timer
-	periodic_LONGPRESS_timer_args = {
-			periodic_LONGPRESS_timer_callback,
-			/* argument specified here will be passed to timer callback function */
-			(void*)TID_LONGPRESS,
-			ESP_TIMER_TASK,
-			"one-shotLONGPRESS"
-	};
-	esp_timer_create(&periodic_LONGPRESS_timer_args, &periodic_LONGPRESS_timer);
 
-	attachInterrupt(BTNPUSH, IntBtnCenter, FALLING);
-	attachInterrupt(BTNA, IntBtnA, CHANGE);
 	Heltec.begin(true /*DisplayEnable Enable*/, false /*LoRa Enable*/, true /*Serial Enable*/);
 	delay(100);
 	digitalWrite(LED, LOW);
@@ -422,7 +278,7 @@ void setup()
 		OLED->setFont(ArialMT_Plain_24);
 		OLED->drawString(2, 2, "LEDPainter");
 		OLED->setFont(ArialMT_Plain_16);
-		OLED->drawString(4, 30, "Version 2.16");
+		OLED->drawString(4, 30, "Version 2.17");
 		OLED->setFont(ArialMT_Plain_10);
 		OLED->drawString(4, 48, __DATE__);
 		OLED->display();
@@ -437,7 +293,7 @@ void setup()
 		SaveSettings(false, false, true);
 	}
 	// load the saved settings if flag is true and the button isn't pushed
-	if ((nBootCount == 0) && bAutoLoadSettings && gpio_get_level(BTNPUSH)) {
+	if ((nBootCount == 0) && bAutoLoadSettings && gpio_get_level(BTN_PUSH)) {
 		// read all the settings
 		SaveSettings(false);
 	}
@@ -534,21 +390,20 @@ void setup()
 		EnableBLE();
 	}
 	// wait for button release
-	while (!digitalRead(BTNPUSH))
+	while (!digitalRead(BTN_PUSH))
 		;
 	delay(30);	// debounce
-	while (!digitalRead(BTNPUSH))
+	while (!digitalRead(BTN_PUSH))
 		;
 	// clear the button buffer
-	while (!btnBuf.empty())
-		btnBuf.pop();
+	CRotaryDialButton::getInstance()->clear();
 	if (!bSdCardValid) {
 		DisplayCurrentFile();
 		delay(2000);
 		ToggleFilesBuiltin(NULL);
 	}
 	DisplayCurrentFile();
-
+/*
 	analogSetCycles(8);                   // Set number of cycles per sample, default is 8 and provides an optimal result, range is 1 - 255
 	analogSetSamples(1);                  // Set number of samples in the range, default is 1, it has an effect on sensitivity has been multiplied
 	analogSetClockDiv(1);                 // Set the divider for the ADC clock, default is 1, range is 1 - 255
@@ -566,6 +421,7 @@ void setup()
 
 	//adcAttachPin(36);
 	adcAttachPin(37);
+*/
 }
 
 void loop()
@@ -969,7 +825,7 @@ void GetIntegerValue(MenuItem* menu)
 	int originalValue = *(int*)menu->value;
 	//Serial.println("int: " + String(menu->text) + String(*(int*)menu->value));
 	char line[50];
-	int button = BTN_NONE;
+	CRotaryDialButton::Button button = BTN_NONE;
 	bool done = false;
 	OLED->clear();
 	DisplayLine(1, "Range: " + String(menu->min) + " to " + String(menu->max));
@@ -1134,7 +990,7 @@ bool HandleMenus()
 		bMenuChanged = false;
 	}
 	bool didsomething = true;
-	int button = ReadButton();
+	CRotaryDialButton::Button button = ReadButton();
 	int lastOffset = MenuStack.peek()->offset;
 	int lastMenu = MenuStack.peek()->index;
 	int lastMenuCount = MenuStack.peek()->menucount;
@@ -1238,9 +1094,9 @@ bool HandleRunMode()
 }
 
 // check buttons and return if one pressed
-int ReadButton()
+enum CRotaryDialButton::Button ReadButton()
 {
-	int retValue = BTN_NONE;
+	enum CRotaryDialButton::Button retValue = BTN_NONE;
 	// see if we got any BLE commands
 	if (!sBLECommand.empty()) {
 		//Serial.println(sBLECommand.c_str());
@@ -1257,13 +1113,10 @@ int ReadButton()
 			return BTN_LEFT;
 		}
 	}
-	// if there is a button, get the front of the queue, then remove it
-	if (btnBuf.size()) {
-		retValue = btnBuf.front();
-		btnBuf.pop();
-	}
-	//if (retValue != BTN_NONE)
-	//	Serial.println("button:" + String(retValue));
+	// read the next button, or NONE it none there
+	retValue = CRotaryDialButton::getInstance()->dequeue();
+	if (retValue != BTN_NONE)
+		Serial.println("button:" + String(retValue));
 	return retValue;
 }
 
@@ -1431,7 +1284,6 @@ void setupSDcard()
 {
 	bSdCardValid = false;
 	gpio_set_direction((gpio_num_t)SDcsPin, GPIO_MODE_OUTPUT);
-	//pinMode(SDcsPin, OUTPUT);
 	delay(50);
 	SPIClass(1);
 	spiSDCard.begin(18, 19, 23, SDcsPin);	// SCK,MISO,MOSI,CS
@@ -1840,7 +1692,7 @@ void Sleep(MenuItem* menu)
 {
 	++nBootCount;
 	//rtc_gpio_pullup_en(BTNPUSH);
-	esp_sleep_enable_ext0_wakeup(BTNPUSH, LOW);
+	esp_sleep_enable_ext0_wakeup(BTN_PUSH, LOW);
 	esp_deep_sleep_start();
 }
 
@@ -1865,7 +1717,7 @@ void DisplayAllColor()
 	else
 		FastLED.showColor(CHSV(nDisplayAllHue, nDisplayAllSaturation, nDisplayAllBrightness));
 	// show until cancelled, but check for rotations of the knob
-	int btn;
+	CRotaryDialButton::Button btn;
 	int what = 0;	// 0 for hue, 1 for saturation, 2 for brightness, 3 for increment
 	int increment = 10;
 	bool bChange = true;
@@ -1959,7 +1811,7 @@ void DisplayAllColor()
 			break;
 		case BTN_LONG:
 			// put it back, we don't want it
-			btnBuf.push(btn);
+			CRotaryDialButton::getInstance()->pushButton(btn);
 			break;
 		}
 		if (CheckCancel())
@@ -2524,8 +2376,7 @@ void ProcessFileOrTest()
 		DisplayCurrentFile();
 	nProgress = 0;
 	// clear buttons
-	while (!btnBuf.empty())
-		btnBuf.pop();
+	CRotaryDialButton::getInstance()->clear();
 }
 
 void SendFile(String Filename) {
@@ -2742,7 +2593,7 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 					if (btn == BTN_NONE)
 						continue;
 					else if (btn == BTN_LONG)
-						btnBuf.push(btn);
+						CRotaryDialButton::getInstance()->pushButton(BTN_LONG);
 					else if (btn == BTN_LEFT) {
 						// backup a line, use 2 because the for loop does one when we're done here
 						if (bReverseImage) {
