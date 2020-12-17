@@ -44,9 +44,6 @@
 #else
 #endif
 
-//#include "SSD1306Wire.h" // legacy include: `#include "SSD1306.h"`
-//#include "OLEDDisplayUi.h"
-
 // bluetooth stuff
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/

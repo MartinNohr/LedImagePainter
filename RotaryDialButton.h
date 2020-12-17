@@ -80,7 +80,6 @@ private:
         static bool lastValA = true;
         bool valA = digitalRead(gpioA);
         bool valB = digitalRead(gpioB);
-        Serial.println("a:b " + String(valA) + " " + String(valB));
         enum Button btnToPush = BTN_NONE;
         // ignore until the time has expired
         unsigned long millisNow = millis();
