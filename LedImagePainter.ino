@@ -2535,15 +2535,10 @@ void IRAM_ATTR ReadAndDisplayFile(bool doingFirstHalf) {
 			ShowProgressBar(percent);
 		}
 		int bufpos = 0;
-		//uint32_t offset = (MYBMP_BF_OFF_BITS + (y * lineLength));
-		//dataFile.seekSet(offset);
 		CRGB pixel;
-		// get to start of pixel data, moved this out of the loop below to speed things up
-		//Serial.println("y=" + String(y));
+		// get to start of pixel data
 		FileSeekBuf((uint32_t)MYBMP_BF_OFF_BITS + (y * lineLength));
-		for (int x = 0; x < displayWidth; x++) {
-			//FileSeekBuf((uint32_t)MYBMP_BF_OFF_BITS + ((y * lineLength) + (x * 3)));
-			//dataFile.seekSet((uint32_t)MYBMP_BF_OFF_BITS + ((y * lineLength) + (x * 3)));
+		for (int x = displayWidth - 1; x >= 0; --x) {
 			// this reads three bytes
 			pixel = getRGBwithGamma();
 			// see if we want this one

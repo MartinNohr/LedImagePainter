@@ -731,7 +731,7 @@ MenuItem ImageMenu[] = {
     {eTextInt,false,"Start Delay (S): %d.%d",GetIntegerValue,&startDelay,0,100,1},
     {eBool,false,"Upside Down Image: %s",ToggleBool,&bUpsideDown,0,0,0,"Yes","No"},
     {eIfEqual,false,"",NULL,&bShowBuiltInTests,false},
-        {eBool,false,"Direction: %s",ToggleBool,&bReverseImage,0,0,0,"Right-Left","Left-Right"},
+        {eBool,false,"Walk Direction: %s",ToggleBool,&bReverseImage,0,0,0,"Left-Right","Right-Left"},
         {eBool,false,"Play Mirror Image: %s",ToggleBool,&bMirrorPlayImage,0,0,0,"Yes","No"},
         {eIfEqual,false,"",NULL,&bMirrorPlayImage,true},
             {eTextInt,false,"Mirror Delay (S): %d.%d",GetIntegerValue,&nMirrorDelay,0,10,1},
