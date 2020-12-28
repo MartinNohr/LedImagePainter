@@ -2391,14 +2391,11 @@ void ProcessFileOrTest()
 }
 
 void SendFile(String Filename) {
-	char temp[14];
-	Filename.toCharArray(temp, 14);
 	// see if there is an associated config file
-	String cfFile = temp;
-	cfFile = MakeIPCFilename(cfFile, true);
+	String cfFile = MakeIPCFilename(Filename, true);
 	SettingsSaveRestore(true, 0);
 	ProcessConfigFile(cfFile);
-	String fn = currentFolder + temp;
+	String fn = currentFolder + Filename;
 	dataFile = SD.open(fn);
 	// if the file is available send it to the LED's
 	if (dataFile.available()) {
