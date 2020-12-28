@@ -1,8 +1,10 @@
 #pragma once
 
 // ***** Various switchs for options are set here *****
-// SB with rotary switch, set to 0 for original schematic
-#define PCB_WITH_DIAL 0
+// SB with rotary switch, 0 for original, 1 for first PCB, 2 for 2nd PCB
+//#define PCB_WITH_DIAL 0
+//#define PCB_WITH_DIAL 1
+#define PCB_WITH_DIAL 2
 // 1 for HELTEC, 0 for TTGO
 #define USE_HELTEC_SBC 1
 // 1 for standard SD library, 0 for the new exFat library
@@ -41,15 +43,20 @@
 #define BTN_RIGHT   CRotaryDialButton::BTN_RIGHT
 #define BTN_LONG    CRotaryDialButton::BTN_LONGPRESS
 
-#if PCB_WITH_DIAL
-#define BTN_PUSH GPIO_NUM_12
-#define BTN_A GPIO_NUM_14
-#define BTN_B GPIO_NUM_27
-#else
+#if PCB_WITH_DIAL==0
 #define BTN_PUSH GPIO_NUM_27
 #define BTN_A GPIO_NUM_12
 #define BTN_B GPIO_NUM_14
+#elif PCB_WITH_DIAL==1
+#define BTN_PUSH GPIO_NUM_12
+#define BTN_A GPIO_NUM_14
+#define BTN_B GPIO_NUM_27
+#elif PCB_WITH_DIAL==2
+#define BTN_PUSH GPIO_NUM_27
+#define BTN_A GPIO_NUM_14
+#define BTN_B GPIO_NUM_12
 #endif
+
 #define FRAMEBUTTON GPIO_NUM_26
 
 #if USE_HELTEC_SBC
